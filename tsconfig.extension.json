@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "outDir": "./build",
+    "rootDir": "./src/extension",
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true
+  },
+  "include": ["src/extension/**/*.ts"]
+}

@@ -1,4 +1,4 @@
-import { srtToObject } from "./utils";
+import { srtToObject } from "./utils.js";
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log("Extension installed");

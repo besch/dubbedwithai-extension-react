@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { Movie, Subtitle } from "./types";
-
-interface OpenSubtitlesResponse {
-  data: {
-    attributes: {
-      language: string;
-    };
-  }[];
-}
 
 const Popup: React.FC = () => {
   const [movieQuery, setMovieQuery] = useState("");
@@ -37,6 +28,17 @@ const Popup: React.FC = () => {
       checkDubbingAvailability(selectedMovie.imdbID, selectedLanguage);
     }
   }, [selectedMovie, selectedLanguage]);
+
+  useEffect(() => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0].id) {
+        chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id!, allFrames: true },
+          files: ["content.js"],
+        });
+      }
+    });
+  }, []);
 
   const searchMovies = async (text: string) => {
     try {
@@ -68,7 +70,6 @@ const Popup: React.FC = () => {
         }
       );
       const data = await response.json();
-      console.log(data.data);
       setLanguages(data.data || []);
     } catch (error) {
       console.error("Error searching movies:", error);
@@ -130,7 +131,7 @@ const Popup: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 w-[300px] h-[400px] bg-white rounded shadow-md">
       <input
         type="text"
         value={movieQuery}

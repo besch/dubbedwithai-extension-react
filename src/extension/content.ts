@@ -1,3 +1,4 @@
+// @ts-ignore
 (() => {
   let subtitlesData: Array<{
     start: string;
@@ -251,5 +252,3 @@
     }
   }
 })();
-
-export {};

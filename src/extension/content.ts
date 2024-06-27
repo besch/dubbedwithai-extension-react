@@ -1,5 +1,3 @@
-// @ts-ignore
-
 interface Subtitle {
   start: string;
   end: string;
@@ -291,5 +289,4 @@ class DubbingManager {
   }
 }
 
-// Initialize the DubbingManager
 const dubbingManager = new DubbingManager();

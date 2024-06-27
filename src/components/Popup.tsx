@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Movie, Subtitle } from "./types";
+import { Movie, Subtitle } from "../types";
 
 const Popup: React.FC = () => {
   const [movieQuery, setMovieQuery] = useState("");
@@ -130,6 +130,12 @@ const Popup: React.FC = () => {
     });
   };
 
+  const handleSelectMovie = (movie: Movie) => {
+    setSelectedMovie(movie);
+    setMovies([]); // Clear the movies list
+    setMovieQuery(""); // Clear the search query
+  };
+
   return (
     <div className="p-4 w-[300px] h-[400px] bg-white rounded shadow-md">
       <input
@@ -144,7 +150,7 @@ const Popup: React.FC = () => {
           {movies.map((movie) => (
             <li
               key={movie.imdbID}
-              onClick={() => setSelectedMovie(movie)}
+              onClick={() => handleSelectMovie(movie)}
               className="cursor-pointer hover:bg-gray-100 p-1"
             >
               {movie.Title} ({movie.Year})

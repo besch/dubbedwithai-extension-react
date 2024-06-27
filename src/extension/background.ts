@@ -58,9 +58,13 @@ async function fetchAudioFile(
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "requestSubtitles") {
     fetchSubtitles(message.movieId, message.language).then((subtitles) => {
+      // console.log("subtitles", subtitles);
       if (subtitles) {
         const subtitlesData = srtToObject(subtitles);
-        sendResponse({ action: "subtitlesData", data: subtitlesData });
+        sendResponse({
+          action: "subtitlesData",
+          data: subtitlesData,
+        });
       } else {
         sendResponse({ action: "subtitlesData", data: null });
       }

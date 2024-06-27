@@ -53,7 +53,6 @@ const Popup: React.FC = () => {
         body: JSON.stringify({ text }),
       });
       const data = await response.json();
-      console.log(data);
       setMovies(data.Search || []);
     } catch (error) {
       console.error("Error searching movies:", error);
@@ -161,7 +160,7 @@ const Popup: React.FC = () => {
                   <img
                     src={movie.Poster}
                     alt={`${movie.Title} poster`}
-                    className="w-48 h-auto object-cover rounded-md shadow-sm"
+                    className="w-24 h-auto object-cover rounded-md shadow-sm"
                   />
                 )}
                 <div className="flex flex-col justify-center">

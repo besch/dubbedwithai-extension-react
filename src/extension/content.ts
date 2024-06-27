@@ -66,7 +66,6 @@
 
     video.addEventListener("timeupdate", () => {
       const currentTime = video.currentTime;
-
       if (subtitlesData) {
         const currentSubtitles = subtitlesData.filter((subtitle) => {
           const startTime = timeStringToSeconds(subtitle.start);

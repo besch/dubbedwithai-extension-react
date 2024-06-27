@@ -8,41 +8,40 @@ export interface SrtObject {
 
 export function srtToObject(srtData: string): SrtObject[] {
   const a: SrtObject[] = [];
-  const normalizedSrtData = srtData.replace(/\r\n/g, "\n");
+  // Remove any surrounding quotes and unescape the string
+  const unescapedSrtData = JSON.parse(
+    '"' + srtData.replace(/^"|"$/g, "") + '"'
+  );
+  const normalizedSrtData = unescapedSrtData.replace(/\r\n|\r|\n/g, "\n");
   const lines = normalizedSrtData.split("\n");
   const len = lines.length;
-
-  let o: SrtObject = {
-    text: "",
-  };
+  let o: SrtObject = { text: "" };
 
   for (let i = 0; i < len; i++) {
     const line = lines[i].trim();
-    let times: string[];
-    let lineBreak = "\n";
+    let times;
 
-    if (!isNaN(parseInt(line, 10)) && (i === 0 || lines[i - 1] === "")) {
-      // we found an index
+    if (/^\d+$/.test(line) && (i === 0 || lines[i - 1] === "")) {
+      if (o.index) {
+        a.push(o);
+        o = { text: "" };
+      }
       o.index = line;
     } else if (line.indexOf(" --> ") > -1) {
-      // we found a timestamp
       o.timestamp = line;
       times = line.split(" --> ");
       o.start = times[0];
       o.end = times[1];
-    } else if (line === "") {
-      // we found an empty string, so push o and reset everything
-      a.push(o);
-      o = { text: "" };
-    } else {
-      // we must have text to enter since it's not an index, timestamp or empty string.
-      // don't add `\n` to the end of the last line of text
-      if (lines[i + 1] === "") {
-        lineBreak = "";
-      }
-      o.text += line + lineBreak;
+    } else if (line !== "") {
+      o.text += (o.text ? "\n" : "") + line;
     }
   }
+
+  // Push the last subtitle object if it's complete
+  if (o.index) {
+    a.push(o);
+  }
+
   return a;
 }
 

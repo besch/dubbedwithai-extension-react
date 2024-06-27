@@ -29,7 +29,14 @@ async function fetchAudioFile(
 ): Promise<ArrayBuffer | null> {
   try {
     const response = await fetch(
-      `https://storage.googleapis.com/dubbed_with_ai/${movieId}/languages/${language}/audio/${fileName}`
+      `http://localhost:3000/api/googlestorage/fetch-audio-file`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ movieId, language, fileName }),
+      }
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

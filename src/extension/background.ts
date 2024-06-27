@@ -10,7 +10,14 @@ async function fetchSubtitles(
 ): Promise<string | null> {
   try {
     const response = await fetch(
-      `https://storage.googleapis.com/dubbed_with_ai/${movieId}/languages/${language}/subtitles.srt`
+      `http://localhost:3000/api/google-storage/fetch-subtitles`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ movieId, language }),
+      }
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -29,7 +36,7 @@ async function fetchAudioFile(
 ): Promise<ArrayBuffer | null> {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/googlestorage/fetch-audio-file`,
+      `http://localhost:3000/api/google-storage/fetch-audio-file`,
       {
         method: "POST",
         headers: {
@@ -60,6 +67,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   } else if (message.action === "requestAudioFile") {
+    console.log("requestAudioFile", message);
     fetchAudioFile(message.movieId, message.language, message.fileName).then(
       (audioData) => {
         if (audioData) {

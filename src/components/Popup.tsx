@@ -6,7 +6,7 @@ const Popup: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [languages, setLanguages] = useState<any[]>([]);
-  const [selectedLanguage, setSelectedLanguage] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState<any | null>(null);
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [dubbingAvailable, setDubbingAvailable] = useState(false);
 
@@ -24,8 +24,11 @@ const Popup: React.FC = () => {
 
   useEffect(() => {
     if (selectedMovie && selectedLanguage) {
-      fetchSubtitles(selectedMovie.imdbID, selectedLanguage);
-      checkDubbingAvailability(selectedMovie.imdbID, selectedLanguage);
+      // fetchSubtitles(selectedLanguage.attributes.files[0].file_id);
+      checkDubbingAvailability(
+        selectedMovie.imdbID,
+        selectedLanguage.attributes.language
+      );
     }
   }, [selectedMovie, selectedLanguage]);
 
@@ -72,30 +75,30 @@ const Popup: React.FC = () => {
       const data = await response.json();
       setLanguages(data.data || []);
     } catch (error) {
-      console.error("Error searching movies:", error);
+      console.error("Error getting subtitle languages:", error);
     }
   };
 
-  const fetchSubtitles = async (imdbID: string, language: string) => {
-    try {
-      const response = await fetch(
-        `http://localhost:3000/api/opensubtitles/fetch-subtitles`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ imdbID, language }),
-        }
-      );
-      const data = await response.json();
-      console.log(data.data);
-      setSubtitles(data);
-      chrome.storage.local.set({ subtitlesData: data });
-    } catch (error) {
-      console.error("Error fetching subtitles:", error);
-    }
-  };
+  // const fetchSubtitles = async (fileId: string) => {
+  //   try {
+  //     const response = await fetch(
+  //       `http://localhost:3000/api/opensubtitles/fetch-subtitles`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({ fileId }),
+  //       }
+  //     );
+  //     const data = await response.json();
+  //     console.log(data.data);
+  //     setSubtitles(data);
+  //     chrome.storage.local.set({ subtitlesData: data });
+  //   } catch (error) {
+  //     console.error("Error fetching subtitles:", error);
+  //   }
+  // };
 
   const checkDubbingAvailability = async (imdbID: string, language: string) => {
     try {
@@ -125,7 +128,7 @@ const Popup: React.FC = () => {
       chrome.tabs.sendMessage(tabs[0].id!, {
         action: "applyDubbing",
         movieId: selectedMovie!.imdbID,
-        language: selectedLanguage,
+        language: selectedLanguage.attributes.language,
       });
     });
   };
@@ -183,8 +186,13 @@ const Popup: React.FC = () => {
             />
           )}
           <select
-            value={selectedLanguage}
-            onChange={(e) => setSelectedLanguage(e.target.value)}
+            value={selectedLanguage ? selectedLanguage.attributes.language : ""}
+            onChange={(e) => {
+              const selectedLang = languages.find(
+                (lang) => lang.attributes.language === e.target.value
+              );
+              setSelectedLanguage(selectedLang);
+            }}
             className="mt-2 w-full p-2 border rounded"
           >
             <option value="">Select a language</option>

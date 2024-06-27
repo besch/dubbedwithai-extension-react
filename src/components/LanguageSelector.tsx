@@ -1,4 +1,4 @@
-import React from "react";
+import languageCodes from "@/lib/languageCodes";
 
 interface Language {
   id: string;
@@ -33,8 +33,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     <option value="">Select a language</option>
     {languages.map((lang) => (
       <option key={lang.id} value={lang.attributes.language}>
-        {lang.attributes.language} --- Rating: {lang.attributes.ratings},
-        Downloads: {lang.attributes.download_count}
+        {languageCodes[lang.attributes.language] || lang.attributes.language}{" "}
+        --- Rating: {lang.attributes.ratings}, Downloads:{" "}
+        {lang.attributes.download_count}
       </option>
     ))}
   </select>

@@ -1,3 +1,5 @@
+import React, { useState } from "react";
+import { Star, Download, ChevronDown } from "lucide-react";
 import languageCodes from "@/lib/languageCodes";
 
 interface Language {
@@ -19,26 +21,54 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   languages,
   selectedLanguage,
   onSelectLanguage,
-}) => (
-  <select
-    value={selectedLanguage ? selectedLanguage.attributes.language : ""}
-    onChange={(e) => {
-      const selectedLang = languages.find(
-        (lang) => lang.attributes.language === e.target.value
-      );
-      if (selectedLang) onSelectLanguage(selectedLang);
-    }}
-    className="mt-2 w-full p-2 border rounded"
-  >
-    <option value="">Select a language</option>
-    {languages.map((lang) => (
-      <option key={lang.id} value={lang.attributes.language}>
-        {languageCodes[lang.attributes.language] || lang.attributes.language}{" "}
-        --- Rating: {lang.attributes.ratings}, Downloads:{" "}
-        {lang.attributes.download_count}
-      </option>
-    ))}
-  </select>
-);
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative mt-2">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full p-2 border rounded bg-white flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <span>
+          {selectedLanguage
+            ? languageCodes[selectedLanguage.attributes.language] ||
+              selectedLanguage.attributes.language
+            : "Select a language"}
+        </span>
+        <ChevronDown className="w-4 h-4" />
+      </button>
+      {isOpen && (
+        <ul className="absolute z-10 w-[250px] mt-1 bg-white border rounded shadow-lg max-h-60 overflow-auto">
+          {languages.map((lang) => (
+            <li
+              key={lang.id}
+              onClick={() => {
+                onSelectLanguage(lang);
+                setIsOpen(false);
+              }}
+              className="p-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
+            >
+              <span>
+                {languageCodes[lang.attributes.language] ||
+                  lang.attributes.language}
+              </span>
+              <div className="flex items-center space-x-2 text-sm">
+                <span className="flex items-center">
+                  <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                  {lang.attributes.ratings.toFixed(1)}
+                </span>
+                <span className="flex items-center">
+                  <Download className="w-4 h-4 text-blue-500 mr-1" />
+                  {lang.attributes.download_count.toLocaleString()}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 export default LanguageSelector;

@@ -6,17 +6,17 @@ chrome.runtime.onInstalled.addListener(() => {
 
 async function fetchSubtitles(
   movieId: string,
-  language: string
+  subtitleId: string
 ): Promise<string | null> {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/google-storage/fetch-subtitles`,
+      `http://localhost:3000/api/opensubtitles/fetch-subtitles`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ movieId, language }),
+        body: JSON.stringify({ movieId, subtitleId }),
       }
     );
     if (!response.ok) {

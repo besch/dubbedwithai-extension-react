@@ -14,11 +14,20 @@ function timeStringToSeconds(timeString: string): number {
 }
 
 function getAudioFileName(subtitle: { start: string; end: string }): string {
-  return `${subtitle.start
-    .replace(/,/g, ".")
-    .replace(/:/g, "_")}__${subtitle.end
-    .replace(/,/g, ".")
-    .replace(/:/g, "_")}.mp3`;
+  const startMs = timeStringToMilliseconds(subtitle.start);
+  const endMs = timeStringToMilliseconds(subtitle.end);
+  return `${startMs}-${endMs}.mp3`;
+}
+
+function timeStringToMilliseconds(timeString: string): number {
+  const [hours, minutes, seconds] = timeString.split(":");
+  const [secs, ms] = seconds.split(",");
+  return (
+    parseInt(hours) * 3600000 +
+    parseInt(minutes) * 60000 +
+    parseInt(secs) * 1000 +
+    parseInt(ms)
+  );
 }
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {

@@ -8,6 +8,8 @@ const Popup: React.FC = () => {
   const [languages, setLanguages] = useState<any[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState<any | null>(null);
   const [dubbingAvailable, setDubbingAvailable] = useState(false);
+  const [dubbingPath, setDubbingPath] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     if (selectedMovie) {
@@ -52,24 +54,70 @@ const Popup: React.FC = () => {
     }
   };
 
-  const checkDubbingAvailability = async (imdbID: string, language: string) => {
+  const checkDubbingAvailability = async (
+    imdbID: string,
+    subtitleId: string
+  ) => {
     try {
       const response = await fetch(
         `http://localhost:3000/api/google-storage/check-dubbing-availability`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imdbID, language }),
+          body: JSON.stringify({ imdbID, subtitleId }),
         }
       );
+      const data = await response.json();
       setDubbingAvailable(response.status === 200);
+      setDubbingPath(data.dubbingPath || null);
     } catch (error) {
       setDubbingAvailable(false);
+      setDubbingPath(null);
     }
   };
 
-  const handleGenerateDubbing = () => {
-    console.log("Generating dubbing...");
+  const handleGenerateDubbing = async () => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch("http://localhost:3000/api/generate-dub", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imdbID: selectedMovie!.imdbID,
+          subtitleID: selectedLanguage.attributes.subtitle_id,
+          fileId: selectedLanguage.attributes.files[0].file_id,
+        }),
+      });
+
+      if (response.ok) {
+        // Simulating a delay (you can remove this in production)
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+        chrome.notifications.create({
+          type: "basic",
+          iconUrl: "icon.png",
+          title: "Dubbing Ready",
+          message: "The dubbing for your selected movie is now ready!",
+        });
+
+        await checkDubbingAvailability(
+          selectedMovie!.imdbID,
+          selectedLanguage.attributes.subtitle_id
+        );
+      } else {
+        throw new Error("Failed to generate dubbing");
+      }
+    } catch (error) {
+      console.error("Error generating dubbing:", error);
+      chrome.notifications.create({
+        type: "basic",
+        iconUrl: "icon.png",
+        title: "Dubbing Generation Failed",
+        message: "There was an error generating the dubbing. Please try again.",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleApplyDubbing = () => {
@@ -80,10 +128,9 @@ const Popup: React.FC = () => {
           {
             action: "applyDubbing",
             movieId: selectedMovie!.imdbID,
-            language: selectedLanguage.attributes.language,
+            subtitleId: selectedLanguage.attributes.subtitle_id,
           },
           () => {
-            // Close the popup after sending the message
             window.close();
           }
         );
@@ -120,20 +167,26 @@ const Popup: React.FC = () => {
           />
         </div>
       )}
-      {selectedMovie && selectedLanguage && (
-        <button
-          onClick={handleApplyDubbing}
-          className="mt-4 bg-blue-500 text-white p-2 rounded w-full"
-        >
-          Apply Dubbing
-        </button>
+      {selectedMovie && selectedLanguage && dubbingAvailable && (
+        <div className="mt-4">
+          <p className="text-sm mb-2">Dubbing path: {dubbingPath}</p>
+          <button
+            onClick={handleApplyDubbing}
+            className="bg-blue-500 text-white p-2 rounded w-full"
+          >
+            Apply Existing Dubbing
+          </button>
+        </div>
       )}
       {selectedMovie && selectedLanguage && !dubbingAvailable && (
         <button
           onClick={handleGenerateDubbing}
-          className="mt-4 bg-green-500 text-white p-2 rounded w-full"
+          disabled={isGenerating}
+          className={`mt-4 ${
+            isGenerating ? "bg-gray-500" : "bg-green-500"
+          } text-white p-2 rounded w-full`}
         >
-          Generate Dubbing
+          {isGenerating ? "Generating Dubbing..." : "Generate Dubbing"}
         </button>
       )}
     </div>

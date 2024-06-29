@@ -10,7 +10,7 @@ async function fetchSubtitles(
 ): Promise<string | null> {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/opensubtitles/fetch-subtitles`,
+      `${process.env.REACT_APP_BASE_API_URL}/api/opensubtitles/fetch-subtitles`,
       {
         method: "POST",
         headers: {
@@ -36,7 +36,7 @@ async function fetchAudioFile(
 ): Promise<ArrayBuffer | null> {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/google-storage/fetch-audio-file`,
+      `${process.env.REACT_APP_BASE_API_URL}/api/google-storage/fetch-audio-file`,
       {
         method: "POST",
         headers: {

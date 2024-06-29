@@ -24,11 +24,14 @@ const MovieSearch: React.FC<MovieSearchProps> = ({
 
   const searchMovies = async (text: string) => {
     try {
-      const response = await fetch("http://localhost:3000/api/search-movies", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_API_URL}/api/search-movies`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        }
+      );
       const data = await response.json();
       setMovies(data.Search || []);
     } catch (error) {

@@ -40,7 +40,7 @@ const Popup: React.FC = () => {
   const getSubtitleLanguages = async (imdbID: string) => {
     try {
       const response = await fetch(
-        "http://localhost:3000/api/opensubtitles/get-subtitle-languages",
+        `${process.env.REACT_APP_BASE_API_URL}/api/opensubtitles/get-subtitle-languages`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -60,7 +60,7 @@ const Popup: React.FC = () => {
   ) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/google-storage/check-dubbing-availability`,
+        `${process.env.REACT_APP_BASE_API_URL}/api/google-storage/check-dubbing-availability`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -79,15 +79,18 @@ const Popup: React.FC = () => {
   const handleGenerateDubbing = async () => {
     setIsGenerating(true);
     try {
-      const response = await fetch("http://localhost:3000/api/generate-dub", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imdbID: selectedMovie!.imdbID,
-          subtitleID: selectedLanguage.attributes.subtitle_id,
-          fileId: selectedLanguage.attributes.files[0].file_id,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_API_URL}/api/generate-dub`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imdbID: selectedMovie!.imdbID,
+            subtitleID: selectedLanguage.attributes.subtitle_id,
+            fileId: selectedLanguage.attributes.files[0].file_id,
+          }),
+        }
+      );
 
       if (response.ok) {
         // Simulating a delay (you can remove this in production)

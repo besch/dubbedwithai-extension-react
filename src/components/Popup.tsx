@@ -10,6 +10,7 @@ const Popup: React.FC = () => {
   const [dubbingAvailable, setDubbingAvailable] = useState(false);
   const [dubbingPath, setDubbingPath] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isDubbingActive, setIsDubbingActive] = useState(false);
 
   useEffect(() => {
     if (selectedMovie) {
@@ -134,9 +135,19 @@ const Popup: React.FC = () => {
             subtitleId: selectedLanguage.attributes.subtitle_id,
           },
           () => {
-            window.close();
+            setIsDubbingActive(true);
           }
         );
+      }
+    });
+  };
+
+  const handleStopDubbing = () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0].id) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "stopDubbing" }, () => {
+          setIsDubbingActive(false);
+        });
       }
     });
   };
@@ -173,12 +184,21 @@ const Popup: React.FC = () => {
       {selectedMovie && selectedLanguage && dubbingAvailable && (
         <div className="mt-4">
           <p className="text-sm mb-2">Dubbing path: {dubbingPath}</p>
-          <button
-            onClick={handleApplyDubbing}
-            className="bg-blue-500 text-white p-2 rounded w-full"
-          >
-            Apply Existing Dubbing
-          </button>
+          {isDubbingActive ? (
+            <button
+              onClick={handleStopDubbing}
+              className="bg-red-500 text-white p-2 rounded w-full"
+            >
+              Stop Dubbing
+            </button>
+          ) : (
+            <button
+              onClick={handleApplyDubbing}
+              className="bg-blue-500 text-white p-2 rounded w-full"
+            >
+              Apply Existing Dubbing
+            </button>
+          )}
         </div>
       )}
       {selectedMovie && selectedLanguage && !dubbingAvailable && (

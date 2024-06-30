@@ -67,6 +67,8 @@ class DubbingManager {
       ) => {
         if (message.action === "applyDubbing") {
           this.handleApplyDubbing(message.movieId, message.language);
+        } else if (message.action === "stopDubbing") {
+          this.stopDubbing();
         }
       }
     );
@@ -88,6 +90,21 @@ class DubbingManager {
         }
       }
     );
+  }
+
+  public stopDubbing(): void {
+    this.subtitlesData = null;
+    this.activeAudio.forEach((audioInfo, fileName) => {
+      this.stopAudio(fileName);
+    });
+    this.activeAudio.clear();
+    this.preloadedAudio.clear();
+
+    // Restore original volume
+    const video = document.querySelector("video");
+    if (video) {
+      video.volume = this.originalVolume;
+    }
   }
 
   private handleVideo(video: HTMLVideoElement): void {

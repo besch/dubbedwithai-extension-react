@@ -1,13 +1,15 @@
 import React from "react";
-import ReactDOM from "react-dom/client";
-import "./index.css";
+import ReactDOM from "react-dom";
+import { Provider } from "react-redux";
+import { store } from "./store";
 import Popup from "@/components/Popup";
+import "./index.css";
 
-const root = ReactDOM.createRoot(
-  document.getElementById("root") as HTMLElement
-);
-root.render(
+ReactDOM.render(
   <React.StrictMode>
-    <Popup />
-  </React.StrictMode>
+    <Provider store={store}>
+      <Popup />
+    </Provider>
+  </React.StrictMode>,
+  document.getElementById("root")
 );

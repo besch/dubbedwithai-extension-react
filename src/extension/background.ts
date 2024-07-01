@@ -53,6 +53,14 @@ async function fetchAudioFile(
   }
 }
 
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.storage.local.get("movieState", (result) => {
+    if (!result.movieState) {
+      chrome.storage.local.set({ movieState: {} });
+    }
+  });
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "requestSubtitles") {
     console.log("requestSubtitles", message);

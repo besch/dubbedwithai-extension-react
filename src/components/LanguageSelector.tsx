@@ -1,31 +1,29 @@
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { setSelectedLanguage } from "@/store/movieSlice";
 import { Star, Download, ChevronDown } from "lucide-react";
 import languageCodes from "@/lib/languageCodes";
+import { Language } from "@/types";
 
-interface Language {
-  id: string;
-  attributes: {
-    language: string;
-    ratings: number;
-    download_count: number;
-  };
-}
-
-interface LanguageSelectorProps {
-  languages: Language[];
-  selectedLanguage: Language | null;
-  onSelectLanguage: (language: Language) => void;
-}
-
-const LanguageSelector: React.FC<LanguageSelectorProps> = ({
-  languages,
-  selectedLanguage,
-  onSelectLanguage,
-}) => {
+const LanguageSelector: React.FC = () => {
+  const dispatch = useDispatch();
+  const { selectedLanguage, languages } = useSelector(
+    (state: RootState) => state.movie
+  );
   const [isOpen, setIsOpen] = useState(false);
 
+  const handleSelectLanguage = (language: Language) => {
+    dispatch(setSelectedLanguage(language));
+    setIsOpen(false);
+  };
+
+  if (languages.length === 0) {
+    return null;
+  }
+
   return (
-    <div className="relative mt-2">
+    <div className="relative mt-4">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full p-2 border rounded bg-white flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -39,14 +37,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <ChevronDown className="w-4 h-4" />
       </button>
       {isOpen && (
-        <ul className="absolute z-10 w-[250px] mt-1 bg-white border rounded shadow-lg max-h-60 overflow-auto">
-          {languages.map((lang) => (
+        <ul className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-auto">
+          {languages.map((lang: Language) => (
             <li
               key={lang.id}
-              onClick={() => {
-                onSelectLanguage(lang);
-                setIsOpen(false);
-              }}
+              onClick={() => handleSelectLanguage(lang)}
               className="p-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
             >
               <span>

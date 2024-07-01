@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { Movie } from "@/types";
@@ -15,31 +15,49 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
   );
   const [movieQuery, setMovieQuery] = useState("");
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (movieQuery.length > 2 && !selectedMovie) {
-      searchMovies(movieQuery);
-    } else {
-      setMovies([]);
-    }
-  }, [movieQuery, selectedMovie]);
-
-  const searchMovies = async (text: string) => {
+  const searchMovies = useCallback(async (text: string) => {
+    console.log("Searching movies for:", text);
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BASE_API_URL}/api/search-movies`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        }
-      );
+      const apiUrl = `${process.env.REACT_APP_BASE_API_URL}/api/search-movies`;
+      console.log("API URL:", apiUrl);
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      console.log("Response status:", response.status);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
+      console.log("Received data:", data);
       setMovies(data.Search || []);
     } catch (error) {
       console.error("Error searching movies:", error);
+      setError("Failed to search movies. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    console.log("MovieQuery changed:", movieQuery);
+    if (movieQuery.length > 2) {
+      // Removed the !selectedMovie condition
+      console.log("Searching for movies...");
+      const debounceTimer = setTimeout(() => {
+        searchMovies(movieQuery);
+      }, 300);
+      return () => clearTimeout(debounceTimer);
+    } else {
+      setMovies([]);
+    }
+  }, [movieQuery, searchMovies]);
 
   const handleSelectMovie = (movie: Movie) => {
     onSelectMovie(movie);
@@ -59,7 +77,9 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
         />
         <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
       </div>
-      {!selectedMovie && movies.length > 0 && (
+      {isLoading && <p>Loading...</p>}
+      {error && <p className="text-red-500">{error}</p>}
+      {movies.length > 0 && ( // Removed the !selectedMovie condition
         <ul className="mt-2 max-h-60 overflow-y-auto">
           {movies.map((movie) => (
             <MovieItem

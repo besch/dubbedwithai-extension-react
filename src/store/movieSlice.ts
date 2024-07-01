@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Language, Movie, Subtitle } from "@/types";
+import { Language, Movie } from "@/types";
 
 interface MovieState {
   selectedMovie: Movie | null;

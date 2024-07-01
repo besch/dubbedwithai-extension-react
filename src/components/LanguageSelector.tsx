@@ -1,20 +1,24 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "@/store";
-import { setSelectedLanguage } from "@/store/movieSlice";
-import { Star, Download, ChevronDown } from "lucide-react";
+import { ChevronDown, Star, Download } from "lucide-react";
 import languageCodes from "@/lib/languageCodes";
 import { Language } from "@/types";
 
-const LanguageSelector: React.FC = () => {
-  const dispatch = useDispatch();
+interface LanguageSelectorProps {
+  onSelectLanguage: (language: Language) => void;
+}
+
+const LanguageSelector: React.FC<LanguageSelectorProps> = ({
+  onSelectLanguage,
+}) => {
   const { selectedLanguage, languages } = useSelector(
     (state: RootState) => state.movie
   );
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSelectLanguage = (language: Language) => {
-    dispatch(setSelectedLanguage(language));
+    onSelectLanguage(language);
     setIsOpen(false);
   };
 

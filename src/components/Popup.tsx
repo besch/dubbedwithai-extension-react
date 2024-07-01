@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { loadState, saveState } from "@/lib/storage";
@@ -10,40 +10,44 @@ import {
   setSelectedLanguage,
   setLanguages,
 } from "@/store/movieSlice";
-import { Movie } from "@/types";
+import { Movie, Language } from "@/types";
 
 const Popup: React.FC = () => {
   const dispatch = useDispatch();
   const { selectedMovie, selectedLanguage, languages } = useSelector(
     (state: RootState) => state.movie
   );
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadState().then((savedState) => {
+      console.log("Loaded state:", savedState);
       if (savedState && savedState.movie) {
         dispatch(setSelectedMovie(savedState.movie.selectedMovie));
         dispatch(setSelectedLanguage(savedState.movie.selectedLanguage));
         dispatch(setLanguages(savedState.movie.languages));
       }
+      setIsLoading(false);
     });
   }, [dispatch]);
 
   useEffect(() => {
-    const saveStateToStorage = () => {
+    if (!isLoading) {
       saveState({
         movie: { selectedMovie, selectedLanguage, languages },
       } as RootState);
-    };
-
-    // Save state when component unmounts
-    return saveStateToStorage;
-  }, [selectedMovie, selectedLanguage, languages]);
+    }
+  }, [selectedMovie, selectedLanguage, languages, isLoading]);
 
   const handleMovieSelect = (movie: Movie) => {
     dispatch(setSelectedMovie(movie));
     dispatch(setSelectedLanguage(null));
     dispatch(setLanguages([]));
     getSubtitleLanguages(movie.imdbID);
+  };
+
+  const handleLanguageSelect = (language: Language) => {
+    dispatch(setSelectedLanguage(language));
   };
 
   const getSubtitleLanguages = async (imdbID: string) => {
@@ -63,6 +67,10 @@ const Popup: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="p-4 w-[300px] h-[400px] bg-white rounded shadow-md">
       <MovieSearch onSelectMovie={handleMovieSelect} />
@@ -77,7 +85,7 @@ const Popup: React.FC = () => {
               className="w-24 h-36 object-cover mt-2"
             />
           )}
-          <LanguageSelector />
+          <LanguageSelector onSelectLanguage={handleLanguageSelect} />
           <DubbingControls />
         </div>
       )}

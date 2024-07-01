@@ -14,7 +14,6 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "@types/chrome": "^0.0.268",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.101",
     "@types/react": "^18.3.3",
@@ -42,9 +41,10 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "build-extension": "craco build && npm run compile-ts && npm run update-manifest",
+    "build-extension": "craco build && npm run compile-ts && npm run update-manifest && npm run replace-env-vars",
     "compile-ts": "tsc -p tsconfig.extension.json",
     "update-manifest": "node scripts/update-manifest.js",
+    "replace-env-vars": "node build-extension.mjs",
     "test": "craco test",
     "eject": "craco eject"
   },
@@ -67,6 +67,10 @@
     ]
   },
   "devDependencies": {
-    "@types/lodash": "^4.17.5"
+    "@types/chrome": "^0.0.268",
+    "@types/lodash": "^4.17.5",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "replace-in-file": "^8.0.1"
   }
 }

@@ -22,7 +22,7 @@ const Popup: React.FC = () => {
     if (selectedMovie && selectedLanguage) {
       checkDubbingAvailability(
         selectedMovie.imdbID,
-        selectedLanguage.attributes.language
+        selectedLanguage.attributes.subtitle_id
       );
     }
   }, [selectedMovie, selectedLanguage]);
@@ -61,15 +61,17 @@ const Popup: React.FC = () => {
   ) => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASE_API_URL}/api/google-storage/check-dubbing-availability`,
+        `${process.env.REACT_APP_BASE_API_URL}/api/google-storage/check-file-exists`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imdbID, subtitleId }),
+          body: JSON.stringify({
+            fileName: `${imdbID}/${subtitleId}/subtitles.srt`,
+          }),
         }
       );
       const data = await response.json();
-      setDubbingAvailable(response.status === 200);
+      setDubbingAvailable(data.exists);
       setDubbingPath(data.dubbingPath || null);
     } catch (error) {
       setDubbingAvailable(false);
@@ -94,16 +96,6 @@ const Popup: React.FC = () => {
       );
 
       if (response.ok) {
-        // Simulating a delay (you can remove this in production)
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-
-        chrome.notifications.create({
-          type: "basic",
-          iconUrl: "icon.png",
-          title: "Dubbing Ready",
-          message: "The dubbing for your selected movie is now ready!",
-        });
-
         await checkDubbingAvailability(
           selectedMovie!.imdbID,
           selectedLanguage.attributes.subtitle_id

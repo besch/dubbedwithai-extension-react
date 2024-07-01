@@ -6,43 +6,34 @@ export interface SrtObject {
   text: string;
 }
 
-export function srtToObject(srtData: string): SrtObject[] {
-  const a: SrtObject[] = [];
-  // Remove any surrounding quotes and unescape the string
-  const unescapedSrtData = JSON.parse(
-    '"' + srtData.replace(/^"|"$/g, "") + '"'
-  );
-  const normalizedSrtData = unescapedSrtData.replace(/\r\n|\r|\n/g, "\n");
-  const lines = normalizedSrtData.split("\n");
-  const len = lines.length;
-  let o: SrtObject = { text: "" };
+export function parseSrt(srtContent: string): SrtObject[] {
+  const srtObjects: SrtObject[] = [];
+  const blocks = srtContent.trim().split(/\n\s*\n/);
 
-  for (let i = 0; i < len; i++) {
-    const line = lines[i].trim();
-    let times;
+  for (const block of blocks) {
+    const lines = block.split("\n");
+    if (lines.length < 3) continue;
 
-    if (/^\d+$/.test(line) && (i === 0 || lines[i - 1] === "")) {
-      if (o.index) {
-        a.push(o);
-        o = { text: "" };
-      }
-      o.index = line;
-    } else if (line.indexOf(" --> ") > -1) {
-      o.timestamp = line;
-      times = line.split(" --> ");
-      o.start = times[0];
-      o.end = times[1];
-    } else if (line !== "") {
-      o.text += (o.text ? "\n" : "") + line;
-    }
+    const [index, timestamp, ...textLines] = lines;
+    const [start, end] = timestamp.split(" --> ");
+
+    const text = textLines
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .replace(/(<[^>]+>) /g, "$1") // Remove space after HTML-like tags
+      .replace(/\s*(\{\\[^}]+\})\s*/g, "$1") // Handle SRT formatting tags
+      .trim();
+
+    srtObjects.push({
+      index,
+      timestamp,
+      start,
+      end,
+      text,
+    });
   }
 
-  // Push the last subtitle object if it's complete
-  if (o.index) {
-    a.push(o);
-  }
-
-  return a;
+  return srtObjects;
 }
 
 export function extractMovieTitle(html: string): string | null {

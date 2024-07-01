@@ -7,7 +7,11 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "strict": true
+    "strict": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "types": ["node", "chrome"],
+    "resolveJsonModule": true
   },
-  "include": ["src/extension/**/*.ts"]
+  "include": ["src/extension/**/*.ts"],
+  "exclude": ["node_modules"]
 }

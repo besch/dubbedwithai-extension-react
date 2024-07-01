@@ -1,8 +1,4 @@
-import { srtToObject } from "./utils.js";
-
-chrome.runtime.onInstalled.addListener(() => {
-  console.log("Extension installed");
-});
+import { parseSrt } from "./utils.js";
 
 async function fetchSubtitles(
   movieId: string,
@@ -10,7 +6,7 @@ async function fetchSubtitles(
 ): Promise<string | null> {
   try {
     const response = await fetch(
-      `${process.env.REACT_APP_BASE_API_URL}/api/opensubtitles/fetch-subtitles`,
+      `${process.env.REACT_APP_BASE_API_URL}/api/google-storage/fetch-subtitles`,
       {
         method: "POST",
         headers: {
@@ -22,7 +18,9 @@ async function fetchSubtitles(
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.text();
+
+    const text = await response.text();
+    return text;
   } catch (e) {
     console.error("There was a problem fetching the subtitles:", e);
     return null;
@@ -31,7 +29,7 @@ async function fetchSubtitles(
 
 async function fetchAudioFile(
   movieId: string,
-  language: string,
+  subtitleId: string,
   fileName: string
 ): Promise<ArrayBuffer | null> {
   try {
@@ -42,7 +40,7 @@ async function fetchAudioFile(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ movieId, language, fileName }),
+        body: JSON.stringify({ movieId, subtitleId, fileName }),
       }
     );
     if (!response.ok) {
@@ -57,10 +55,10 @@ async function fetchAudioFile(
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "requestSubtitles") {
-    fetchSubtitles(message.movieId, message.language).then((subtitles) => {
-      // console.log("subtitles", subtitles);
+    console.log("requestSubtitles", message);
+    fetchSubtitles(message.movieId, message.subtitleId).then((subtitles) => {
       if (subtitles) {
-        const subtitlesData = srtToObject(subtitles);
+        const subtitlesData = parseSrt(subtitles);
         sendResponse({
           action: "subtitlesData",
           data: subtitlesData,
@@ -72,7 +70,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   } else if (message.action === "requestAudioFile") {
     console.log("requestAudioFile", message);
-    fetchAudioFile(message.movieId, message.language, message.fileName).then(
+    fetchAudioFile(message.movieId, message.subtitleId, message.fileName).then(
       (audioData) => {
         if (audioData) {
           const base64Audio = btoa(

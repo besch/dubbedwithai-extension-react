@@ -51,7 +51,7 @@ class DubbingManager {
   > = new Map();
   private originalVolume = 1;
   private currentMovieId: string | null = null;
-  private currentLanguage: string | null = null;
+  private currentSubtitleId: string | null = null;
 
   constructor() {
     this.audioContext = new window.AudioContext();
@@ -66,7 +66,7 @@ class DubbingManager {
         sendResponse: (response?: any) => void
       ) => {
         if (message.action === "applyDubbing") {
-          this.handleApplyDubbing(message.movieId, message.language);
+          this.handleApplyDubbing(message.movieId, message.subtitleId);
         } else if (message.action === "stopDubbing") {
           this.stopDubbing();
         }
@@ -74,14 +74,14 @@ class DubbingManager {
     );
   }
 
-  private handleApplyDubbing(movieId: string, language: string): void {
+  private handleApplyDubbing(movieId: string, subtitleId: string): void {
     this.currentMovieId = movieId;
-    this.currentLanguage = language;
+    this.currentSubtitleId = subtitleId;
     chrome.runtime.sendMessage(
       {
         action: "requestSubtitles",
         movieId: this.currentMovieId,
-        language: this.currentLanguage,
+        subtitleId: this.currentSubtitleId,
       },
       (response: any) => {
         if (response && response.action === "subtitlesData") {
@@ -214,7 +214,7 @@ class DubbingManager {
       {
         action: "requestAudioFile",
         movieId: this.currentMovieId,
-        language: this.currentLanguage,
+        subtitleId: this.currentSubtitleId,
         fileName: fileName,
       },
       (response: any) => {
@@ -246,7 +246,7 @@ class DubbingManager {
       {
         action: "requestAudioFile",
         movieId: this.currentMovieId,
-        language: this.currentLanguage,
+        subtitleId: this.currentSubtitleId,
         fileName: fileName,
       },
       (response: any) => {

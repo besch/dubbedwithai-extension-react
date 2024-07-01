@@ -9,14 +9,14 @@ import {
   setSelectedMovie,
   setSelectedLanguage,
   setLanguages,
+  setIsDubbingActive,
 } from "@/store/movieSlice";
 import { Movie, Language } from "@/types";
 
 const Popup: React.FC = () => {
   const dispatch = useDispatch();
-  const { selectedMovie, selectedLanguage, languages } = useSelector(
-    (state: RootState) => state.movie
-  );
+  const { selectedMovie, selectedLanguage, languages, isDubbingActive } =
+    useSelector((state: RootState) => state.movie);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -26,6 +26,7 @@ const Popup: React.FC = () => {
         dispatch(setSelectedMovie(savedState.movie.selectedMovie));
         dispatch(setSelectedLanguage(savedState.movie.selectedLanguage));
         dispatch(setLanguages(savedState.movie.languages));
+        dispatch(setIsDubbingActive(savedState.movie.isDubbingActive));
       }
       setIsLoading(false);
     });
@@ -34,20 +35,25 @@ const Popup: React.FC = () => {
   useEffect(() => {
     if (!isLoading) {
       saveState({
-        movie: { selectedMovie, selectedLanguage, languages },
+        movie: { selectedMovie, selectedLanguage, languages, isDubbingActive },
       } as RootState);
     }
-  }, [selectedMovie, selectedLanguage, languages, isLoading]);
+  }, [selectedMovie, selectedLanguage, languages, isDubbingActive, isLoading]);
 
   const handleMovieSelect = (movie: Movie) => {
     dispatch(setSelectedMovie(movie));
     dispatch(setSelectedLanguage(null));
     dispatch(setLanguages([]));
+    dispatch(setIsDubbingActive(false));
     getSubtitleLanguages(movie.imdbID);
   };
 
   const handleLanguageSelect = (language: Language) => {
     dispatch(setSelectedLanguage(language));
+  };
+
+  const handleDubbingToggle = (isActive: boolean) => {
+    dispatch(setIsDubbingActive(isActive));
   };
 
   const getSubtitleLanguages = async (imdbID: string) => {
@@ -86,7 +92,10 @@ const Popup: React.FC = () => {
             />
           )}
           <LanguageSelector onSelectLanguage={handleLanguageSelect} />
-          <DubbingControls />
+          <DubbingControls
+            isDubbingActive={isDubbingActive}
+            onDubbingToggle={handleDubbingToggle}
+          />
         </div>
       )}
     </div>

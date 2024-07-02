@@ -9,7 +9,7 @@ interface MovieState {
   isDubbingActive: boolean;
   isLoading: boolean;
   error: string | null;
-  searchResults: Movie[]; // Add this line
+  searchResults: Movie[];
 }
 
 const initialState: MovieState = {
@@ -19,8 +19,16 @@ const initialState: MovieState = {
   isDubbingActive: false,
   isLoading: false,
   error: null,
-  searchResults: [], // Add this line
+  searchResults: [],
 };
+
+export const loadMovieState = createAsyncThunk("movie/loadState", async () => {
+  return new Promise<Partial<MovieState>>((resolve) => {
+    chrome.storage.local.get(["movieState"], (result) => {
+      resolve(result.movieState || {});
+    });
+  });
+});
 
 export const fetchLanguages = createAsyncThunk(
   "movie/fetchLanguages",
@@ -90,12 +98,15 @@ const movieSlice = createSlice({
       state.selectedMovie = action.payload;
       state.selectedLanguage = null;
       state.languages = [];
+      chrome.storage.local.set({ movieState: { ...state } });
     },
     setSelectedLanguage: (state, action: PayloadAction<Language | null>) => {
       state.selectedLanguage = action.payload;
+      chrome.storage.local.set({ movieState: { ...state } });
     },
     setIsDubbingActive: (state, action: PayloadAction<boolean>) => {
       state.isDubbingActive = action.payload;
+      chrome.storage.local.set({ movieState: { ...state } });
     },
     setSearchResults: (state, action: PayloadAction<Movie[]>) => {
       state.searchResults = action.payload;
@@ -103,6 +114,9 @@ const movieSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(loadMovieState.fulfilled, (state, action) => {
+        return { ...state, ...action.payload };
+      })
       .addCase(fetchLanguages.pending, (state) => {
         state.isLoading = true;
         state.error = null;

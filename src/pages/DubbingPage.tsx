@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "@/store";
 import DubbingControls from "@/components/DubbingControls";
+import CurrentSubtitle from "@/components/CurrentSubtitle";
 import { setIsDubbingActive } from "@/store/movieSlice";
 
 const DubbingPage: React.FC = () => {
@@ -42,6 +43,7 @@ const DubbingPage: React.FC = () => {
       >
         Back to Search
       </button>
+      <CurrentSubtitle />
     </div>
   );
 };

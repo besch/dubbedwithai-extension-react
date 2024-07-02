@@ -17,6 +17,7 @@ const DubbingControls: React.FC<DubbingControlsProps> = ({
 
   const handleToggleDubbing = () => {
     const newDubbingState = !isDubbingActive;
+    console.log("Toggling dubbing state to:", newDubbingState);
     onDubbingToggle(newDubbingState);
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

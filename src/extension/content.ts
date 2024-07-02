@@ -53,6 +53,8 @@ class DubbingManager {
   private currentMovieId: string | null = null;
   private currentSubtitleId: string | null = null;
   private isVideoPaused = false;
+  private lastSentSubtitle: Subtitle | null = null;
+  private lastSentTime: number = 0;
 
   constructor() {
     this.audioContext = new window.AudioContext();
@@ -168,6 +170,41 @@ class DubbingManager {
       }
       this.stopExpiredAudio(currentTime);
       this.preloadUpcomingSubtitles(currentTime);
+
+      // Send current subtitle info to the extension, but only if it's changed or enough time has passed
+      if (currentSubtitles.length > 0) {
+        const currentSubtitle = currentSubtitles[0];
+        const startTime = timeStringToSeconds(currentSubtitle.start);
+        const endTime = timeStringToSeconds(currentSubtitle.end);
+
+        // Only send a message if the subtitle has changed or 0.5 seconds have passed
+        if (
+          currentSubtitle !== this.lastSentSubtitle ||
+          currentTime - this.lastSentTime >= 0.5
+        ) {
+          const message = {
+            action: "currentSubtitle",
+            subtitle: {
+              text: currentSubtitle.text,
+              start: startTime,
+              end: endTime,
+              currentTime: currentTime,
+            },
+          };
+          console.log("Sending subtitle message:", message);
+          chrome.runtime.sendMessage(message);
+
+          this.lastSentSubtitle = currentSubtitle;
+          this.lastSentTime = currentTime;
+        }
+      } else if (this.lastSentSubtitle !== null) {
+        // If there's no current subtitle but we had one before, send a null message
+        chrome.runtime.sendMessage({
+          action: "currentSubtitle",
+          subtitle: null,
+        });
+        this.lastSentSubtitle = null;
+      }
     }
   }
 

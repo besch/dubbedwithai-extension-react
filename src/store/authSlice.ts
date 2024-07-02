@@ -10,6 +10,7 @@ interface AuthState {
   token: string | null;
   loading: boolean;
   error: string | null;
+  authChecked: boolean;
 }
 
 const initialState: AuthState = {
@@ -17,6 +18,7 @@ const initialState: AuthState = {
   token: null,
   loading: false,
   error: null,
+  authChecked: false,
 };
 
 export const login = createAsyncThunk(
@@ -38,8 +40,19 @@ export const logout = createAsyncThunk("auth/logout", async () => {
 export const checkAuthStatus = createAsyncThunk(
   "auth/checkStatus",
   async () => {
-    const token = await getAuthToken();
-    return token;
+    return new Promise<string | null>((resolve) => {
+      chrome.storage.local.get(["authToken"], (result) => {
+        if (result.authToken) {
+          resolve(result.authToken);
+        } else {
+          chrome.runtime.sendMessage({ action: "checkAuthStatus" }, () => {
+            chrome.storage.local.get(["authToken"], (updatedResult) => {
+              resolve(updatedResult.authToken || null);
+            });
+          });
+        }
+      });
+    });
   }
 );
 
@@ -49,26 +62,39 @@ const authSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(login.pending, (state) => {
+      .addCase(checkAuthStatus.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(login.fulfilled, (state, action) => {
-        state.isAuthenticated = true;
+      .addCase(checkAuthStatus.fulfilled, (state, action) => {
+        state.isAuthenticated = !!action.payload;
         state.token = action.payload;
         state.loading = false;
+        state.authChecked = true;
+      })
+      .addCase(checkAuthStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || null;
+        state.authChecked = true;
+      })
+      .addCase(login.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
+      .addCase(login.fulfilled, (state, action) => {
+        state.isAuthenticated = true;
+        state.token = action.payload;
+        state.loading = false;
+        chrome.storage.local.set({ authToken: action.payload });
+      })
       .addCase(logout.fulfilled, (state) => {
         state.isAuthenticated = false;
         state.token = null;
-      })
-      .addCase(checkAuthStatus.fulfilled, (state, action) => {
-        state.isAuthenticated = !!action.payload;
-        state.token = action.payload;
+        chrome.storage.local.remove(["authToken"]);
       });
   },
 });

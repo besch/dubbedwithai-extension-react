@@ -66,12 +66,32 @@ async function fetchAudioFile(
   }
 }
 
+async function checkAndUpdateAuthStatus() {
+  try {
+    const token = await getAuthToken();
+    if (token) {
+      chrome.storage.local.set({ authToken: token });
+    } else {
+      chrome.storage.local.remove(["authToken"]);
+    }
+  } catch (error) {
+    console.error("Error checking auth status:", error);
+    chrome.storage.local.remove(["authToken"]);
+  }
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get("movieState", (result) => {
     if (!result.movieState) {
       chrome.storage.local.set({ movieState: {} });
     }
   });
+
+  checkAndUpdateAuthStatus();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  checkAndUpdateAuthStatus();
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -106,6 +126,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
       }
     );
+    return true;
+  } else if (message.action === "checkAuthStatus") {
+    // New message handler to check auth status
+    checkAndUpdateAuthStatus().then(() => {
+      sendResponse({ action: "authStatusChecked" });
+    });
     return true;
   }
 });

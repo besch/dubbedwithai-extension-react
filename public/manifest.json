@@ -3,7 +3,14 @@
   "name": "Movie Dubbing Extension",
   "version": "1.0",
   "description": "Search for movies and apply or generate dubbing",
-  "permissions": ["activeTab", "storage", "scripting", "notifications"],
+  "permissions": ["activeTab", "storage", "scripting", "identity"],
+  "oauth2": {
+    "client_id": "75200943505-tac3qkuke542o7pu7evmabpqj2e2paih.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
+  },
   "host_permissions": ["https://*/", "http://*/"],
   "action": {
     "default_popup": "index.html"

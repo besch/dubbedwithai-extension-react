@@ -17,12 +17,17 @@ export function initiateGoogleAuth(): Promise<string> {
 
 export function getAuthToken(): Promise<string | null> {
   return new Promise<string | null>((resolve) => {
-    chrome.storage.local.get(
-      ["authToken"],
-      (result: { authToken?: string }) => {
-        resolve(result.authToken || null);
+    chrome.identity.getAuthToken({ interactive: true }, (token) => {
+      if (chrome.runtime.lastError) {
+        console.error(chrome.runtime.lastError);
+        resolve(null);
+      } else if (token) {
+        resolve(token);
+      } else {
+        console.error("No token received");
+        resolve(null);
       }
-    );
+    });
   });
 }
 

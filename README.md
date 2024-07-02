@@ -6,3 +6,4 @@ npm run build-extension
 
 change .env file appropriate variables
 change client_id in manifest.json and chrome console Cliend ID -> Item ID
+change new chrome extension id in corsMiddleware.js(backend)

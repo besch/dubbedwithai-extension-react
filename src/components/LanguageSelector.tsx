@@ -1,20 +1,17 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
 import { ChevronDown, Star, Download } from "lucide-react";
 import languageCodes from "@/lib/languageCodes";
 import { Language } from "@/types";
 
 interface LanguageSelectorProps {
   onSelectLanguage: (language: Language) => void;
+  languages: Language[];
 }
 
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   onSelectLanguage,
+  languages,
 }) => {
-  const { selectedLanguage, languages } = useSelector(
-    (state: RootState) => state.movie
-  );
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSelectLanguage = (language: Language) => {
@@ -32,12 +29,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="w-full p-2 border rounded bg-white flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
-        <span>
-          {selectedLanguage
-            ? languageCodes[selectedLanguage.attributes.language] ||
-              selectedLanguage.attributes.language
-            : "Select a language"}
-        </span>
+        <span>Select a language</span>
         <ChevronDown className="w-4 h-4" />
       </button>
       {isOpen && (

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Language, Movie } from "@/types";
-import { getAuthToken } from "@/lib/auth";
+import { getAuthToken } from "@/extension/auth";
 
 interface MovieState {
   selectedMovie: Movie | null;
@@ -9,6 +9,7 @@ interface MovieState {
   isDubbingActive: boolean;
   isLoading: boolean;
   error: string | null;
+  searchResults: Movie[]; // Add this line
 }
 
 const initialState: MovieState = {
@@ -18,6 +19,7 @@ const initialState: MovieState = {
   isDubbingActive: false,
   isLoading: false,
   error: null,
+  searchResults: [], // Add this line
 };
 
 export const fetchLanguages = createAsyncThunk(
@@ -50,6 +52,36 @@ export const fetchLanguages = createAsyncThunk(
   }
 );
 
+export const searchMovies = createAsyncThunk(
+  "movie/searchMovies",
+  async (query: string, { rejectWithValue }) => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error("No auth token available");
+      }
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_API_URL}/api/search-movies`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ text: query }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to search movies");
+      }
+      const data = await response.json();
+      return data.Search as Movie[];
+    } catch (error) {
+      return rejectWithValue((error as Error).message);
+    }
+  }
+);
+
 const movieSlice = createSlice({
   name: "movie",
   initialState,
@@ -64,6 +96,9 @@ const movieSlice = createSlice({
     },
     setIsDubbingActive: (state, action: PayloadAction<boolean>) => {
       state.isDubbingActive = action.payload;
+    },
+    setSearchResults: (state, action: PayloadAction<Movie[]>) => {
+      state.searchResults = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -82,11 +117,30 @@ const movieSlice = createSlice({
       .addCase(fetchLanguages.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+      .addCase(searchMovies.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(
+        searchMovies.fulfilled,
+        (state, action: PayloadAction<Movie[]>) => {
+          state.isLoading = false;
+          state.searchResults = action.payload;
+        }
+      )
+      .addCase(searchMovies.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   },
 });
 
-export const { setSelectedMovie, setSelectedLanguage, setIsDubbingActive } =
-  movieSlice.actions;
+export const {
+  setSelectedMovie,
+  setSelectedLanguage,
+  setIsDubbingActive,
+  setSearchResults,
+} = movieSlice.actions;
 
 export default movieSlice.reducer;

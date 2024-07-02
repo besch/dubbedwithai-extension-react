@@ -1,16 +1,23 @@
 import { parseSrt } from "./utils.js";
+import { getAuthToken } from "./auth.js";
 
 async function fetchSubtitles(
   movieId: string,
   subtitleId: string
 ): Promise<string | null> {
   try {
+    const token = await getAuthToken();
+    if (!token) {
+      throw new Error("No auth token available");
+    }
+
     const response = await fetch(
       `${process.env.REACT_APP_BASE_API_URL}/api/google-storage/fetch-subtitles`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ movieId, subtitleId }),
       }
@@ -33,12 +40,18 @@ async function fetchAudioFile(
   fileName: string
 ): Promise<ArrayBuffer | null> {
   try {
+    const token = await getAuthToken();
+    if (!token) {
+      throw new Error("No auth token available");
+    }
+
     const response = await fetch(
       `${process.env.REACT_APP_BASE_API_URL}/api/google-storage/fetch-audio-file`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ movieId, subtitleId, fileName }),
       }

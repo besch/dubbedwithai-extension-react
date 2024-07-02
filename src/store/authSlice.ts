@@ -1,5 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { initiateGoogleAuth, getAuthToken, clearAuthToken } from "@/lib/auth";
+import {
+  initiateGoogleAuth,
+  getAuthToken,
+  clearAuthToken,
+} from "@/extension/auth";
 
 interface AuthState {
   isAuthenticated: boolean;

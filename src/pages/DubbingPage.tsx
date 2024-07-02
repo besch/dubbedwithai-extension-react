@@ -5,6 +5,7 @@ import { RootState } from "@/store";
 import DubbingControls from "@/components/DubbingControls";
 import CurrentSubtitle from "@/components/CurrentSubtitle";
 import { setIsDubbingActive } from "@/store/movieSlice";
+import languageCodes from "@/lib/languageCodes"; // Import languageCodes
 
 const DubbingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +22,11 @@ const DubbingPage: React.FC = () => {
     navigate("/search");
   };
 
+  // Function to get full language name
+  const getFullLanguageName = (languageCode: string): string => {
+    return languageCodes[languageCode] || languageCode;
+  };
+
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Dubbing Controls</h2>
@@ -29,7 +35,8 @@ const DubbingPage: React.FC = () => {
           <h3 className="font-semibold">{selectedMovie.Title}</h3>
           <p className="text-sm text-gray-600">{selectedMovie.Year}</p>
           <p className="text-sm text-gray-600">
-            Language: {selectedLanguage.attributes.language}
+            Language:{" "}
+            {getFullLanguageName(selectedLanguage.attributes.language)}
           </p>
         </div>
       )}

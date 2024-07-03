@@ -13,6 +13,7 @@ interface AuthState {
   user: {
     name: string;
     email: string;
+    picture: string;
   } | null;
   authChecked: boolean;
 }
@@ -28,7 +29,7 @@ const initialState: AuthState = {
 
 export async function fetchUserInfo(
   token: string
-): Promise<{ name: string; email: string }> {
+): Promise<{ name: string; email: string; picture: string }> {
   try {
     const response = await fetch(
       "https://www.googleapis.com/oauth2/v2/userinfo",
@@ -48,6 +49,7 @@ export async function fetchUserInfo(
     return {
       name: data.name,
       email: data.email,
+      picture: data.picture || "", // Add this line
     };
   } catch (error) {
     console.error("Error fetching user info:", error);

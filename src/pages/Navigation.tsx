@@ -1,5 +1,4 @@
 // src/components/Navigation.tsx
-
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -19,19 +18,19 @@ const Navigation: React.FC = () => {
     <nav className="flex justify-between items-center p-4 bg-gray-100">
       <div className="flex space-x-4">
         <Search
-          className="cursor-pointer"
+          className="cursor-pointer hover:text-blue-500 transition-colors"
           onClick={() => navigate("/search")}
           size={24}
         />
         <Mic
-          className={`cursor-pointer ${
+          className={`cursor-pointer hover:text-blue-500 transition-colors ${
             isDubbingActive ? "text-red-500 animate-flicker" : ""
           }`}
           onClick={() => navigate("/dubbing")}
           size={24}
         />
         <User
-          className="cursor-pointer"
+          className="cursor-pointer hover:text-blue-500 transition-colors"
           onClick={() => navigate("/profile")}
           size={24}
         />

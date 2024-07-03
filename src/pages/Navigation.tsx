@@ -32,7 +32,7 @@ const Navigation: React.FC = () => {
         />
         <User
           className="cursor-pointer"
-          onClick={() => navigate("/account")}
+          onClick={() => navigate("/profile")}
           size={24}
         />
       </div>

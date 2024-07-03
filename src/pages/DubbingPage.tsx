@@ -1,10 +1,10 @@
 // src/pages/DubbingPage.tsx
-import React from "react";
+import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import DubbingControls from "@/components/DubbingControls";
 import CurrentSubtitle from "@/components/CurrentSubtitle";
-import { setIsDubbingActive } from "@/store/movieSlice";
+import { setIsDubbingActive, startDubbingProcess } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
 
 const DubbingPage: React.FC = () => {
@@ -13,8 +13,32 @@ const DubbingPage: React.FC = () => {
     (state: RootState) => state.movie
   );
 
+  useEffect(() => {
+    if (isDubbingActive && selectedMovie && selectedLanguage) {
+      // Start the dubbing process when the component mounts if dubbing is active
+      dispatch(startDubbingProcess());
+
+      // Send message to content script to check dubbing status
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        if (tabs[0]?.id) {
+          chrome.tabs.sendMessage(tabs[0].id, { action: "checkDubbingStatus" });
+        }
+      });
+    }
+  }, [dispatch, isDubbingActive, selectedMovie, selectedLanguage]);
+
   const handleDubbingToggle = async (isActive: boolean) => {
     await dispatch(setIsDubbingActive(isActive));
+    if (isActive) {
+      dispatch(startDubbingProcess());
+    } else {
+      // Send message to content script to stop dubbing
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        if (tabs[0]?.id) {
+          chrome.tabs.sendMessage(tabs[0].id, { action: "stopDubbing" });
+        }
+      });
+    }
   };
 
   const getFullLanguageName = (languageCode: string): string => {

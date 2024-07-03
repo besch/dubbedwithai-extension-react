@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { Movie } from "@/types";
-import MovieItem from "./MovieItem";
+import MovieItem from "@/components/MovieItem";
 import { Search } from "lucide-react";
 import { searchMovies, setSelectedMovie } from "@/store/movieSlice";
 

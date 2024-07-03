@@ -59,6 +59,7 @@ class DubbingManager {
   constructor() {
     this.audioContext = new window.AudioContext();
     this.setupMessageListener();
+    this.checkAndApplyDubbing();
   }
 
   private setupMessageListener(): void {
@@ -72,9 +73,28 @@ class DubbingManager {
           this.handleApplyDubbing(message.movieId, message.subtitleId);
         } else if (message.action === "stopDubbing") {
           this.stopDubbing();
+        } else if (message.action === "checkDubbingStatus") {
+          this.checkAndApplyDubbing();
         }
       }
     );
+  }
+
+  private checkAndApplyDubbing(): void {
+    chrome.storage.local.get(["movieState"], (result) => {
+      const movieState = result.movieState;
+      if (
+        movieState &&
+        movieState.isDubbingActive &&
+        movieState.selectedMovie &&
+        movieState.selectedLanguage
+      ) {
+        this.handleApplyDubbing(
+          movieState.selectedMovie.imdbID,
+          movieState.selectedLanguage.id
+        );
+      }
+    });
   }
 
   private handleApplyDubbing(movieId: string, subtitleId: string): void {
@@ -402,6 +422,29 @@ class DubbingManager {
         console.error("Could not access iframe content:", e);
       }
     }
+
+    // If no video is found, set up a MutationObserver to watch for video elements
+    this.setupVideoObserver();
+  }
+
+  private setupVideoObserver(): void {
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === "childList") {
+          const video = document.querySelector("video");
+          if (video) {
+            this.handleVideo(video);
+            observer.disconnect();
+            return;
+          }
+        }
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
   }
 }
 

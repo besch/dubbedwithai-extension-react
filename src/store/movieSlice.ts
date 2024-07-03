@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Language, Movie } from "@/types";
 import { getAuthToken } from "@/extension/auth";
+import { RootState } from "@/store/index";
 
 interface MovieState {
   selectedMovie: Movie | null;
@@ -29,6 +30,28 @@ export const loadMovieState = createAsyncThunk("movie/loadState", async () => {
     });
   });
 });
+
+export const startDubbingProcess = createAsyncThunk(
+  "movie/startDubbingProcess",
+  async (_, { getState }) => {
+    const state = getState() as RootState;
+    const { selectedMovie, selectedLanguage } = state.movie;
+
+    if (!selectedMovie || !selectedLanguage) {
+      throw new Error("No movie or language selected");
+    }
+
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: "applyDubbing",
+          movieId: selectedMovie.imdbID,
+          subtitleId: selectedLanguage.id,
+        });
+      }
+    });
+  }
+);
 
 export const fetchLanguages = createAsyncThunk(
   "movie/fetchLanguages",
@@ -146,6 +169,9 @@ const movieSlice = createSlice({
       .addCase(searchMovies.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+      .addCase(startDubbingProcess.rejected, (state, action) => {
+        state.error = action.error.message || "Failed to start dubbing process";
       });
   },
 });

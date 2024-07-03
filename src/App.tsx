@@ -50,7 +50,7 @@ const AppContent: React.FC = () => {
 
   return (
     <>
-      <Navigation />
+      {isAuthenticated && <Navigation />}
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
         <Route

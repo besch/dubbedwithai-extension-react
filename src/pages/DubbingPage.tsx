@@ -1,37 +1,46 @@
+// src/pages/DubbingPage.tsx
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { RootState } from "@/store";
+import { RootState, AppDispatch } from "@/store";
 import DubbingControls from "@/components/DubbingControls";
 import CurrentSubtitle from "@/components/CurrentSubtitle";
 import { setIsDubbingActive } from "@/store/movieSlice";
-import languageCodes from "@/lib/languageCodes"; // Import languageCodes
+import languageCodes from "@/lib/languageCodes";
 
 const DubbingPage: React.FC = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { selectedMovie, selectedLanguage, isDubbingActive } = useSelector(
     (state: RootState) => state.movie
   );
 
-  const handleDubbingToggle = (isActive: boolean) => {
-    dispatch(setIsDubbingActive(isActive));
+  const handleDubbingToggle = async (isActive: boolean) => {
+    await dispatch(setIsDubbingActive(isActive));
   };
 
-  const handleBackToSearch = () => {
-    navigate("/search");
-  };
-
-  // Function to get full language name
   const getFullLanguageName = (languageCode: string): string => {
     return languageCodes[languageCode] || languageCode;
   };
 
+  if (!selectedMovie || !selectedLanguage) {
+    return <div className="p-4">No movie or language selected</div>;
+  }
+
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Dubbing Controls</h2>
-      {selectedMovie && selectedLanguage && (
-        <div className="mb-4">
+      <div className="mb-4 flex items-start">
+        {selectedMovie.Poster && selectedMovie.Poster !== "N/A" ? (
+          <img
+            src={selectedMovie.Poster}
+            alt={`${selectedMovie.Title} poster`}
+            className="w-24 h-36 object-cover rounded-md shadow-sm mr-4"
+          />
+        ) : (
+          <div className="w-24 h-36 bg-gray-200 flex items-center justify-center rounded-md shadow-sm mr-4">
+            <span className="text-gray-500 text-xs text-center">No poster</span>
+          </div>
+        )}
+        <div>
           <h3 className="font-semibold">{selectedMovie.Title}</h3>
           <p className="text-sm text-gray-600">{selectedMovie.Year}</p>
           <p className="text-sm text-gray-600">
@@ -39,17 +48,11 @@ const DubbingPage: React.FC = () => {
             {getFullLanguageName(selectedLanguage.attributes.language)}
           </p>
         </div>
-      )}
+      </div>
       <DubbingControls
         isDubbingActive={isDubbingActive}
         onDubbingToggle={handleDubbingToggle}
       />
-      <button
-        onClick={handleBackToSearch}
-        className="mt-4 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition duration-200"
-      >
-        Back to Search
-      </button>
       <CurrentSubtitle />
     </div>
   );

@@ -1,6 +1,5 @@
+// src/components/DubbingControls.tsx
 import React from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
 
 interface DubbingControlsProps {
   isDubbingActive: boolean;
@@ -11,46 +10,17 @@ const DubbingControls: React.FC<DubbingControlsProps> = ({
   isDubbingActive,
   onDubbingToggle,
 }) => {
-  const { selectedMovie, selectedLanguage } = useSelector(
-    (state: RootState) => state.movie
-  );
-
-  const handleToggleDubbing = () => {
-    const newDubbingState = !isDubbingActive;
-    console.log("Toggling dubbing state to:", newDubbingState);
-    onDubbingToggle(newDubbingState);
-
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const activeTab = tabs[0];
-      if (activeTab.id) {
-        if (newDubbingState) {
-          chrome.tabs.sendMessage(activeTab.id, {
-            action: "applyDubbing",
-            movieId: selectedMovie?.imdbID,
-            subtitleId: selectedLanguage?.id,
-          });
-        } else {
-          chrome.tabs.sendMessage(activeTab.id, { action: "stopDubbing" });
-        }
-      }
-    });
-  };
-
-  if (!selectedMovie || !selectedLanguage) {
-    return null;
-  }
-
   return (
-    <div className="mt-4">
+    <div>
       <button
-        onClick={handleToggleDubbing}
-        className={`w-full p-2 rounded ${
+        onClick={() => onDubbingToggle(!isDubbingActive)}
+        className={`px-4 py-2 rounded transition duration-200 ${
           isDubbingActive
-            ? "bg-red-500 hover:bg-red-600"
-            : "bg-blue-500 hover:bg-blue-600"
-        } text-white`}
+            ? "bg-red-500 text-white hover:bg-red-600"
+            : "bg-green-500 text-white hover:bg-green-600"
+        }`}
       >
-        {isDubbingActive ? "Stop Dubbing" : "Apply Existing Dubbing"}
+        {isDubbingActive ? "Stop Dubbing" : "Start Dubbing"}
       </button>
     </div>
   );

@@ -1,6 +1,16 @@
 import { parseSrt } from "./utils.js";
 import { getAuthToken } from "./auth.js";
 
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
 async function fetchSubtitles(
   movieId: string,
   subtitleId: string
@@ -114,12 +124,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     fetchAudioFile(message.movieId, message.subtitleId, message.fileName).then(
       (audioData) => {
         if (audioData) {
-          const base64Audio = btoa(
-            String.fromCharCode.apply(
-              null,
-              Array.from(new Uint8Array(audioData))
-            )
-          );
+          // Replace the problematic line with this function
+          const base64Audio = arrayBufferToBase64(audioData);
           sendResponse({ action: "audioFileData", data: base64Audio });
         } else {
           sendResponse({ action: "audioFileData", data: null });

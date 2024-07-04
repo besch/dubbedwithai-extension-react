@@ -309,10 +309,9 @@ class DubbingManager {
         fileName: fileName,
       },
       (response: any) => {
-        if (response && response.action === "audioFileData") {
-          const audioData = base64ToArrayBuffer(response.data);
+        if (response && response.action === "audioFileData" && response.data) {
           this.audioContext
-            .decodeAudioData(audioData)
+            .decodeAudioData(base64ToArrayBuffer(response.data))
             .then((buffer) => {
               this.preloadedAudio.set(fileName, buffer);
             })
@@ -349,11 +348,13 @@ class DubbingManager {
         fileName: fileName,
       },
       (response: any) => {
-        if (response && response.action === "audioFileData") {
-          const audioData = base64ToArrayBuffer(response.data);
-          this.audioContext.decodeAudioData(audioData).then((buffer) => {
-            this.playAudioBuffer(buffer, fileName, subtitle, offset);
-          });
+        if (response && response.action === "audioFileData" && response.data) {
+          this.audioContext
+            .decodeAudioData(base64ToArrayBuffer(response.data))
+            .then((buffer) => {
+              this.playAudioBuffer(buffer, fileName, subtitle, offset);
+            })
+            .catch((e) => console.error("Error decoding audio data:", e));
         }
       }
     );

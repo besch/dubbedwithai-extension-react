@@ -14,6 +14,7 @@ const DubbingPage: React.FC = () => {
   );
 
   useEffect(() => {
+    console.log("dispatch, isDubbingActive, selectedMovie, selectedLanguage");
     if (isDubbingActive && selectedMovie && selectedLanguage) {
       // Start the dubbing process when the component mounts if dubbing is active
       dispatch(startDubbingProcess());

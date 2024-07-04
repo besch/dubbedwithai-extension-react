@@ -55,7 +55,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
       </div>
       {isLoading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}
-      {searchResults.length > 0 && (
+      {searchResults && searchResults.length > 0 && (
         <ul className="mt-2 max-h-60 overflow-y-auto">
           {searchResults.map((movie) => (
             <MovieItem

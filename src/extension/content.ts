@@ -41,6 +41,9 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 }
 
 class DubbingManager {
+  private subtitlesCache: Map<string, Subtitle[]> = new Map();
+  private audioRequests: Map<string, Promise<AudioBuffer | null>> = new Map();
+  private subtitleRequests: Map<string, Promise<Subtitle[] | null>> = new Map();
   private dbName = "AudioCache";
   private dbVersion = 1;
   private db: IDBDatabase | null = null;
@@ -64,6 +67,119 @@ class DubbingManager {
     this.setupMessageListener();
     this.checkAndApplyDubbing();
     this.initIndexedDB();
+  }
+
+  private async getSubtitles(
+    movieId: string,
+    subtitleId: string
+  ): Promise<Subtitle[] | null> {
+    const cacheKey = `${movieId}-${subtitleId}`;
+
+    const cachedSubtitles = this.subtitlesCache.get(cacheKey);
+    if (cachedSubtitles) {
+      return cachedSubtitles;
+    }
+
+    if (!this.subtitleRequests.has(cacheKey)) {
+      const subtitlePromise = new Promise<Subtitle[] | null>((resolve) => {
+        chrome.runtime.sendMessage(
+          {
+            action: "requestSubtitles",
+            movieId: movieId,
+            subtitleId: subtitleId,
+          },
+          (response: any) => {
+            if (response && response.action === "subtitlesData") {
+              this.subtitlesCache.set(cacheKey, response.data);
+              resolve(response.data);
+            } else {
+              resolve(null);
+            }
+          }
+        );
+      });
+
+      this.subtitleRequests.set(cacheKey, subtitlePromise);
+    }
+
+    const subtitleRequestPromise = this.subtitleRequests.get(cacheKey);
+    if (subtitleRequestPromise) {
+      const subtitles = await subtitleRequestPromise;
+      this.subtitleRequests.delete(cacheKey);
+      return subtitles;
+    }
+
+    return null;
+  }
+
+  private async getAudioBuffer(fileName: string): Promise<AudioBuffer | null> {
+    const preloadedBuffer = this.preloadedAudio.get(fileName);
+    if (preloadedBuffer) {
+      return preloadedBuffer;
+    }
+
+    if (!this.audioRequests.has(fileName)) {
+      const audioPromise = this.fetchAudioBuffer(fileName);
+      this.audioRequests.set(fileName, audioPromise);
+    }
+
+    const audioRequestPromise = this.audioRequests.get(fileName);
+    if (audioRequestPromise) {
+      const audioBuffer = await audioRequestPromise;
+      this.audioRequests.delete(fileName);
+      return audioBuffer;
+    }
+
+    return null;
+  }
+
+  private async fetchAudioBuffer(
+    fileName: string
+  ): Promise<AudioBuffer | null> {
+    // Try to get audio from IndexedDB first
+    const cachedAudio = await this.getAudioFromIndexedDB(fileName);
+    if (cachedAudio) {
+      try {
+        const buffer = await this.audioContext.decodeAudioData(cachedAudio);
+        this.preloadedAudio.set(fileName, buffer);
+        return buffer;
+      } catch (e) {
+        console.error("Error decoding cached audio data:", e);
+      }
+    }
+
+    // If not in IndexedDB, fetch from server
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        {
+          action: "requestAudioFile",
+          movieId: this.currentMovieId,
+          subtitleId: this.currentSubtitleId,
+          fileName: fileName,
+        },
+        async (response: any) => {
+          if (
+            response &&
+            response.action === "audioFileData" &&
+            response.data
+          ) {
+            const audioData = base64ToArrayBuffer(response.data);
+            try {
+              const buffer = await this.audioContext.decodeAudioData(audioData);
+              this.preloadedAudio.set(fileName, buffer);
+              // Store in IndexedDB for future use
+              await this.storeAudioInIndexedDB(fileName, audioData);
+              resolve(buffer);
+            } catch (e) {
+              console.error("Error decoding audio data:", e);
+              resolve(null);
+            }
+          } else {
+            resolve(null);
+          }
+        }
+      );
+    });
   }
 
   private initIndexedDB(): void {
@@ -161,22 +277,22 @@ class DubbingManager {
     });
   }
 
-  private handleApplyDubbing(movieId: string, subtitleId: string): void {
+  private async handleApplyDubbing(
+    movieId: string,
+    subtitleId: string
+  ): Promise<void> {
     this.currentMovieId = movieId;
     this.currentSubtitleId = subtitleId;
-    chrome.runtime.sendMessage(
-      {
-        action: "requestSubtitles",
-        movieId: this.currentMovieId,
-        subtitleId: this.currentSubtitleId,
-      },
-      (response: any) => {
-        if (response && response.action === "subtitlesData") {
-          this.subtitlesData = response.data;
-          this.findAndHandleVideo();
-        }
-      }
-    );
+
+    this.subtitlesData = await this.getSubtitles(movieId, subtitleId);
+    if (this.subtitlesData) {
+      this.findAndHandleVideo();
+    } else {
+      console.error(
+        `Failed to load subtitles for movie ${movieId} and subtitle ${subtitleId}`
+      );
+      // Handle the error case, maybe notify the user or try again
+    }
   }
 
   public stopDubbing(): void {
@@ -363,55 +479,22 @@ class DubbingManager {
   }
 
   private async preloadAudio(fileName: string): Promise<void> {
-    if (this.preloadedAudio.has(fileName)) return;
-
-    // Try to get audio from IndexedDB first
-    const cachedAudio = await this.getAudioFromIndexedDB(fileName);
-    if (cachedAudio) {
-      try {
-        const buffer = await this.audioContext.decodeAudioData(cachedAudio);
-        this.preloadedAudio.set(fileName, buffer);
-        return;
-      } catch (e) {
-        console.error("Error decoding cached audio data:", e);
-      }
+    const buffer = await this.getAudioBuffer(fileName);
+    if (buffer) {
+      this.preloadedAudio.set(fileName, buffer);
     }
-
-    // If not in IndexedDB, fetch from server
-    chrome.runtime.sendMessage(
-      {
-        action: "requestAudioFile",
-        movieId: this.currentMovieId,
-        subtitleId: this.currentSubtitleId,
-        fileName: fileName,
-      },
-      async (response: any) => {
-        if (response && response.action === "audioFileData" && response.data) {
-          const audioData = base64ToArrayBuffer(response.data);
-          try {
-            const buffer = await this.audioContext.decodeAudioData(audioData);
-            this.preloadedAudio.set(fileName, buffer);
-            // Store in IndexedDB for future use
-            await this.storeAudioInIndexedDB(fileName, audioData);
-          } catch (e) {
-            console.error("Error decoding audio data:", e);
-          }
-        }
-      }
-    );
   }
 
-  private playAudioIfAvailable(
+  private async playAudioIfAvailable(
     fileName: string,
     subtitle: Subtitle,
     offset: number = 0
-  ): void {
-    if (this.preloadedAudio.has(fileName)) {
-      const buffer = this.preloadedAudio.get(fileName);
-      if (buffer) this.playAudioBuffer(buffer, fileName, subtitle, offset);
+  ): Promise<void> {
+    const buffer = await this.getAudioBuffer(fileName);
+    if (buffer) {
+      this.playAudioBuffer(buffer, fileName, subtitle, offset);
     } else {
-      console.log(`Audio file ${fileName} not preloaded, fetching now...`);
-      this.fetchAndPlayAudio(fileName, subtitle, offset);
+      console.warn(`Audio buffer not available for file: ${fileName}`);
     }
   }
 

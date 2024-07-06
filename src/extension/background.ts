@@ -92,11 +92,8 @@ async function checkAndUpdateAuthStatus() {
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get("movieState", (result) => {
-    if (!result.movieState) {
-      chrome.storage.local.set({ movieState: {} });
-    }
+    chrome.storage.local.set({ movieState: result.movieState ?? {} });
   });
-
   checkAndUpdateAuthStatus();
 });
 
@@ -106,32 +103,29 @@ chrome.runtime.onStartup.addListener(() => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "requestSubtitles") {
-    console.log("requestSubtitles", message);
-    fetchSubtitles(message.movieId, message.subtitleId).then((subtitles) => {
-      if (subtitles) {
-        const subtitlesData = parseSrt(subtitles);
-        sendResponse({
-          action: "subtitlesData",
-          data: subtitlesData,
-        });
-      } else {
-        sendResponse({ action: "subtitlesData", data: null });
-      }
-    });
+    (async () => {
+      const subtitles = await fetchSubtitles(
+        message.movieId,
+        message.subtitleId
+      );
+      sendResponse({
+        action: "subtitlesData",
+        data: subtitles ? parseSrt(subtitles) : null,
+      });
+    })();
     return true;
   } else if (message.action === "requestAudioFile") {
-    console.log("requestAudioFile", message);
-    fetchAudioFile(message.movieId, message.subtitleId, message.fileName).then(
-      (audioData) => {
-        if (audioData) {
-          // Replace the problematic line with this function
-          const base64Audio = arrayBufferToBase64(audioData);
-          sendResponse({ action: "audioFileData", data: base64Audio });
-        } else {
-          sendResponse({ action: "audioFileData", data: null });
-        }
-      }
-    );
+    (async () => {
+      const audioData = await fetchAudioFile(
+        message.movieId,
+        message.subtitleId,
+        message.fileName
+      );
+      sendResponse({
+        action: "audioFileData",
+        data: audioData ? arrayBufferToBase64(audioData) : null,
+      });
+    })();
     return true;
   } else if (message.action === "checkAuthStatus") {
     // New message handler to check auth status

@@ -49,9 +49,8 @@ function timeStringToMilliseconds(timeString: string): number {
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
   const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
   return bytes.buffer;
@@ -74,11 +73,7 @@ class AudioFileManager {
   ): Promise<AudioBuffer | null> {
     const cacheKey = `${movieId}-${subtitleId}-${fileName}`;
 
-    // If this file has been requested before, wait for the existing request
     if (this.requestedFiles.has(cacheKey)) {
-      console.log(
-        `Audio file ${fileName} already requested, waiting for result`
-      );
       while (
         this.ongoingRequests.has(cacheKey) ||
         !this.inMemoryCache.has(cacheKey)
@@ -88,26 +83,16 @@ class AudioFileManager {
       return this.inMemoryCache.get(cacheKey) || null;
     }
 
-    // Mark this file as requested
     this.requestedFiles.add(cacheKey);
 
     try {
-      // Check in-memory cache first
-      if (this.inMemoryCache.has(cacheKey)) {
-        console.log(`Audio file ${fileName} found in memory cache`);
+      if (this.inMemoryCache.has(cacheKey))
         return this.inMemoryCache.get(cacheKey)!;
-      }
-
-      // Check if there's an ongoing request for this file
-      if (this.ongoingRequests.has(cacheKey)) {
-        console.log(`Audio file ${fileName} is already being fetched`);
+      if (this.ongoingRequests.has(cacheKey))
         return this.ongoingRequests.get(cacheKey)!;
-      }
 
-      // Check IndexedDB cache
       const cachedAudio = await this.audioCache.getAudio(cacheKey);
       if (cachedAudio) {
-        console.log(`Audio file ${fileName} found in IndexedDB cache`);
         try {
           const buffer = await this.audioContext.decodeAudioData(cachedAudio);
           this.inMemoryCache.set(cacheKey, buffer);
@@ -117,8 +102,6 @@ class AudioFileManager {
         }
       }
 
-      // If not in cache and not being fetched, initiate a new request
-      console.log(`Fetching audio file ${fileName}`);
       const request = this.fetchAndProcessAudio(
         movieId,
         subtitleId,
@@ -126,9 +109,7 @@ class AudioFileManager {
         cacheKey
       );
       this.ongoingRequests.set(cacheKey, request);
-
-      const buffer = await request;
-      return buffer;
+      return await request;
     } finally {
       this.ongoingRequests.delete(cacheKey);
     }
@@ -158,25 +139,16 @@ class AudioFileManager {
     }
   }
 
-  private async fetchAudioFile(
+  private fetchAudioFile(
     movieId: string,
     subtitleId: string,
     fileName: string
   ): Promise<ArrayBuffer | null> {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage(
-        {
-          action: "requestAudioFile",
-          movieId: movieId,
-          subtitleId: subtitleId,
-          fileName: fileName,
-        },
+        { action: "requestAudioFile", movieId, subtitleId, fileName },
         (response: any) => {
-          if (
-            response &&
-            response.action === "audioFileData" &&
-            response.data
-          ) {
+          if (response?.action === "audioFileData" && response.data) {
             resolve(base64ToArrayBuffer(response.data));
           } else {
             resolve(null);
@@ -190,8 +162,6 @@ class AudioFileManager {
     this.inMemoryCache.clear();
     this.ongoingRequests.clear();
     this.requestedFiles.clear();
-    // Optionally, clear IndexedDB cache as well
-    // this.audioCache.clearAll();
   }
 }
 
@@ -206,15 +176,9 @@ class AudioCache {
 
   private initIndexedDB(): void {
     const request = indexedDB.open(this.dbName, this.dbVersion);
-
-    request.onerror = (event) => {
-      log(LogLevel.ERROR, "IndexedDB error:", event);
-    };
-
-    request.onsuccess = (event) => {
-      this.db = (event.target as IDBOpenDBRequest).result;
-    };
-
+    request.onerror = (event) => log(LogLevel.ERROR, "IndexedDB error:", event);
+    request.onsuccess = (event) =>
+      (this.db = (event.target as IDBOpenDBRequest).result);
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
       db.createObjectStore("audioFiles", { keyPath: "fileName" });
@@ -232,10 +196,8 @@ class AudioCache {
       const store = transaction.objectStore("audioFiles");
       const request = store.get(fileName);
 
-      request.onsuccess = () => {
+      request.onsuccess = () =>
         resolve(request.result ? request.result.audioData : null);
-      };
-
       request.onerror = () => {
         log(
           LogLevel.ERROR,
@@ -267,16 +229,14 @@ class SubtitleManager {
   private sortedSubtitles: Subtitle[] = [];
 
   getUpcomingSubtitles(currentTime: number, preloadTime: number): Subtitle[] {
-    const upcomingSubtitles = this.sortedSubtitles.filter((subtitle) => {
+    return this.sortedSubtitles.filter((subtitle) => {
       const startTime = timeStringToSeconds(subtitle.start);
       return startTime > currentTime && startTime <= currentTime + preloadTime;
     });
-    return upcomingSubtitles;
   }
 
-  public reset(): void {
+  reset(): void {
     this.sortedSubtitles = [];
-    // Reset any other state in the SubtitleManager
   }
 
   async getSubtitles(
@@ -285,21 +245,15 @@ class SubtitleManager {
   ): Promise<Subtitle[] | null> {
     const cacheKey = `${movieId}-${subtitleId}`;
 
-    const cachedSubtitles = this.subtitlesCache.get(cacheKey);
-    if (cachedSubtitles) {
-      return cachedSubtitles;
-    }
+    if (this.subtitlesCache.has(cacheKey))
+      return this.subtitlesCache.get(cacheKey)!;
 
     if (!this.subtitleRequests.has(cacheKey)) {
       const subtitlePromise = new Promise<Subtitle[] | null>((resolve) => {
         chrome.runtime.sendMessage(
-          {
-            action: "requestSubtitles",
-            movieId: movieId,
-            subtitleId: subtitleId,
-          },
+          { action: "requestSubtitles", movieId, subtitleId },
           (response: any) => {
-            if (response && response.action === "subtitlesData") {
+            if (response?.action === "subtitlesData") {
               this.subtitlesCache.set(cacheKey, response.data);
               this.sortSubtitles(response.data);
               resolve(response.data);
@@ -313,14 +267,11 @@ class SubtitleManager {
       this.subtitleRequests.set(cacheKey, subtitlePromise);
     }
 
-    const subtitleRequestPromise = this.subtitleRequests.get(cacheKey);
-    if (subtitleRequestPromise) {
-      const subtitles = await subtitleRequestPromise;
-      this.subtitleRequests.delete(cacheKey);
-      return subtitles;
-    }
+    const subtitlePromise = this.subtitleRequests.get(cacheKey);
+    this.subtitleRequests.delete(cacheKey);
 
-    return null;
+    // Wait for the promise to resolve and return its result
+    return subtitlePromise ? await subtitlePromise : null;
   }
 
   private sortSubtitles(subtitles: Subtitle[]): void {
@@ -335,28 +286,23 @@ class SubtitleManager {
     );
     if (index === -1) return [];
 
-    const currentSubtitles: Subtitle[] = [];
-    for (let i = index; i < this.sortedSubtitles.length; i++) {
-      const subtitle = this.sortedSubtitles[i];
-      if (timeStringToSeconds(subtitle.start) > currentTime) break;
-      if (timeStringToSeconds(subtitle.end) > currentTime) {
-        currentSubtitles.push(subtitle);
-      }
-    }
-    return currentSubtitles;
+    return this.sortedSubtitles
+      .slice(index)
+      .filter(
+        (subtitle) =>
+          timeStringToSeconds(subtitle.start) <= currentTime &&
+          timeStringToSeconds(subtitle.end) > currentTime
+      );
   }
 }
 
 class AudioPlayer {
-  private audioContext: AudioContext;
   private activeAudio: Map<
     string,
     { source: AudioBufferSourceNode; subtitle: Subtitle }
   > = new Map();
 
-  constructor(audioContext: AudioContext) {
-    this.audioContext = audioContext;
-  }
+  constructor(private audioContext: AudioContext) {}
 
   async playAudio(
     buffer: AudioBuffer,
@@ -367,31 +313,22 @@ class AudioPlayer {
     const source = this.audioContext.createBufferSource();
     source.buffer = buffer;
     source.connect(this.audioContext.destination);
-
     source.start(0, offset);
 
     this.activeAudio.set(fileName, { source, subtitle });
-
-    source.onended = () => {
-      this.activeAudio.delete(fileName);
-    };
+    source.onended = () => this.activeAudio.delete(fileName);
   }
 
   stopAudio(fileName: string): void {
-    if (this.activeAudio.has(fileName)) {
-      const audioInfo = this.activeAudio.get(fileName);
-      if (audioInfo) {
-        audioInfo.source.stop();
-        this.activeAudio.delete(fileName);
-      }
+    const audioInfo = this.activeAudio.get(fileName);
+    if (audioInfo) {
+      audioInfo.source.stop();
+      this.activeAudio.delete(fileName);
     }
   }
 
   stopAllAudio(): void {
-    this.activeAudio.forEach((audioInfo, fileName) => {
-      this.stopAudio(fileName);
-    });
-    this.activeAudio.clear();
+    this.activeAudio.forEach((_, fileName) => this.stopAudio(fileName));
   }
 
   isAudioActive(fileName: string): boolean {
@@ -406,18 +343,7 @@ class AudioPlayer {
     });
   }
 
-  getActiveAudioInfo(): Map<string, { subtitle: Subtitle }> {
-    return new Map(
-      Array.from(this.activeAudio.entries()).map(([key, value]) => [
-        key,
-        { subtitle: value.subtitle },
-      ])
-    );
-  }
-
   setVolume(volume: number): void {
-    // Assuming we want to set the volume for all active audio
-    // You might want to adjust this based on your specific requirements
     this.activeAudio.forEach((audioInfo) => {
       const gainNode = this.audioContext.createGain();
       gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime);
@@ -432,95 +358,52 @@ class AudioPlayer {
       (audioInfo) => audioInfo.subtitle
     );
   }
-
-  // Helper method to get the AudioContext
-  getAudioContext(): AudioContext {
-    return this.audioContext;
-  }
 }
 
 class DubbingManager {
   private audioFileManager: AudioFileManager;
-  private audioCache: AudioCache;
   private subtitleManager: SubtitleManager;
   private audioPlayer: AudioPlayer;
   private audioContext: AudioContext;
-  private preloadedAudio: Map<string, AudioBuffer> = new Map();
   private originalVolume = 1;
   private currentMovieId: string | null = null;
   private currentSubtitleId: string | null = null;
   private isVideoPaused = false;
   private lastSentSubtitle: Subtitle | null = null;
   private lastSentTime: number = 0;
-  private preloadTime = 5; // Added this line
+  private preloadTime = 5;
 
   constructor() {
     this.audioContext = new window.AudioContext();
     this.audioFileManager = new AudioFileManager(this.audioContext);
-    this.audioCache = new AudioCache();
     this.subtitleManager = new SubtitleManager();
     this.audioPlayer = new AudioPlayer(this.audioContext);
     this.setupMessageListener();
     this.checkAndApplyDubbing();
-
-    this.handleVideoPlay = this.handleVideoPlay.bind(this);
-    this.handleVideoPause = this.handleVideoPause.bind(this);
-    this.handleVideoSeeking = this.handleVideoSeeking.bind(this);
-    this.handleVolumeChange = this.handleVolumeChange.bind(this);
-    this.handleTimeUpdate = this.handleTimeUpdate.bind(this);
   }
 
-  public stopDubbing(): void {
+  stopDubbing(): void {
     this.audioFileManager.clearCache();
-    // Stop all audio playback
     this.audioPlayer.stopAllAudio();
-
-    // Clear preloaded audio
-    this.preloadedAudio.clear();
-
-    // Reset subtitle manager
     this.subtitleManager.reset();
-
-    // Reset current movie and subtitle IDs
-    this.currentMovieId = null;
-    this.currentSubtitleId = null;
-
-    // Reset video state
+    this.currentMovieId = this.currentSubtitleId = null;
     this.isVideoPaused = false;
-
-    // Reset last sent subtitle info
     this.lastSentSubtitle = null;
     this.lastSentTime = 0;
-
-    // Restore original volume
     const video = document.querySelector("video");
-    if (video) {
-      video.volume = this.originalVolume;
-    }
-
-    // Remove video event listeners
+    if (video) video.volume = this.originalVolume;
     this.removeVideoEventListeners();
-
     log(LogLevel.INFO, "Dubbing stopped");
   }
 
   private removeVideoEventListeners(): void {
     const video = document.querySelector("video");
     if (video) {
-      const eventHandlers: { [key: string]: (event: Event) => void } = {
-        play: (event) => this.handleVideoPlay(event.target as HTMLVideoElement),
-        pause: () => this.handleVideoPause(),
-        seeking: (event) =>
-          this.handleVideoSeeking(event.target as HTMLVideoElement),
-        volumechange: (event) =>
-          this.handleVolumeChange(event.target as HTMLVideoElement),
-        timeupdate: (event) =>
-          this.handleTimeUpdate(event.target as HTMLVideoElement),
-      };
-
-      Object.entries(eventHandlers).forEach(([event, handler]) => {
-        video.removeEventListener(event, handler);
-      });
+      video.removeEventListener("play", this.handleVideoPlay);
+      video.removeEventListener("pause", this.handleVideoPause);
+      video.removeEventListener("seeking", this.handleVideoSeeking);
+      video.removeEventListener("volumechange", this.handleVolumeChange);
+      video.removeEventListener("timeupdate", this.handleTimeUpdate);
     }
   }
 
@@ -534,17 +417,13 @@ class DubbingManager {
 
   private setupMessageListener(): void {
     chrome.runtime.onMessage.addListener(
-      (
-        message: { action: string; movieId?: string; subtitleId?: string },
-        sender: chrome.runtime.MessageSender,
-        sendResponse: (response?: any) => void
-      ) => {
-        if (message.action === "applyDubbing") {
-          if (message.movieId && message.subtitleId) {
-            this.handleApplyDubbing(message.movieId, message.subtitleId);
-          } else {
-            console.error("applyDubbing action missing movieId or subtitleId");
-          }
+      (message: { action: string; movieId?: string; subtitleId?: string }) => {
+        if (
+          message.action === "applyDubbing" &&
+          message.movieId &&
+          message.subtitleId
+        ) {
+          this.handleApplyDubbing(message.movieId, message.subtitleId);
         } else if (message.action === "stopDubbing") {
           this.stopDubbing();
         } else if (message.action === "checkDubbingStatus") {
@@ -558,8 +437,7 @@ class DubbingManager {
     chrome.storage.local.get(["movieState"], (result) => {
       const movieState = result.movieState;
       if (
-        movieState &&
-        movieState.isDubbingActive &&
+        movieState?.isDubbingActive &&
         movieState.selectedMovie &&
         movieState.selectedLanguage
       ) {
@@ -591,134 +469,77 @@ class DubbingManager {
         );
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      log(LogLevel.ERROR, `Error applying dubbing: ${errorMessage}`);
-    }
-  }
-
-  private handleVideo(video: HTMLVideoElement): void {
-    console.log("found video tag");
-    this.originalVolume = video.volume;
-
-    const eventHandlers: { [key: string]: (event: Event) => void } = {
-      play: (event) => this.handleVideoPlay(event.target as HTMLVideoElement),
-      pause: () => this.handleVideoPause(),
-      seeking: (event) =>
-        this.handleVideoSeeking(event.target as HTMLVideoElement),
-      volumechange: (event) =>
-        this.handleVolumeChange(event.target as HTMLVideoElement),
-      timeupdate: (event) =>
-        this.handleTimeUpdate(event.target as HTMLVideoElement),
-    };
-
-    Object.entries(eventHandlers).forEach(([event, handler]) => {
-      video.addEventListener(event, handler);
-    });
-  }
-
-  private handleVideoPlay(video: HTMLVideoElement): void {
-    console.log("Video played");
-    this.isVideoPaused = false;
-    this.stopAllAudio();
-    this.playCurrentSubtitles(
-      video.currentTime,
-      this.getCurrentSubtitles(video.currentTime)
-    );
-  }
-
-  private handleVideoPause(): void {
-    console.log("Video paused");
-    this.isVideoPaused = true;
-    this.stopAllAudio();
-  }
-
-  private handleVideoSeeking(video: HTMLVideoElement): void {
-    console.log("Video seeking");
-    this.stopAllAudio();
-    if (!this.isVideoPaused) {
-      this.playCurrentSubtitles(
-        video.currentTime,
-        this.getCurrentSubtitles(video.currentTime)
+      log(
+        LogLevel.ERROR,
+        `Error applying dubbing: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
     }
   }
 
-  private handleVolumeChange(video: HTMLVideoElement): void {
-    const currentSubtitles = this.getCurrentSubtitles(video.currentTime);
-    if (currentSubtitles.length === 0) {
-      this.originalVolume = video.volume;
-    }
+  private handleVideo(video: HTMLVideoElement): void {
+    this.originalVolume = video.volume;
+    video.addEventListener("play", this.handleVideoPlay);
+    video.addEventListener("pause", this.handleVideoPause);
+    video.addEventListener("seeking", this.handleVideoSeeking);
+    video.addEventListener("volumechange", this.handleVolumeChange);
+    video.addEventListener("timeupdate", this.handleTimeUpdate);
   }
 
-  private handleTimeUpdate(video: HTMLVideoElement): void {
+  private handleVideoPlay = (event: Event): void => {
+    this.isVideoPaused = false;
+    this.audioPlayer.stopAllAudio();
+    this.playCurrentSubtitles((event.target as HTMLVideoElement).currentTime);
+  };
+
+  private handleVideoPause = (): void => {
+    this.isVideoPaused = true;
+    this.audioPlayer.stopAllAudio();
+  };
+
+  private handleVideoSeeking = (event: Event): void => {
+    this.audioPlayer.stopAllAudio();
+    if (!this.isVideoPaused) {
+      this.playCurrentSubtitles((event.target as HTMLVideoElement).currentTime);
+    }
+  };
+
+  private handleVolumeChange = (event: Event): void => {
+    const video = event.target as HTMLVideoElement;
+    if (
+      this.subtitleManager.getCurrentSubtitles(video.currentTime).length === 0
+    ) {
+      this.originalVolume = video.volume;
+    }
+  };
+
+  private handleTimeUpdate = (event: Event): void => {
+    const video = event.target as HTMLVideoElement;
     const currentTime = video.currentTime;
-    const currentSubtitles = this.getCurrentSubtitles(currentTime);
+    const currentSubtitles =
+      this.subtitleManager.getCurrentSubtitles(currentTime);
 
     this.adjustVolume(video, currentSubtitles);
     if (!this.isVideoPaused) {
-      this.playCurrentSubtitles(currentTime, currentSubtitles);
+      this.playCurrentSubtitles(currentTime);
     }
     this.audioPlayer.stopExpiredAudio(currentTime);
     this.preloadUpcomingSubtitles(currentTime);
 
-    // Send current subtitle info to the extension
-    if (currentSubtitles.length > 0) {
-      const currentSubtitle = currentSubtitles[0];
-      const startTime = timeStringToSeconds(currentSubtitle.start);
-      const endTime = timeStringToSeconds(currentSubtitle.end);
-
-      if (
-        currentSubtitle !== this.lastSentSubtitle ||
-        currentTime - this.lastSentTime >= 0.5
-      ) {
-        const message = {
-          action: "currentSubtitle",
-          subtitle: {
-            text: currentSubtitle.text,
-            start: startTime,
-            end: endTime,
-            currentTime: currentTime,
-          },
-        };
-        log(LogLevel.INFO, "Sending subtitle message:", message);
-        chrome.runtime.sendMessage(message);
-
-        this.lastSentSubtitle = currentSubtitle;
-        this.lastSentTime = currentTime;
-      }
-    } else if (this.lastSentSubtitle !== null) {
-      chrome.runtime.sendMessage({
-        action: "currentSubtitle",
-        subtitle: null,
-      });
-      this.lastSentSubtitle = null;
-    }
-  }
-
-  private getCurrentSubtitles(currentTime: number): Subtitle[] {
-    return this.subtitleManager.getCurrentSubtitles(currentTime);
-  }
+    this.sendCurrentSubtitleInfo(currentTime, currentSubtitles);
+  };
 
   private adjustVolume(
     video: HTMLVideoElement,
     currentSubtitles: Subtitle[]
   ): void {
-    if (currentSubtitles.length > 0) {
-      if (video.volume !== 0.3) {
-        video.volume = 0.3;
-      }
-    } else {
-      if (video.volume !== this.originalVolume) {
-        video.volume = this.originalVolume;
-      }
-    }
+    video.volume = currentSubtitles.length > 0 ? 0.3 : this.originalVolume;
   }
 
-  private playCurrentSubtitles(
-    currentTime: number,
-    currentSubtitles: Subtitle[]
-  ): void {
+  private playCurrentSubtitles(currentTime: number): void {
+    const currentSubtitles =
+      this.subtitleManager.getCurrentSubtitles(currentTime);
     currentSubtitles.forEach((subtitle) => {
       const audioFileName = getAudioFileName(subtitle);
       const startTime = timeStringToSeconds(subtitle.start);
@@ -743,20 +564,10 @@ class DubbingManager {
       currentTime,
       this.preloadTime
     );
-
     upcomingSubtitles.forEach((subtitle) => {
       const audioFileName = getAudioFileName(subtitle);
-      if (!this.preloadedAudio.has(audioFileName)) {
-        this.preloadAudio(audioFileName);
-      }
+      this.getAudioBuffer(audioFileName); // This will cache the audio if it's not already cached
     });
-  }
-
-  private async preloadAudio(fileName: string): Promise<void> {
-    const buffer = await this.getAudioBuffer(fileName);
-    if (buffer) {
-      this.preloadedAudio.set(fileName, buffer);
-    }
   }
 
   private async playAudioIfAvailable(
@@ -772,8 +583,36 @@ class DubbingManager {
     }
   }
 
-  private stopAllAudio(): void {
-    this.audioPlayer.stopAllAudio();
+  private sendCurrentSubtitleInfo(
+    currentTime: number,
+    currentSubtitles: Subtitle[]
+  ): void {
+    if (currentSubtitles.length > 0) {
+      const currentSubtitle = currentSubtitles[0];
+      const startTime = timeStringToSeconds(currentSubtitle.start);
+      const endTime = timeStringToSeconds(currentSubtitle.end);
+
+      if (
+        currentSubtitle !== this.lastSentSubtitle ||
+        currentTime - this.lastSentTime >= 0.5
+      ) {
+        chrome.runtime.sendMessage({
+          action: "currentSubtitle",
+          subtitle: {
+            text: currentSubtitle.text,
+            start: startTime,
+            end: endTime,
+            currentTime,
+          },
+        });
+
+        this.lastSentSubtitle = currentSubtitle;
+        this.lastSentTime = currentTime;
+      }
+    } else if (this.lastSentSubtitle !== null) {
+      chrome.runtime.sendMessage({ action: "currentSubtitle", subtitle: null });
+      this.lastSentSubtitle = null;
+    }
   }
 
   private findAndHandleVideo(): void {
@@ -785,8 +624,7 @@ class DubbingManager {
     }
 
     const iframes = document.querySelectorAll("iframe");
-    for (let i = 0; i < iframes.length; i++) {
-      const iframe = iframes[i];
+    for (const iframe of iframes) {
       try {
         const iframeDocument =
           iframe.contentDocument || iframe.contentWindow?.document;
@@ -802,7 +640,6 @@ class DubbingManager {
       }
     }
 
-    // If no video is found, set up a MutationObserver to watch for video elements
     this.setupVideoObserver();
   }
 
@@ -820,10 +657,7 @@ class DubbingManager {
       }
     });
 
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 }
 

@@ -10,6 +10,20 @@ enum LogLevel {
   ERROR,
 }
 
+interface DubbingConfig {
+  defaultVolume: number;
+  dubbingVolume: number;
+  preloadTime: number;
+  subtitleUpdateInterval: number;
+}
+
+const DEFAULT_DUBBING_CONFIG: DubbingConfig = {
+  defaultVolume: 1,
+  dubbingVolume: 0.3,
+  preloadTime: 5,
+  subtitleUpdateInterval: 0.5,
+};
+
 function log(level: LogLevel, message: string, ...args: any[]): void {
   const prefix = LogLevel[level];
   console[
@@ -365,19 +379,21 @@ class DubbingManager {
   private subtitleManager: SubtitleManager;
   private audioPlayer: AudioPlayer;
   private audioContext: AudioContext;
-  private originalVolume = 1;
+  private originalVolume: number;
   private currentMovieId: string | null = null;
   private currentSubtitleId: string | null = null;
   private isVideoPaused = false;
   private lastSentSubtitle: Subtitle | null = null;
   private lastSentTime: number = 0;
-  private preloadTime = 5;
+  private config: DubbingConfig;
 
-  constructor() {
+  constructor(config: Partial<DubbingConfig> = {}) {
+    this.config = { ...DEFAULT_DUBBING_CONFIG, ...config };
     this.audioContext = new window.AudioContext();
     this.audioFileManager = new AudioFileManager(this.audioContext);
     this.subtitleManager = new SubtitleManager();
     this.audioPlayer = new AudioPlayer(this.audioContext);
+    this.originalVolume = this.config.defaultVolume;
     this.setupMessageListener();
     this.checkAndApplyDubbing();
   }
@@ -534,7 +550,10 @@ class DubbingManager {
     video: HTMLVideoElement,
     currentSubtitles: Subtitle[]
   ): void {
-    video.volume = currentSubtitles.length > 0 ? 0.3 : this.originalVolume;
+    video.volume =
+      currentSubtitles.length > 0
+        ? this.config.dubbingVolume
+        : this.originalVolume;
   }
 
   private playCurrentSubtitles(currentTime: number): void {
@@ -562,11 +581,11 @@ class DubbingManager {
   private preloadUpcomingSubtitles(currentTime: number): void {
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
       currentTime,
-      this.preloadTime
+      this.config.preloadTime
     );
     upcomingSubtitles.forEach((subtitle) => {
       const audioFileName = getAudioFileName(subtitle);
-      this.getAudioBuffer(audioFileName); // This will cache the audio if it's not already cached
+      this.getAudioBuffer(audioFileName);
     });
   }
 
@@ -594,7 +613,7 @@ class DubbingManager {
 
       if (
         currentSubtitle !== this.lastSentSubtitle ||
-        currentTime - this.lastSentTime >= 0.5
+        currentTime - this.lastSentTime >= this.config.subtitleUpdateInterval
       ) {
         chrome.runtime.sendMessage({
           action: "currentSubtitle",

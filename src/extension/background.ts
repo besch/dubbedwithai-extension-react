@@ -1,5 +1,5 @@
-import { parseSrt } from "./utils.js";
-import { getAuthToken } from "./auth.js";
+import { parseSrt } from "./utils";
+import { getAuthToken } from "./auth";
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   let binary = "";

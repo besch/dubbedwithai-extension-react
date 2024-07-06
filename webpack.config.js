@@ -1,12 +1,10 @@
 const path = require("path");
 const webpack = require("webpack");
-const fs = require("fs");
-
-const idbCode = fs.readFileSync(require.resolve("idb"), "utf8");
 
 module.exports = {
   entry: {
     content: path.join(__dirname, "src", "extension", "content.ts"),
+    background: path.join(__dirname, "src", "extension", "background.ts"),
   },
   mode: "production",
   module: {
@@ -18,9 +16,7 @@ module.exports = {
             loader: "ts-loader",
             options: {
               transpileOnly: true,
-              compilerOptions: {
-                module: "es6",
-              },
+              configFile: "tsconfig.extension.json",
             },
           },
         ],
@@ -30,15 +26,19 @@ module.exports = {
   },
   resolve: {
     extensions: [".ts", ".js"],
-    modules: [path.resolve(__dirname, "src"), "node_modules"],
+    modules: [path.resolve(__dirname, "src", "extension"), "node_modules"],
   },
   output: {
     filename: "[name].js",
     path: path.resolve(__dirname, "build"),
   },
+  optimization: {
+    minimize: true,
+    concatenateModules: true,
+  },
   plugins: [
-    new webpack.DefinePlugin({
-      IDB_RAW: JSON.stringify(idbCode),
+    new webpack.optimize.LimitChunkCountPlugin({
+      maxChunks: 1,
     }),
   ],
 };

@@ -2,14 +2,14 @@
   "compilerOptions": {
     "outDir": "./build",
     "rootDir": "./src/extension",
-    "module": "ESNext",
-    "target": "ESNext",
+    "module": "esnext",
+    "target": "es2015",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,
     "lib": ["dom", "dom.iterable", "esnext"],
-    "types": ["node", "chrome"],
+    "types": ["chrome"],
     "resolveJsonModule": true
   },
   "include": ["src/extension/**/*.ts"],

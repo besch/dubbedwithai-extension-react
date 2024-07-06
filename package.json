@@ -36,14 +36,13 @@
     "tailwind-merge": "^2.3.0",
     "tailwindcss": "^3.4.4",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "webpack": "^5.92.1"
   },
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "build-extension": "craco build && npm run compile-ts && npm run update-manifest && npm run replace-env-vars",
-    "compile-ts": "tsc -p tsconfig.extension.json",
+    "build-extension": "craco build && webpack --config webpack.config.js && npm run update-manifest && npm run replace-env-vars",
     "update-manifest": "node scripts/update-manifest.js",
     "replace-env-vars": "node build-extension.mjs",
     "test": "craco test",
@@ -72,6 +71,9 @@
     "@types/lodash": "^4.17.5",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
-    "replace-in-file": "^8.0.1"
+    "replace-in-file": "^8.0.1",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.5.3",
+    "webpack-cli": "^5.1.4"
   }
 }

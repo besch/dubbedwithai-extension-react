@@ -1,5 +1,5 @@
 import { AudioCache } from "./AudioCache";
-import { base64ToArrayBuffer } from "./utils";
+import { base64ToArrayBuffer, log, LogLevel } from "./utils";
 
 export class AudioFileManager {
   private audioCache: AudioCache;
@@ -39,11 +39,13 @@ export class AudioFileManager {
       const cachedAudio = await this.audioCache.getAudio(cacheKey);
       if (cachedAudio) {
         try {
-          const buffer = await this.audioContext.decodeAudioData(cachedAudio);
+          const buffer = await this.audioContext.decodeAudioData(
+            cachedAudio.slice(0)
+          );
           this.inMemoryCache.set(cacheKey, buffer);
           return buffer;
         } catch (e) {
-          console.error("Error decoding cached audio data:", e);
+          log(LogLevel.ERROR, "Error decoding cached audio data:", e);
         }
       }
 
@@ -74,12 +76,14 @@ export class AudioFileManager {
       );
       if (!audioData) return null;
 
-      const buffer = await this.audioContext.decodeAudioData(audioData);
+      const buffer = await this.audioContext.decodeAudioData(
+        audioData.slice(0)
+      );
       this.inMemoryCache.set(cacheKey, buffer);
       await this.audioCache.storeAudio(cacheKey, audioData);
       return buffer;
     } catch (e) {
-      console.error("Error fetching or processing audio:", e);
+      log(LogLevel.ERROR, "Error fetching or processing audio:", e);
       return null;
     }
   }

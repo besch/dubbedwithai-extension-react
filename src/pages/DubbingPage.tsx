@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import DubbingControls from "@/components/DubbingControls";
 import CurrentSubtitle from "@/components/CurrentSubtitle";
-import { setIsDubbingActive, startDubbingProcess } from "@/store/movieSlice";
+import { setIsDubbingActive } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
 import { sendMessageToActiveTab } from "@/lib/messaging";
 
@@ -20,15 +20,15 @@ const DubbingPage: React.FC = () => {
         .then((response: any) => {
           if (response.status === "checked") {
             dispatch(setIsDubbingActive(response.isDubbingActive));
+          } else if (response.status === "error") {
+            setError(response.message);
+            dispatch(setIsDubbingActive(false));
           } else {
             throw new Error("Unexpected response from content script");
           }
         })
         .catch((error) => {
           console.error("Failed to check dubbing status:", error);
-          setError(
-            "Failed to communicate with the active tab. Please refresh the page and try again."
-          );
           dispatch(setIsDubbingActive(false));
         });
     }
@@ -37,33 +37,38 @@ const DubbingPage: React.FC = () => {
   const handleDubbingToggle = async (isActive: boolean) => {
     setError(null);
     try {
-      if (isActive) {
-        const response = await sendMessageToActiveTab({
-          action: "initializeDubbing",
-          movieId: selectedMovie?.imdbID,
-          subtitleId: selectedLanguage?.id,
-        });
-        if (response.status !== "initialized") {
-          throw new Error("Failed to initialize dubbing");
-        }
-      } else {
-        const response = await sendMessageToActiveTab({
-          action: "stopDubbing",
-        });
-        if (response.status !== "stopped") {
-          throw new Error("Failed to stop dubbing");
-        }
+      const action = isActive ? "initializeDubbing" : "stopDubbing";
+      const message = isActive
+        ? {
+            action,
+            movieId: selectedMovie?.imdbID,
+            subtitleId: selectedLanguage?.id,
+          }
+        : { action };
+
+      const response = await sendMessageToActiveTab(message);
+
+      if (response?.status === "error") {
+        throw new Error(response.message);
+      } else if (
+        (isActive && response?.status !== "initialized") ||
+        (!isActive && response?.status !== "stopped")
+      ) {
+        throw new Error(
+          `Failed to ${isActive ? "initialize" : "stop"} dubbing`
+        );
       }
+
       dispatch(setIsDubbingActive(isActive));
     } catch (error) {
       console.error("Failed to toggle dubbing:", error);
       setError("Failed to toggle dubbing. Please try again.");
+      dispatch(setIsDubbingActive(false));
     }
   };
 
-  const getFullLanguageName = (languageCode: string): string => {
-    return languageCodes[languageCode] || languageCode;
-  };
+  const getFullLanguageName = (languageCode: string): string =>
+    languageCodes[languageCode] || languageCode;
 
   if (!selectedMovie || !selectedLanguage) {
     return <div className="p-4">No movie or language selected</div>;

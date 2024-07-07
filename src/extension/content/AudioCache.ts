@@ -1,30 +1,38 @@
-import { LogLevel } from "./utils";
-import { log } from "./utils";
+import { LogLevel, log } from "./utils";
 
 export class AudioCache {
   private dbName = "AudioCache";
   private dbVersion = 1;
   private db: IDBDatabase | null = null;
+  private dbReady: Promise<void>;
 
   constructor() {
-    this.initIndexedDB();
+    this.dbReady = this.initIndexedDB();
   }
 
-  private initIndexedDB(): void {
-    const request = indexedDB.open(this.dbName, this.dbVersion);
-    request.onerror = (event) => log(LogLevel.ERROR, "IndexedDB error:", event);
-    request.onsuccess = (event) =>
-      (this.db = (event.target as IDBOpenDBRequest).result);
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      db.createObjectStore("audioFiles", { keyPath: "fileName" });
-    };
+  private initIndexedDB(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, this.dbVersion);
+      request.onerror = (event) => {
+        log(LogLevel.ERROR, "IndexedDB error:", event);
+        reject(new Error("Failed to open IndexedDB"));
+      };
+      request.onsuccess = (event) => {
+        this.db = (event.target as IDBOpenDBRequest).result;
+        resolve();
+      };
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        db.createObjectStore("audioFiles", { keyPath: "fileName" });
+      };
+    });
   }
 
   async getAudio(fileName: string): Promise<ArrayBuffer | null> {
-    return new Promise((resolve) => {
+    await this.dbReady;
+    return new Promise((resolve, reject) => {
       if (!this.db) {
-        resolve(null);
+        reject(new Error("IndexedDB not initialized"));
         return;
       }
 
@@ -40,12 +48,13 @@ export class AudioCache {
           "Error fetching audio from IndexedDB:",
           request.error
         );
-        resolve(null);
+        reject(new Error("Failed to fetch audio from IndexedDB"));
       };
     });
   }
 
   async storeAudio(fileName: string, audioData: ArrayBuffer): Promise<void> {
+    await this.dbReady;
     if (!this.db) throw new Error("IndexedDB not initialized");
 
     return new Promise((resolve, reject) => {
@@ -54,7 +63,8 @@ export class AudioCache {
       const request = store.put({ fileName, audioData });
 
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () =>
+        reject(new Error("Failed to store audio in IndexedDB"));
     });
   }
 }

@@ -266,11 +266,15 @@ export class DubbingManager {
     subtitle: Subtitle,
     offset: number = 0
   ): Promise<void> {
-    const buffer = await this.getAudioBuffer(fileName);
-    if (buffer) {
-      this.audioPlayer.playAudio(buffer, fileName, subtitle, offset);
-    } else {
-      log(LogLevel.WARN, `Audio buffer not available for file: ${fileName}`);
+    try {
+      const buffer = await this.getAudioBuffer(fileName);
+      if (buffer) {
+        await this.audioPlayer.playAudio(buffer, fileName, subtitle, offset);
+      } else {
+        log(LogLevel.WARN, `Audio buffer not available for file: ${fileName}`);
+      }
+    } catch (error) {
+      log(LogLevel.ERROR, `Error playing audio for file: ${fileName}`, error);
     }
   }
 

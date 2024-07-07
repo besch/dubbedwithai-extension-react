@@ -169,26 +169,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   } else if (message.action === "updateDubbingState") {
-    // Handle the updateDubbingState message
-    chrome.storage.local.get("movieState", (result) => {
-      const newMovieState = {
-        ...result.movieState,
-        isDubbingActive: message.payload,
-      };
-      chrome.storage.local.set({ movieState: newMovieState }, () => {
-        // Notify all tabs about the state change
-        chrome.tabs.query({}, (tabs) => {
-          tabs.forEach((tab) => {
-            if (tab.id) {
-              chrome.tabs.sendMessage(tab.id, {
-                action: "updateDubbingState",
-                payload: message.payload,
-              });
-            }
+    chrome.storage.local.set({ isDubbingActive: message.payload });
+    // Optionally, notify all tabs about the state change
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach((tab) => {
+        if (tab.id) {
+          chrome.tabs.sendMessage(tab.id, {
+            action: "dubbingStateChanged",
+            isDubbingActive: message.payload,
           });
-        });
+        }
       });
     });
-    return true;
   }
 });

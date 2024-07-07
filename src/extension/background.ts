@@ -3,7 +3,7 @@ import { getAuthToken } from "./auth";
 import { DubbingMessage } from "./content/types";
 
 const iconBasePath = chrome.runtime.getURL("icons/");
-let pulseInterval: NodeJS.Timer | null = null;
+const iconCache: { [key: string]: ImageData } = {};
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   let binary = "";
@@ -13,6 +13,30 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
     binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary);
+}
+
+async function preloadIcons() {
+  const iconSizes = [16, 48, 128];
+  const iconStates = ["active", "inactive"];
+
+  for (const size of iconSizes) {
+    for (const state of iconStates) {
+      const iconUrl = `${iconBasePath}mic-${state}${size}.png`;
+      try {
+        const response = await fetch(iconUrl);
+        const blob = await response.blob();
+        const imageBitmap = await createImageBitmap(blob);
+        const canvas = new OffscreenCanvas(size, size);
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(imageBitmap, 0, 0);
+          iconCache[`${state}${size}`] = ctx.getImageData(0, 0, size, size);
+        }
+      } catch (error) {
+        console.error(`Failed to preload icon: ${iconUrl}`, error);
+      }
+    }
+  }
 }
 
 async function fetchSubtitles(
@@ -102,18 +126,17 @@ function checkDubbingStatus(tabId: number): void {
 
 function updateIcon(isDubbingActive: boolean): Promise<void> {
   return new Promise((resolve, reject) => {
-    const iconPath = isDubbingActive
-      ? {
-          16: `${iconBasePath}mic-active16.png`,
-          48: `${iconBasePath}mic-active48.png`,
-          128: `${iconBasePath}mic-active128.png`,
-        }
-      : {
-          16: `${iconBasePath}mic-inactive16.png`,
-          48: `${iconBasePath}mic-inactive48.png`,
-          128: `${iconBasePath}mic-inactive128.png`,
-        };
-    chrome.action.setIcon({ path: iconPath }, () => {
+    const state = isDubbingActive ? "active" : "inactive";
+    const iconData: { [key: number]: ImageData } = {};
+
+    [16, 48, 128].forEach((size) => {
+      const cachedIcon = iconCache[`${state}${size}`];
+      if (cachedIcon) {
+        iconData[size] = cachedIcon;
+      }
+    });
+
+    chrome.action.setIcon({ imageData: iconData }, () => {
       if (chrome.runtime.lastError) {
         reject(
           new Error(`Error setting icon: ${chrome.runtime.lastError.message}`)
@@ -164,6 +187,9 @@ chrome.windows.onFocusChanged.addListener((windowId) => {
 });
 
 chrome.runtime.onInstalled.addListener(() => {
+  preloadIcons().then(() => {
+    console.log("Icons preloaded and cached");
+  });
   chrome.storage.local.get("movieState", (result) => {
     chrome.storage.local.set({ movieState: result.movieState ?? {} });
   });
@@ -171,6 +197,9 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onStartup.addListener(() => {
+  preloadIcons().then(() => {
+    console.log("Icons preloaded and cached");
+  });
   checkAndUpdateAuthStatus();
 });
 

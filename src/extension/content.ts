@@ -23,6 +23,13 @@ function initializeDubbingManager(): boolean {
   return true;
 }
 
+async function stopDubbingOnInactiveTab() {
+  if (isDubbingActive && dubbingManager) {
+    await dubbingManager.stop();
+    updateDubbingState(false);
+  }
+}
+
 function updateDubbingState(isActive: boolean) {
   isDubbingActive = isActive;
   chrome.storage.local.set({ isDubbingActive: isActive });
@@ -82,6 +89,11 @@ chrome.runtime.onMessage.addListener(
   (message: DubbingMessage, sender, sendResponse) => {
     console.log("Received message in content script:", message);
 
+    if (message.action === "checkDubbingStatus") {
+      sendResponse({ isDubbingActive: isDubbingActive });
+      return true;
+    }
+
     handleDubbingAction(message)
       .then((response) => {
         console.log("Sending response from content script:", response);
@@ -91,7 +103,7 @@ chrome.runtime.onMessage.addListener(
         console.error("Error in dubbing action:", error);
         sendResponse({ status: "error", message: error.message });
       });
-    return true; // Indicates that the response is sent asynchronously
+    return true;
   }
 );
 
@@ -123,13 +135,9 @@ chrome.storage.local.get(
   }
 );
 
-// Listen for tab visibility changes
-document.addEventListener("visibilitychange", async () => {
-  if (document.hidden && isDubbingActive) {
-    if (dubbingManager) {
-      await dubbingManager.stop();
-    }
-    updateDubbingState(false);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    stopDubbingOnInactiveTab();
   }
 });
 

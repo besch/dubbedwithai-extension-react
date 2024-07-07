@@ -103,8 +103,16 @@ function checkDubbingStatus(tabId: number): void {
 function updateIcon(isDubbingActive: boolean): Promise<void> {
   return new Promise((resolve, reject) => {
     const iconPath = isDubbingActive
-      ? `${iconBasePath}mic-active.png`
-      : `${iconBasePath}mic-inactive.png`;
+      ? {
+          16: `${iconBasePath}mic-active16.png`,
+          48: `${iconBasePath}mic-active48.png`,
+          128: `${iconBasePath}mic-active128.png`,
+        }
+      : {
+          16: `${iconBasePath}mic-inactive16.png`,
+          48: `${iconBasePath}mic-inactive48.png`,
+          128: `${iconBasePath}mic-inactive128.png`,
+        };
     chrome.action.setIcon({ path: iconPath }, () => {
       if (chrome.runtime.lastError) {
         reject(
@@ -117,59 +125,41 @@ function updateIcon(isDubbingActive: boolean): Promise<void> {
   });
 }
 
-function startPulse() {
-  if (pulseInterval) return;
-  let pulse = true;
-  pulseInterval = setInterval(async () => {
-    const iconPath = pulse
-      ? `${iconBasePath}mic-active.png`
-      : `${iconBasePath}mic-inactive.png`;
-    try {
-      await updateIcon(pulse);
-      pulse = !pulse;
-    } catch (error) {
-      console.error("Error in pulse:", error);
-      stopPulse();
-    }
-  }, 500);
-}
-
-function stopPulse() {
-  if (pulseInterval) {
-    clearInterval(pulseInterval);
-    pulseInterval = null;
-  }
-  updateIcon(false).catch((error) =>
-    console.error("Error stopping pulse:", error)
+function updateDubbingState(isActive: boolean, tabId: number) {
+  updateIcon(isActive).catch((error) =>
+    console.error("Error updating icon:", error)
   );
 }
 
-chrome.tabs.onActivated.addListener((activeInfo: chrome.tabs.TabActiveInfo) => {
-  checkDubbingStatus(activeInfo.tabId);
+function checkDubbingStatusOnActiveTab() {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs[0] && tabs[0].id) {
+      chrome.tabs.sendMessage(
+        tabs[0].id,
+        { action: "checkDubbingStatus" },
+        (response) => {
+          if (response && response.isDubbingActive !== undefined) {
+            updateDubbingState(response.isDubbingActive, tabs[0].id!);
+          }
+        }
+      );
+    }
+  });
+}
+
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  checkDubbingStatusOnActiveTab();
 });
 
-chrome.tabs.onUpdated.addListener(
-  (
-    tabId: number,
-    changeInfo: chrome.tabs.TabChangeInfo,
-    tab: chrome.tabs.Tab
-  ) => {
-    if (changeInfo.status === "complete") {
-      checkDubbingStatus(tabId);
-    }
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === "complete" && tab.active) {
+    checkDubbingStatusOnActiveTab();
   }
-);
+});
 
-chrome.windows.onFocusChanged.addListener((windowId: number) => {
+chrome.windows.onFocusChanged.addListener((windowId) => {
   if (windowId !== chrome.windows.WINDOW_ID_NONE) {
-    chrome.tabs.query(
-      { active: true, windowId: windowId },
-      (tabs: chrome.tabs.Tab[]) => {
-        if (tabs.length > 0 && tabs[0].id) {
-          checkDubbingStatus(tabs[0].id);
-        }
-      }
-    );
+    checkDubbingStatusOnActiveTab();
   }
 });
 
@@ -215,27 +205,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ action: "authStatusChecked" });
     });
     return true;
-  } else if (message.action === "updateDubbingState") {
-    const isActive = message.payload;
-    updateIcon(isActive)
-      .then(() => {
-        if (isActive) {
-          startPulse();
-        } else {
-          stopPulse();
-        }
-        // Broadcast the state change to all tabs
-        chrome.tabs.query({}, (tabs) => {
-          tabs.forEach((tab) => {
-            if (tab.id) {
-              chrome.tabs.sendMessage(tab.id, {
-                action: "updateDubbingState",
-                payload: isActive,
-              });
-            }
-          });
-        });
-      })
-      .catch((error) => console.error("Error updating dubbing state:", error));
+  } else if (
+    message.action === "updateDubbingState" &&
+    sender.tab &&
+    sender.tab.id
+  ) {
+    updateDubbingState(message.payload, sender.tab.id);
   }
 });

@@ -63,7 +63,7 @@ export class DubbingManager {
     }
   }
 
-  stop(): void {
+  async stop(): Promise<void> {
     this.audioFileManager.clearCache();
     this.audioPlayer.stopAllAudio();
     this.subtitleManager.reset();

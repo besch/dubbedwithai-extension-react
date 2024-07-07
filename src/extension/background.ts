@@ -2,6 +2,9 @@ import { parseSrt } from "./utils";
 import { getAuthToken } from "./auth";
 import { DubbingMessage } from "./content/types";
 
+const iconBasePath = chrome.runtime.getURL("icons/");
+let pulseInterval: NodeJS.Timer | null = null;
+
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   let binary = "";
   const bytes = new Uint8Array(buffer);
@@ -97,6 +100,50 @@ function checkDubbingStatus(tabId: number): void {
   } as DubbingMessage);
 }
 
+function updateIcon(isDubbingActive: boolean): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const iconPath = isDubbingActive
+      ? `${iconBasePath}mic-active.png`
+      : `${iconBasePath}mic-inactive.png`;
+    chrome.action.setIcon({ path: iconPath }, () => {
+      if (chrome.runtime.lastError) {
+        reject(
+          new Error(`Error setting icon: ${chrome.runtime.lastError.message}`)
+        );
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+function startPulse() {
+  if (pulseInterval) return;
+  let pulse = true;
+  pulseInterval = setInterval(async () => {
+    const iconPath = pulse
+      ? `${iconBasePath}mic-active.png`
+      : `${iconBasePath}mic-inactive.png`;
+    try {
+      await updateIcon(pulse);
+      pulse = !pulse;
+    } catch (error) {
+      console.error("Error in pulse:", error);
+      stopPulse();
+    }
+  }, 500);
+}
+
+function stopPulse() {
+  if (pulseInterval) {
+    clearInterval(pulseInterval);
+    pulseInterval = null;
+  }
+  updateIcon(false).catch((error) =>
+    console.error("Error stopping pulse:", error)
+  );
+}
+
 chrome.tabs.onActivated.addListener((activeInfo: chrome.tabs.TabActiveInfo) => {
   checkDubbingStatus(activeInfo.tabId);
 });
@@ -169,17 +216,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   } else if (message.action === "updateDubbingState") {
-    chrome.storage.local.set({ isDubbingActive: message.payload });
-    // Optionally, notify all tabs about the state change
-    chrome.tabs.query({}, (tabs) => {
-      tabs.forEach((tab) => {
-        if (tab.id) {
-          chrome.tabs.sendMessage(tab.id, {
-            action: "dubbingStateChanged",
-            isDubbingActive: message.payload,
-          });
+    const isActive = message.payload;
+    updateIcon(isActive)
+      .then(() => {
+        if (isActive) {
+          startPulse();
+        } else {
+          stopPulse();
         }
-      });
-    });
+        // Broadcast the state change to all tabs
+        chrome.tabs.query({}, (tabs) => {
+          tabs.forEach((tab) => {
+            if (tab.id) {
+              chrome.tabs.sendMessage(tab.id, {
+                action: "updateDubbingState",
+                payload: isActive,
+              });
+            }
+          });
+        });
+      })
+      .catch((error) => console.error("Error updating dubbing state:", error));
   }
 });

@@ -23,7 +23,18 @@ function initializeDubbingManager(): boolean {
   return true;
 }
 
+function updateDubbingState(isActive: boolean) {
+  isDubbingActive = isActive;
+  chrome.storage.local.set({ isDubbingActive: isActive });
+  chrome.runtime.sendMessage({
+    action: "updateDubbingState",
+    payload: isActive,
+  });
+}
+
 async function handleDubbingAction(message: DubbingMessage): Promise<any> {
+  console.log("Handling dubbing action:", message.action);
+
   switch (message.action) {
     case "initializeDubbing":
       if (!initializeDubbingManager()) {
@@ -31,9 +42,8 @@ async function handleDubbingAction(message: DubbingMessage): Promise<any> {
       }
       if ("movieId" in message && "subtitleId" in message) {
         await dubbingManager!.initialize(message.movieId, message.subtitleId);
-        isDubbingActive = true;
+        updateDubbingState(true);
         await chrome.storage.local.set({
-          isDubbingActive: true,
           currentMovieId: message.movieId,
           currentSubtitleId: message.subtitleId,
         });
@@ -45,8 +55,7 @@ async function handleDubbingAction(message: DubbingMessage): Promise<any> {
       if (dubbingManager) {
         await dubbingManager.stop();
       }
-      isDubbingActive = false;
-      await chrome.storage.local.set({ isDubbingActive: false });
+      updateDubbingState(false);
       return { status: "stopped" };
     case "checkDubbingStatus":
       if (!initializeDubbingManager()) {
@@ -56,15 +65,28 @@ async function handleDubbingAction(message: DubbingMessage): Promise<any> {
         status: "checked",
         isDubbingActive: isDubbingActive,
       };
+    case "updateDubbingState":
+      if ("payload" in message && typeof message.payload === "boolean") {
+        updateDubbingState(message.payload);
+        return { status: "updated" };
+      } else {
+        throw new Error("Invalid payload for updateDubbingState");
+      }
     default:
+      console.error(`Unknown action received: ${(message as any).action}`);
       throw new Error(`Unknown action: ${(message as any).action}`);
   }
 }
 
 chrome.runtime.onMessage.addListener(
   (message: DubbingMessage, sender, sendResponse) => {
+    console.log("Received message in content script:", message);
+
     handleDubbingAction(message)
-      .then(sendResponse)
+      .then((response) => {
+        console.log("Sending response from content script:", response);
+        sendResponse(response);
+      })
       .catch((error) => {
         console.error("Error in dubbing action:", error);
         sendResponse({ status: "error", message: error.message });
@@ -74,8 +96,6 @@ chrome.runtime.onMessage.addListener(
 );
 
 log(LogLevel.INFO, "Content script loaded");
-
-// ... rest of your content script ...
 
 chrome.storage.local.get(
   ["isDubbingActive", "currentMovieId", "currentSubtitleId"],
@@ -91,23 +111,14 @@ chrome.storage.local.get(
           result.currentMovieId,
           result.currentSubtitleId
         );
-        isDubbingActive = true;
+        updateDubbingState(true);
       } catch (error) {
         console.error("Failed to initialize dubbing:", error);
-        isDubbingActive = false;
-        await chrome.storage.local.set({ isDubbingActive: false });
-        chrome.runtime.sendMessage({
-          action: "updateDubbingState",
-          payload: false,
-        });
+        updateDubbingState(false);
       }
     } else if (result.isDubbingActive) {
       // If dubbing was active but we can't initialize it on this page, update the state
-      await chrome.storage.local.set({ isDubbingActive: false });
-      chrome.runtime.sendMessage({
-        action: "updateDubbingState",
-        payload: false,
-      });
+      updateDubbingState(false);
     }
   }
 );
@@ -118,12 +129,7 @@ document.addEventListener("visibilitychange", async () => {
     if (dubbingManager) {
       await dubbingManager.stop();
     }
-    isDubbingActive = false;
-    await chrome.storage.local.set({ isDubbingActive: false });
-    chrome.runtime.sendMessage({
-      action: "updateDubbingState",
-      payload: false,
-    });
+    updateDubbingState(false);
   }
 });
 

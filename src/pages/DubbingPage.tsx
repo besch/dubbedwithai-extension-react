@@ -1,44 +1,63 @@
-// src/pages/DubbingPage.tsx
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import DubbingControls from "@/components/DubbingControls";
 import CurrentSubtitle from "@/components/CurrentSubtitle";
 import { setIsDubbingActive, startDubbingProcess } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
+import { sendMessageToActiveTab } from "@/lib/messaging";
 
 const DubbingPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { selectedMovie, selectedLanguage, isDubbingActive } = useSelector(
     (state: RootState) => state.movie
   );
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("dispatch, isDubbingActive, selectedMovie, selectedLanguage");
-    if (isDubbingActive && selectedMovie && selectedLanguage) {
-      // Start the dubbing process when the component mounts if dubbing is active
-      dispatch(startDubbingProcess());
-
-      // Send message to content script to check dubbing status
-      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        if (tabs[0]?.id) {
-          chrome.tabs.sendMessage(tabs[0].id, { action: "checkDubbingStatus" });
-        }
-      });
+    if (selectedMovie && selectedLanguage) {
+      sendMessageToActiveTab({ action: "checkDubbingStatus" })
+        .then((response: any) => {
+          if (response.status === "checked") {
+            dispatch(setIsDubbingActive(response.isDubbingActive));
+          } else {
+            throw new Error("Unexpected response from content script");
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to check dubbing status:", error);
+          setError(
+            "Failed to communicate with the active tab. Please refresh the page and try again."
+          );
+          dispatch(setIsDubbingActive(false));
+        });
     }
-  }, [dispatch, isDubbingActive, selectedMovie, selectedLanguage]);
+  }, [dispatch, selectedMovie, selectedLanguage]);
 
   const handleDubbingToggle = async (isActive: boolean) => {
-    await dispatch(setIsDubbingActive(isActive));
-    if (isActive) {
-      dispatch(startDubbingProcess());
-    } else {
-      // Send message to content script to stop dubbing
-      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        if (tabs[0]?.id) {
-          chrome.tabs.sendMessage(tabs[0].id, { action: "stopDubbing" });
+    setError(null);
+    try {
+      if (isActive) {
+        const response = await sendMessageToActiveTab({
+          action: "initializeDubbing",
+          movieId: selectedMovie?.imdbID,
+          subtitleId: selectedLanguage?.id,
+        });
+        if (response.status !== "initialized") {
+          throw new Error("Failed to initialize dubbing");
         }
-      });
+      } else {
+        const response = await sendMessageToActiveTab({
+          action: "stopDubbing",
+        });
+        if (response.status !== "stopped") {
+          throw new Error("Failed to stop dubbing");
+        }
+      }
+      dispatch(setIsDubbingActive(isActive));
+    } catch (error) {
+      console.error("Failed to toggle dubbing:", error);
+      setError("Failed to toggle dubbing. Please try again.");
     }
   };
 
@@ -74,6 +93,7 @@ const DubbingPage: React.FC = () => {
           </p>
         </div>
       </div>
+      {error && <div className="text-red-500 mt-2">{error}</div>}
       <DubbingControls
         isDubbingActive={isDubbingActive}
         onDubbingToggle={handleDubbingToggle}

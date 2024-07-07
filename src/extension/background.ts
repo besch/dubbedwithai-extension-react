@@ -1,5 +1,6 @@
 import { parseSrt } from "./utils";
 import { getAuthToken } from "./auth";
+import { DubbingMessage } from "./content/types";
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   let binary = "";
@@ -90,6 +91,41 @@ async function checkAndUpdateAuthStatus() {
   }
 }
 
+function checkDubbingStatus(tabId: number): void {
+  chrome.tabs.sendMessage(tabId, {
+    action: "checkDubbingStatus",
+  } as DubbingMessage);
+}
+
+chrome.tabs.onActivated.addListener((activeInfo: chrome.tabs.TabActiveInfo) => {
+  checkDubbingStatus(activeInfo.tabId);
+});
+
+chrome.tabs.onUpdated.addListener(
+  (
+    tabId: number,
+    changeInfo: chrome.tabs.TabChangeInfo,
+    tab: chrome.tabs.Tab
+  ) => {
+    if (changeInfo.status === "complete") {
+      checkDubbingStatus(tabId);
+    }
+  }
+);
+
+chrome.windows.onFocusChanged.addListener((windowId: number) => {
+  if (windowId !== chrome.windows.WINDOW_ID_NONE) {
+    chrome.tabs.query(
+      { active: true, windowId: windowId },
+      (tabs: chrome.tabs.Tab[]) => {
+        if (tabs.length > 0 && tabs[0].id) {
+          checkDubbingStatus(tabs[0].id);
+        }
+      }
+    );
+  }
+});
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get("movieState", (result) => {
     chrome.storage.local.set({ movieState: result.movieState ?? {} });
@@ -128,9 +164,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     })();
     return true;
   } else if (message.action === "checkAuthStatus") {
-    // New message handler to check auth status
     checkAndUpdateAuthStatus().then(() => {
       sendResponse({ action: "authStatusChecked" });
+    });
+    return true;
+  } else if (message.action === "updateDubbingState") {
+    // Handle the updateDubbingState message
+    chrome.storage.local.get("movieState", (result) => {
+      const newMovieState = {
+        ...result.movieState,
+        isDubbingActive: message.payload,
+      };
+      chrome.storage.local.set({ movieState: newMovieState }, () => {
+        // Notify all tabs about the state change
+        chrome.tabs.query({}, (tabs) => {
+          tabs.forEach((tab) => {
+            if (tab.id) {
+              chrome.tabs.sendMessage(tab.id, {
+                action: "updateDubbingState",
+                payload: message.payload,
+              });
+            }
+          });
+        });
+      });
     });
     return true;
   }

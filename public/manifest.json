@@ -5,6 +5,7 @@
   "description": "Search for movies and apply or generate dubbing",
   "permissions": [
     "activeTab",
+    "tabs",
     "storage",
     "scripting",
     "identity",

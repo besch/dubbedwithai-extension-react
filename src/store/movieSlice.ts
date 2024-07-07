@@ -134,6 +134,10 @@ const movieSlice = createSlice({
     setSearchResults: (state, action: PayloadAction<Movie[]>) => {
       state.searchResults = action.payload;
     },
+    updateDubbingState: (state, action: PayloadAction<boolean>) => {
+      state.isDubbingActive = action.payload;
+      chrome.storage.local.set({ movieState: { ...state } });
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -181,6 +185,7 @@ export const {
   setSelectedLanguage,
   setIsDubbingActive,
   setSearchResults,
+  updateDubbingState,
 } = movieSlice.actions;
 
 export default movieSlice.reducer;

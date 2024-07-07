@@ -4,6 +4,8 @@ import { DubbingMessage } from "./content/types";
 
 const iconBasePath = chrome.runtime.getURL("icons/");
 const iconCache: { [key: string]: ImageData } = {};
+let isPulsing = false;
+let pulseState = false;
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   let binary = "";
@@ -17,7 +19,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 
 async function preloadIcons() {
   const iconSizes = [16, 48, 128];
-  const iconStates = ["active", "inactive"];
+  const iconStates = ["active", "active-filled", "inactive"];
 
   for (const size of iconSizes) {
     for (const state of iconStates) {
@@ -37,6 +39,22 @@ async function preloadIcons() {
       }
     }
   }
+}
+
+function startPulsing() {
+  if (isPulsing) return; // Already pulsing
+
+  isPulsing = true;
+  chrome.alarms.create("iconPulse", { periodInMinutes: 1 / 60 }); // Pulse every second
+  updateIcon(true, false);
+}
+
+function stopPulsing() {
+  if (!isPulsing) return;
+
+  isPulsing = false;
+  chrome.alarms.clear("iconPulse");
+  updateIcon(false);
 }
 
 async function fetchSubtitles(
@@ -124,9 +142,16 @@ function checkDubbingStatus(tabId: number): void {
   } as DubbingMessage);
 }
 
-function updateIcon(isDubbingActive: boolean): Promise<void> {
+function updateIcon(
+  isDubbingActive: boolean,
+  pulse: boolean = false
+): Promise<void> {
   return new Promise((resolve, reject) => {
-    const state = isDubbingActive ? "active" : "inactive";
+    const state = isDubbingActive
+      ? pulse
+        ? "active-filled"
+        : "active"
+      : "inactive";
     const iconData: { [key: number]: ImageData } = {};
 
     [16, 48, 128].forEach((size) => {
@@ -149,9 +174,11 @@ function updateIcon(isDubbingActive: boolean): Promise<void> {
 }
 
 function updateDubbingState(isActive: boolean, tabId: number) {
-  updateIcon(isActive).catch((error) =>
-    console.error("Error updating icon:", error)
-  );
+  if (isActive) {
+    startPulsing();
+  } else {
+    stopPulsing();
+  }
 }
 
 function checkDubbingStatusOnActiveTab() {
@@ -169,6 +196,17 @@ function checkDubbingStatusOnActiveTab() {
     }
   });
 }
+
+chrome.runtime.onSuspend.addListener(() => {
+  chrome.alarms.clear("iconPulse");
+});
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "iconPulse") {
+    pulseState = !pulseState;
+    updateIcon(true, pulseState);
+  }
+});
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
   checkDubbingStatusOnActiveTab();

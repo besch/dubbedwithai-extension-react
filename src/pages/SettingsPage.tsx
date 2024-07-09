@@ -78,17 +78,17 @@ const SettingsPage: React.FC = () => {
           <input
             type="range"
             id="subtitleOffset"
-            min="-10"
-            max="10"
+            min="-100"
+            max="100"
             step="0.1"
             value={localOffset}
             onChange={handleOffsetChange}
             className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
           />
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>-10s</span>
+            <span>-100s</span>
             <span>0s</span>
-            <span>+10s</span>
+            <span>+100s</span>
           </div>
           <div className="text-center text-lg font-semibold text-primary">
             {localOffset.toFixed(1)}s

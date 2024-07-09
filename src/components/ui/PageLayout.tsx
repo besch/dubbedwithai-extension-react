@@ -13,7 +13,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
 }) => {
   return (
     <div className={`p-4 space-y-4 ${className}`}>
-      <h1 className="text-2xl font-bold text-primary">{title}</h1>
+      <h1 className="text-xl font-bold text-secondary">{title}</h1>
       {children}
     </div>
   );

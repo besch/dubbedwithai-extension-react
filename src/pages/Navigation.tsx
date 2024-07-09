@@ -1,14 +1,14 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { AppDispatch, RootState } from "@/store";
 import { Search, Mic, User, Settings } from "lucide-react";
 import { checkDubbingStatus } from "@/store/movieSlice";
-import { RootState, AppDispatch } from "@/store";
 
 const Navigation: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
   const { isDubbingActive } = useSelector((state: RootState) => state.movie);
 
@@ -27,6 +27,21 @@ const Navigation: React.FC = () => {
     return `${baseClass} ${inactiveClass}`;
   };
 
+  const getMicIconClass = () => {
+    const baseClass = "cursor-pointer transition-colors";
+    const isDubbingPage = location.pathname === "/dubbing";
+
+    if (isDubbingActive) {
+      if (isDubbingPage) {
+        return `${baseClass} animate-flash-blue-red`;
+      } else {
+        return `${baseClass} animate-flash-red`;
+      }
+    } else {
+      return getIconClass("/dubbing");
+    }
+  };
+
   const handleNavigate = (path: string) => {
     navigate(path);
     if (path === "/dubbing") {
@@ -39,7 +54,7 @@ const Navigation: React.FC = () => {
       <div className="flex items-center space-x-4">
         <h1
           className="text-2xl font-bold text-blue-600 cursor-pointer"
-          onClick={() => navigate("/")}
+          onClick={() => handleNavigate("/")}
         >
           Dubabase
         </h1>
@@ -51,9 +66,7 @@ const Navigation: React.FC = () => {
           size={24}
         />
         <Mic
-          className={`${getIconClass("/dubbing")} ${
-            isDubbingActive ? "text-red-500 animate-flicker" : ""
-          }`}
+          className={getMicIconClass()}
           onClick={() => handleNavigate("/dubbing")}
           size={24}
         />

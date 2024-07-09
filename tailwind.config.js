@@ -70,14 +70,17 @@ module.exports = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-      },
-      animation: {
-        flicker: "flicker 1s infinite",
+        "flash-blue-red": "flashBlueRed 1s linear infinite",
+        "flash-red": "flashRed 1s linear infinite", // New animation
       },
       keyframes: {
-        flicker: {
-          "0%, 100%": { opacity: 1 },
-          "50%": { opacity: 0.5 },
+        flashBlueRed: {
+          "0%, 100%": { color: "#3B82F6" }, // blue-500
+          "50%": { color: "#EF4444" }, // red-500
+        },
+        flashRed: {
+          "0%, 100%": { color: "#EF4444" }, // red-500
+          "50%": { color: "#FFFFFF" }, // white
         },
       },
     },

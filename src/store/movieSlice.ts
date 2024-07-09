@@ -131,7 +131,7 @@ export const checkDubbingStatus = createAsyncThunk(
       const response = await sendMessageToActiveTab({
         action: "checkDubbingStatus",
       });
-      if (response.status === "checked") {
+      if (response && response.status === "checked") {
         dispatch(setIsDubbingActive(response.isDubbingActive));
       }
     } catch (error) {
@@ -157,7 +157,6 @@ const movieSlice = createSlice({
     },
     setIsDubbingActive: (state, action: PayloadAction<boolean>) => {
       state.isDubbingActive = action.payload;
-      chrome.storage.local.set({ movieState: { ...state } });
     },
     setSearchResults: (state, action: PayloadAction<Movie[]>) => {
       state.searchResults = action.payload;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState, AppDispatch } from "@/store";
+import { AppDispatch, RootState } from "@/store";
 import DubbingControls from "@/components/DubbingControls";
 import { setIsDubbingActive, checkDubbingStatus } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";

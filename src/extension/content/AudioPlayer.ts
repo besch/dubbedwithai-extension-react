@@ -18,10 +18,22 @@ export class AudioPlayer {
     const source = this.audioContext.createBufferSource();
     source.buffer = buffer;
     source.connect(this.audioContext.destination);
-    source.start(0, offset);
+
+    // Ensure offset is not negative and not beyond the buffer duration
+    const startOffset = Math.max(0, Math.min(offset, buffer.duration));
+    source.start(0, startOffset);
 
     this.activeAudio.set(fileName, { source, subtitle });
     source.onended = () => this.activeAudio.delete(fileName);
+  }
+
+  stopExpiredAudio(adjustedTime: number): void {
+    this.activeAudio.forEach((audioInfo, fileName) => {
+      const endTime = timeStringToSeconds(audioInfo.subtitle.end);
+      if (adjustedTime >= endTime) {
+        this.stopAudio(fileName);
+      }
+    });
   }
 
   stopAudio(fileName: string): void {
@@ -38,14 +50,6 @@ export class AudioPlayer {
 
   isAudioActive(fileName: string): boolean {
     return this.activeAudio.has(fileName);
-  }
-
-  stopExpiredAudio(currentTime: number): void {
-    this.activeAudio.forEach((audioInfo, fileName) => {
-      if (currentTime >= timeStringToSeconds(audioInfo.subtitle.end)) {
-        this.stopAudio(fileName);
-      }
-    });
   }
 
   setVolume(volume: number): void {

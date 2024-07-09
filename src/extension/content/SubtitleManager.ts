@@ -6,10 +6,12 @@ export class SubtitleManager {
   private subtitleRequests: Map<string, Promise<Subtitle[] | null>> = new Map();
   private sortedSubtitles: Subtitle[] = [];
 
-  getUpcomingSubtitles(currentTime: number, preloadTime: number): Subtitle[] {
+  getUpcomingSubtitles(adjustedTime: number, preloadTime: number): Subtitle[] {
     return this.sortedSubtitles.filter((subtitle) => {
       const startTime = timeStringToSeconds(subtitle.start);
-      return startTime > currentTime && startTime <= currentTime + preloadTime;
+      return (
+        startTime > adjustedTime && startTime <= adjustedTime + preloadTime
+      );
     });
   }
 
@@ -58,18 +60,11 @@ export class SubtitleManager {
     );
   }
 
-  getCurrentSubtitles(currentTime: number): Subtitle[] {
-    const index = this.sortedSubtitles.findIndex(
-      (subtitle) => timeStringToSeconds(subtitle.end) > currentTime
-    );
-    if (index === -1) return [];
-
-    return this.sortedSubtitles
-      .slice(index)
-      .filter(
-        (subtitle) =>
-          timeStringToSeconds(subtitle.start) <= currentTime &&
-          timeStringToSeconds(subtitle.end) > currentTime
-      );
+  getCurrentSubtitles(adjustedTime: number): Subtitle[] {
+    return this.sortedSubtitles.filter((subtitle) => {
+      const startTime = timeStringToSeconds(subtitle.start);
+      const endTime = timeStringToSeconds(subtitle.end);
+      return adjustedTime >= startTime && adjustedTime < endTime;
+    });
   }
 }

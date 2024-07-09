@@ -20,7 +20,6 @@ const CurrentSubtitle: React.FC = () => {
 
   useEffect(() => {
     const handleSubtitleChange = (message: any) => {
-      console.log("Received subtitle message:", message);
       if (message.action === "currentSubtitle") {
         if (message.subtitle) {
           setSubtitle(message.subtitle);

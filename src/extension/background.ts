@@ -32,7 +32,8 @@ async function preloadIcons() {
         const ctx = canvas.getContext("2d");
         if (ctx) {
           ctx.drawImage(imageBitmap, 0, 0);
-          iconCache[`${state}${size}`] = ctx.getImageData(0, 0, size, size);
+          const imageData = ctx.getImageData(0, 0, size, size);
+          iconCache[`${state}${size}`] = imageData;
         }
       } catch (error) {
         console.error(`Failed to preload icon: ${iconUrl}`, error);
@@ -156,10 +157,16 @@ function updateIcon(
 
     [16, 48, 128].forEach((size) => {
       const cachedIcon = iconCache[`${state}${size}`];
-      if (cachedIcon) {
+      if (cachedIcon && cachedIcon instanceof ImageData) {
         iconData[size] = cachedIcon;
       }
     });
+
+    // Check if we have valid ImageData for at least one size
+    if (Object.keys(iconData).length === 0) {
+      reject(new Error("No valid ImageData found in iconCache"));
+      return;
+    }
 
     chrome.action.setIcon({ imageData: iconData }, () => {
       if (chrome.runtime.lastError) {
@@ -278,5 +285,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sender.tab.id
   ) {
     updateDubbingState(message.payload, sender.tab.id);
+  } else if (message.action === "updateCurrentTime") {
+    chrome.runtime.sendMessage(message);
   }
 });

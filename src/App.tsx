@@ -1,5 +1,3 @@
-// src/App.tsx
-
 import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
@@ -10,7 +8,7 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { checkAuthStatus } from "@/store/authSlice";
-import { loadMovieState } from "@/store/movieSlice";
+import { loadMovieState, updateDubbingState } from "@/store/movieSlice";
 import AuthPage from "@/pages/AuthPage";
 import MovieSearchPage from "@/pages/MovieSearchPage";
 import LanguageSelectionPage from "@/pages/LanguageSelectionPage";
@@ -18,6 +16,14 @@ import DubbingPage from "@/pages/DubbingPage";
 import ProfilePage from "@/pages/ProfilePage";
 import Navigation from "@/pages/Navigation";
 import SettingsPage from "./pages/SettingsPage";
+import CurrentSubtitle from "@/components/CurrentSubtitle";
+
+interface SubtitleItem {
+  text: string;
+  start: number;
+  end: number;
+  currentTime: number;
+}
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -28,6 +34,7 @@ const App: React.FC = () => {
     (state: RootState) => state.movie.isDubbingActive
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [subtitle, setSubtitle] = useState<SubtitleItem | null>(null);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -37,6 +44,22 @@ const App: React.FC = () => {
     };
 
     initializeApp();
+  }, [dispatch]);
+
+  useEffect(() => {
+    const messageListener = (message: any) => {
+      if (message.action === "updateDubbingState") {
+        dispatch(updateDubbingState(message.payload));
+      } else if (message.action === "currentSubtitle") {
+        setSubtitle(message.subtitle);
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(messageListener);
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(messageListener);
+    };
   }, [dispatch]);
 
   if (isLoading) {

@@ -12,6 +12,7 @@ const DEFAULT_DUBBING_CONFIG: DubbingConfig = {
 };
 
 export class DubbingManager {
+  private subtitleOffset: number = 0;
   private audioFileManager: AudioFileManager;
   private subtitleManager: SubtitleManager;
   private audioPlayer: AudioPlayer;
@@ -32,6 +33,14 @@ export class DubbingManager {
     this.audioPlayer = new AudioPlayer(this.audioContext);
     this.originalVolume = this.config.defaultVolume;
     this.setupMessageListener();
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+      if (namespace === "local" && changes.movieState) {
+        const newMovieState = changes.movieState.newValue;
+        if (newMovieState && typeof newMovieState.subtitleOffset === "number") {
+          this.subtitleOffset = newMovieState.subtitleOffset;
+        }
+      }
+    });
   }
 
   initialize(movieId: string, subtitleId: string): void {
@@ -205,17 +214,25 @@ export class DubbingManager {
   private handleTimeUpdate = (event: Event): void => {
     const video = event.target as HTMLVideoElement;
     const currentTime = video.currentTime;
+    const adjustedTime = currentTime - this.subtitleOffset;
+
     const currentSubtitles =
-      this.subtitleManager.getCurrentSubtitles(currentTime);
+      this.subtitleManager.getCurrentSubtitles(adjustedTime);
 
     this.adjustVolume(video, currentSubtitles);
     if (!this.isVideoPaused) {
       this.playCurrentSubtitles(currentTime);
     }
-    this.audioPlayer.stopExpiredAudio(currentTime);
-    this.preloadUpcomingSubtitles(currentTime);
+    this.audioPlayer.stopExpiredAudio(adjustedTime);
+    this.preloadUpcomingSubtitles(adjustedTime);
 
-    this.sendCurrentSubtitleInfo(currentTime, currentSubtitles);
+    this.sendCurrentSubtitleInfo(adjustedTime, currentSubtitles);
+
+    chrome.runtime.sendMessage({
+      action: "updateCurrentTime",
+      currentTime: currentTime,
+      adjustedTime: adjustedTime,
+    });
   };
 
   private adjustVolume(
@@ -229,30 +246,30 @@ export class DubbingManager {
   }
 
   private playCurrentSubtitles(currentTime: number): void {
+    const adjustedTime = currentTime - this.subtitleOffset;
+
     const currentSubtitles =
-      this.subtitleManager.getCurrentSubtitles(currentTime);
+      this.subtitleManager.getCurrentSubtitles(adjustedTime);
     currentSubtitles.forEach((subtitle) => {
       const audioFileName = getAudioFileName(subtitle);
       const startTime = timeStringToSeconds(subtitle.start);
       const endTime = timeStringToSeconds(subtitle.end);
 
       if (
-        currentTime >= startTime &&
-        currentTime < endTime &&
+        adjustedTime >= startTime &&
+        adjustedTime < endTime &&
         !this.audioPlayer.isAudioActive(audioFileName)
       ) {
-        this.playAudioIfAvailable(
-          audioFileName,
-          subtitle,
-          currentTime - startTime
-        );
+        const audioOffset = Math.max(0, adjustedTime - startTime);
+        this.playAudioIfAvailable(audioFileName, subtitle, audioOffset);
       }
     });
   }
 
   private preloadUpcomingSubtitles(currentTime: number): void {
+    const adjustedTime = currentTime - this.subtitleOffset;
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
-      currentTime,
+      adjustedTime,
       this.config.preloadTime
     );
     upcomingSubtitles.forEach((subtitle) => {
@@ -279,7 +296,7 @@ export class DubbingManager {
   }
 
   private sendCurrentSubtitleInfo(
-    currentTime: number,
+    adjustedTime: number,
     currentSubtitles: Subtitle[]
   ): void {
     if (currentSubtitles.length > 0) {
@@ -289,7 +306,7 @@ export class DubbingManager {
 
       if (
         currentSubtitle !== this.lastSentSubtitle ||
-        currentTime - this.lastSentTime >= this.config.subtitleUpdateInterval
+        adjustedTime - this.lastSentTime >= this.config.subtitleUpdateInterval
       ) {
         chrome.runtime.sendMessage({
           action: "currentSubtitle",
@@ -297,12 +314,12 @@ export class DubbingManager {
             text: currentSubtitle.text,
             start: startTime,
             end: endTime,
-            currentTime,
+            currentTime: adjustedTime,
           },
         });
 
         this.lastSentSubtitle = currentSubtitle;
-        this.lastSentTime = currentTime;
+        this.lastSentTime = adjustedTime;
       }
     } else if (this.lastSentSubtitle !== null) {
       chrome.runtime.sendMessage({ action: "currentSubtitle", subtitle: null });

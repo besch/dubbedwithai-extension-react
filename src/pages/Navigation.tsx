@@ -1,34 +1,29 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { Search, Mic, User, Settings } from "lucide-react";
-import { updateDubbingState } from "@/store/movieSlice";
 
 const Navigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const { isDubbingActive } = useSelector((state: RootState) => state.movie);
-
-  useEffect(() => {
-    const messageListener = (message: any) => {
-      if (message.action === "updateDubbingState") {
-        dispatch(updateDubbingState(message.payload));
-      }
-    };
-
-    chrome.runtime.onMessage.addListener(messageListener);
-
-    return () => {
-      chrome.runtime.onMessage.removeListener(messageListener);
-    };
-  }, [dispatch]);
 
   if (location.pathname === "/auth") {
     return null;
   }
+
+  const getIconClass = (path: string) => {
+    const baseClass = "cursor-pointer transition-colors";
+    const activeClass = "text-blue-600";
+    const inactiveClass = "hover:text-blue-500";
+
+    if (location.pathname === path) {
+      return `${baseClass} ${activeClass}`;
+    }
+    return `${baseClass} ${inactiveClass}`;
+  };
 
   return (
     <nav className="flex justify-between items-center p-4 bg-gray-100">
@@ -42,25 +37,25 @@ const Navigation: React.FC = () => {
       </div>
       <div className="flex space-x-6">
         <Search
-          className="cursor-pointer hover:text-blue-500 transition-colors"
+          className={getIconClass("/search")}
           onClick={() => navigate("/search")}
           size={24}
         />
         <Mic
-          className={`cursor-pointer hover:text-blue-500 transition-colors ${
+          className={`${getIconClass("/dubbing")} ${
             isDubbingActive ? "text-red-500 animate-flicker" : ""
           }`}
           onClick={() => navigate("/dubbing")}
           size={24}
         />
-        <User
-          className="cursor-pointer hover:text-blue-500 transition-colors"
-          onClick={() => navigate("/profile")}
+        <Settings
+          className={getIconClass("/settings")}
+          onClick={() => navigate("/settings")}
           size={24}
         />
-        <Settings
-          className="cursor-pointer hover:text-blue-500 transition-colors"
-          onClick={() => navigate("/settings")}
+        <User
+          className={getIconClass("/profile")}
+          onClick={() => navigate("/profile")}
           size={24}
         />
       </div>

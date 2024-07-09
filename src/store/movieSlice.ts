@@ -12,6 +12,8 @@ interface MovieState {
   error: string | null;
   searchResults: Movie[];
   subtitleOffset: number;
+  currentVideoTime: number;
+  adjustedVideoTime: number;
 }
 
 const initialState: MovieState = {
@@ -23,6 +25,8 @@ const initialState: MovieState = {
   error: null,
   searchResults: [],
   subtitleOffset: 0,
+  currentVideoTime: 0,
+  adjustedVideoTime: 0,
 };
 
 export const loadMovieState = createAsyncThunk("movie/loadState", async () => {
@@ -148,6 +152,17 @@ const movieSlice = createSlice({
       state.subtitleOffset = action.payload;
       chrome.storage.local.set({ movieState: { ...state } });
     },
+    resetSubtitleOffset: (state) => {
+      state.subtitleOffset = 0;
+      chrome.storage.local.set({ movieState: { ...state } });
+    },
+    updateCurrentTime: (
+      state,
+      action: PayloadAction<{ currentTime: number; adjustedTime: number }>
+    ) => {
+      state.currentVideoTime = action.payload.currentTime;
+      state.adjustedVideoTime = action.payload.adjustedTime;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -197,6 +212,8 @@ export const {
   setSearchResults,
   updateDubbingState,
   setSubtitleOffset,
+  resetSubtitleOffset,
+  updateCurrentTime,
 } = movieSlice.actions;
 
 export default movieSlice.reducer;

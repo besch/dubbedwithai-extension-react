@@ -1,17 +1,28 @@
+import React from "react";
 import { Movie } from "@/types";
 
-const MovieCard: React.FC<{ movie: Movie }> = ({ movie }) => (
-  <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 bg-white rounded-lg shadow-md p-4">
-    {movie.Poster && (
+interface MovieCardProps {
+  movie: Movie;
+}
+
+const MovieCard: React.FC<MovieCardProps> = ({ movie }) => (
+  <div className="flex items-start space-x-4">
+    {movie.Poster && movie.Poster !== "N/A" ? (
       <img
         src={movie.Poster}
         alt={`${movie.Title} poster`}
-        className="w-24 h-auto object-cover rounded-md shadow-sm"
+        className="w-24 h-36 object-cover rounded-md shadow-sm"
       />
+    ) : (
+      <div className="w-24 h-36 bg-secondary flex items-center justify-center rounded-md shadow-sm">
+        <span className="text-secondary-foreground text-xs text-center">
+          No poster
+        </span>
+      </div>
     )}
-    <div className="flex flex-col justify-center">
-      <h2 className="text-xl font-semibold text-gray-800">{movie.Title}</h2>
-      <p className="text-sm text-gray-600 mt-1">({movie.Year})</p>
+    <div>
+      <h3 className="font-semibold text-foreground">{movie.Title}</h3>
+      <p className="text-sm text-muted-foreground">{movie.Year}</p>
     </div>
   </div>
 );

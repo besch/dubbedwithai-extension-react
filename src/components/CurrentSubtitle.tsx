@@ -68,12 +68,12 @@ const CurrentSubtitle: React.FC = () => {
 
   return (
     <div
-      className={`fixed bottom-4 left-0 right-0 text-center p-4 bg-black bg-opacity-50 text-white text-xl
+      className={`fixed bottom-4 left-0 right-0 text-center p-4 bg-secondary bg-opacity-75 text-white text-xl rounded-t-lg
         animate__animated ${
-          isVisible ? "animate__backInUp" : "animate__backOutUp"
+          isVisible ? "animate__fadeInUp" : "animate__fadeOutDown"
         }`}
     >
-      <div className="mb-2">
+      <div className="mb-2 text-sm opacity-75">
         {formatTime(subtitle.start)} - {formatTime(subtitle.end)}
       </div>
       <div>{subtitle.text}</div>

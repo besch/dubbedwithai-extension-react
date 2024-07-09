@@ -5,6 +5,8 @@ import { RootState, AppDispatch } from "@/store";
 import LanguageSelector from "@/components/LanguageSelector";
 import { setSelectedLanguage, fetchLanguages } from "@/store/movieSlice";
 import { Language } from "@/types";
+import PageLayout from "@/components/ui/PageLayout";
+import MovieCard from "@/components/MovieCard";
 
 const LanguageSelectionPage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,23 +37,17 @@ const LanguageSelectionPage: React.FC = () => {
   }
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Select Language</h2>
-      {selectedMovie && (
-        <div className="mb-4">
-          <h3 className="font-semibold">{selectedMovie.Title}</h3>
-          <p className="text-sm text-gray-600">{selectedMovie.Year}</p>
-        </div>
-      )}
+    <PageLayout title="Select Language">
+      {selectedMovie && <MovieCard movie={selectedMovie} />}
       {languages.length > 0 ? (
         <LanguageSelector
           onSelectLanguage={handleLanguageSelect}
           languages={languages}
         />
       ) : (
-        <p>No languages available for this movie.</p>
+        <p className="text-gray-600">No languages available for this movie.</p>
       )}
-    </div>
+    </PageLayout>
   );
 };
 

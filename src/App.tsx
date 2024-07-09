@@ -19,31 +19,24 @@ import LanguageSelectionPage from "@/pages/LanguageSelectionPage";
 import DubbingPage from "@/pages/DubbingPage";
 import ProfilePage from "@/pages/ProfilePage";
 import Navigation from "@/pages/Navigation";
-import SettingsPage from "./pages/SettingsPage";
+import SettingsPage from "@/pages/SettingsPage";
+import CurrentSubtitle from "@/components/CurrentSubtitle";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
-interface SubtitleItem {
-  text: string;
-  start: number;
-  end: number;
-  currentTime: number;
-}
+const APP_WIDTH = 350;
+const APP_HEIGHT = 400;
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const isAuthenticated = useSelector(
-    (state: RootState) => state.auth.isAuthenticated
-  );
-  const isDubbingActive = useSelector(
-    (state: RootState) => state.movie.isDubbingActive
-  );
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isDubbingActive } = useSelector((state: RootState) => state.movie);
   const [isLoading, setIsLoading] = useState(true);
-  const [subtitle, setSubtitle] = useState<SubtitleItem | null>(null);
 
   useEffect(() => {
     const initializeApp = async () => {
       await dispatch(checkAuthStatus());
       await dispatch(loadMovieState());
-      await dispatch(checkDubbingStatus()); // Add this line
+      await dispatch(checkDubbingStatus());
       setIsLoading(false);
     };
 
@@ -54,8 +47,6 @@ const App: React.FC = () => {
     const messageListener = (message: any) => {
       if (message.action === "updateDubbingState") {
         dispatch(updateDubbingState(message.payload));
-      } else if (message.action === "currentSubtitle") {
-        setSubtitle(message.subtitle);
       }
     };
 
@@ -67,80 +58,89 @@ const App: React.FC = () => {
   }, [dispatch]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className={`w-[350px] h-[400px] flex items-center justify-center`}>
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return (
     <Router>
-      <div className="w-[350px] h-[400px] bg-white rounded shadow-md">
+      <div
+        className={`w-[350px] h-[400px] bg-background text-foreground flex flex-col`}
+      >
         <Navigation />
-        <Routes>
-          <Route path="/auth" element={<AuthPage />} />
-          <Route
-            path="/search"
-            element={
-              isAuthenticated ? (
-                <MovieSearchPage />
-              ) : (
-                <Navigate to="/auth" replace />
-              )
-            }
-          />
-          <Route
-            path="/language"
-            element={
-              isAuthenticated ? (
-                <LanguageSelectionPage />
-              ) : (
-                <Navigate to="/auth" replace />
-              )
-            }
-          />
-          <Route
-            path="/dubbing"
-            element={
-              isAuthenticated ? (
-                <DubbingPage />
-              ) : (
-                <Navigate to="/auth" replace />
-              )
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              isAuthenticated ? (
-                <ProfilePage />
-              ) : (
-                <Navigate to="/auth" replace />
-              )
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              isAuthenticated ? (
-                <SettingsPage />
-              ) : (
-                <Navigate to="/auth" replace />
-              )
-            }
-          />
-          <Route
-            path="*"
-            element={
-              isAuthenticated ? (
-                isDubbingActive ? (
-                  <Navigate to="/dubbing" replace />
+        <div className="flex-grow overflow-auto">
+          <Routes>
+            <Route path="/auth" element={<AuthPage />} />
+            <Route
+              path="/search"
+              element={
+                isAuthenticated ? (
+                  <MovieSearchPage />
                 ) : (
-                  <Navigate to="/search" replace />
+                  <Navigate to="/auth" replace />
                 )
-              ) : (
-                <Navigate to="/auth" replace />
-              )
-            }
-          />
-        </Routes>
+              }
+            />
+            <Route
+              path="/language"
+              element={
+                isAuthenticated ? (
+                  <LanguageSelectionPage />
+                ) : (
+                  <Navigate to="/auth" replace />
+                )
+              }
+            />
+            <Route
+              path="/dubbing"
+              element={
+                isAuthenticated ? (
+                  <DubbingPage />
+                ) : (
+                  <Navigate to="/auth" replace />
+                )
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                isAuthenticated ? (
+                  <ProfilePage />
+                ) : (
+                  <Navigate to="/auth" replace />
+                )
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                isAuthenticated ? (
+                  <SettingsPage />
+                ) : (
+                  <Navigate to="/auth" replace />
+                )
+              }
+            />
+            <Route
+              path="*"
+              element={
+                isAuthenticated ? (
+                  isDubbingActive ? (
+                    <Navigate to="/dubbing" replace />
+                  ) : (
+                    <Navigate to="/search" replace />
+                  )
+                ) : (
+                  <Navigate to="/auth" replace />
+                )
+              }
+            />
+          </Routes>
+        </div>
+        <CurrentSubtitle />
       </div>
     </Router>
   );

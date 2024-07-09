@@ -5,6 +5,9 @@ import DubbingControls from "@/components/DubbingControls";
 import { setIsDubbingActive, checkDubbingStatus } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
 import { sendMessageToActiveTab } from "@/lib/messaging";
+import PageLayout from "@/components/ui/PageLayout";
+import MovieCard from "@/components/MovieCard";
+import { Alert, AlertDescription } from "@/components/ui/Alert";
 
 const DubbingPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -56,39 +59,33 @@ const DubbingPage: React.FC = () => {
     languageCodes[languageCode] || languageCode;
 
   if (!selectedMovie || !selectedLanguage) {
-    return <div className="p-4">No movie or language selected</div>;
+    return (
+      <PageLayout title="Dubbing Controls">
+        <Alert variant="destructive">
+          <AlertDescription>No movie or language selected</AlertDescription>
+        </Alert>
+      </PageLayout>
+    );
   }
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Dubbing Controls</h2>
-      <div className="mb-4 flex items-start">
-        {selectedMovie.Poster && selectedMovie.Poster !== "N/A" ? (
-          <img
-            src={selectedMovie.Poster}
-            alt={`${selectedMovie.Title} poster`}
-            className="w-24 h-36 object-cover rounded-md shadow-sm mr-4"
-          />
-        ) : (
-          <div className="w-24 h-36 bg-gray-200 flex items-center justify-center rounded-md shadow-sm mr-4">
-            <span className="text-gray-500 text-xs text-center">No poster</span>
-          </div>
+    <PageLayout title="Dubbing Controls">
+      <div className="space-y-4">
+        <MovieCard movie={selectedMovie} />
+        <p className="text-sm text-muted-foreground">
+          Language: {getFullLanguageName(selectedLanguage.attributes.language)}
+        </p>
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
-        <div>
-          <h3 className="font-semibold">{selectedMovie.Title}</h3>
-          <p className="text-sm text-gray-600">{selectedMovie.Year}</p>
-          <p className="text-sm text-gray-600">
-            Language:{" "}
-            {getFullLanguageName(selectedLanguage.attributes.language)}
-          </p>
-        </div>
+        <DubbingControls
+          isDubbingActive={isDubbingActive}
+          onDubbingToggle={handleDubbingToggle}
+        />
       </div>
-      {error && <div className="text-red-500 mt-2">{error}</div>}
-      <DubbingControls
-        isDubbingActive={isDubbingActive}
-        onDubbingToggle={handleDubbingToggle}
-      />
-    </div>
+    </PageLayout>
   );
 };
 

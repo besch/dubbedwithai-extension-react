@@ -66,22 +66,20 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        flashBlueRed: {
+          "0%, 100%": { color: "hsl(var(--primary))" },
+          "50%": { color: "hsl(var(--destructive))" },
+        },
+        flashRed: {
+          "0%, 100%": { color: "hsl(var(--destructive))" },
+          "50%": { color: "hsl(var(--background))" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "flash-blue-red": "flashBlueRed 1s linear infinite",
-        "flash-red": "flashRed 1s linear infinite", // New animation
-      },
-      keyframes: {
-        flashBlueRed: {
-          "0%, 100%": { color: "#3B82F6" }, // blue-500
-          "50%": { color: "#EF4444" }, // red-500
-        },
-        flashRed: {
-          "0%, 100%": { color: "#EF4444" }, // red-500
-          "50%": { color: "#FFFFFF" }, // white
-        },
+        "flash-red": "flashRed 1s linear infinite",
       },
     },
   },

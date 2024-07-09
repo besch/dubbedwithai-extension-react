@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "@/store/authSlice";
 import { AppDispatch, RootState } from "@/store";
+import PageLayout from "@/components/ui/PageLayout";
+import Button from "@/components/ui/Button";
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,20 +21,17 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-4">
-      <h2 className="mb-4 text-xl font-bold">Welcome to Dubabase</h2>
-      <p className="mb-4 text-center text-gray-600">
-        Please log in to access the movie dubbing features.
-      </p>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
-      <button
-        onClick={handleLogin}
-        disabled={loading}
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200 disabled:opacity-50"
-      >
-        {loading ? "Logging in..." : "Login with Google"}
-      </button>
-    </div>
+    <PageLayout title="Welcome to Dubabase">
+      <div className="text-center">
+        <p className="mb-4 text-gray-600">
+          Please log in to access the movie dubbing features.
+        </p>
+        {error && <p className="text-danger mb-2">{error}</p>}
+        <Button onClick={handleLogin} disabled={loading}>
+          {loading ? "Logging in..." : "Login with Google"}
+        </Button>
+      </div>
+    </PageLayout>
   );
 };
 

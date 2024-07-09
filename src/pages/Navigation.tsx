@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
 import { Search, Mic, User, Settings } from "lucide-react";
 import { checkDubbingStatus } from "@/store/movieSlice";
+import { cn } from "@/lib/utils";
 
 const Navigation: React.FC = () => {
   const location = useLocation();
@@ -17,29 +18,25 @@ const Navigation: React.FC = () => {
   }
 
   const getIconClass = (path: string) => {
-    const baseClass = "cursor-pointer transition-colors";
-    const activeClass = "text-blue-600";
-    const inactiveClass = "hover:text-blue-500";
-
-    if (location.pathname === path) {
-      return `${baseClass} ${activeClass}`;
-    }
-    return `${baseClass} ${inactiveClass}`;
+    return cn(
+      "cursor-pointer transition-colors",
+      location.pathname === path
+        ? "text-primary"
+        : "text-muted-foreground hover:text-primary"
+    );
   };
 
   const getMicIconClass = () => {
-    const baseClass = "cursor-pointer transition-colors";
     const isDubbingPage = location.pathname === "/dubbing";
 
-    if (isDubbingActive) {
-      if (isDubbingPage) {
-        return `${baseClass} animate-flash-blue-red`;
-      } else {
-        return `${baseClass} animate-flash-red`;
-      }
-    } else {
-      return getIconClass("/dubbing");
-    }
+    return cn(
+      "cursor-pointer transition-colors",
+      {
+        "animate-flash-blue-red": isDubbingActive && isDubbingPage,
+        "animate-flash-red": isDubbingActive && !isDubbingPage,
+      },
+      !isDubbingActive && getIconClass("/dubbing")
+    );
   };
 
   const handleNavigate = (path: string) => {
@@ -50,14 +47,9 @@ const Navigation: React.FC = () => {
   };
 
   return (
-    <nav className="flex justify-between items-center p-4 bg-gray-100">
+    <nav className="flex justify-between items-center p-4 bg-background border-b">
       <div className="flex items-center space-x-4">
-        <h1
-          className="text-2xl font-bold text-blue-600 cursor-pointer"
-          onClick={() => handleNavigate("/")}
-        >
-          Dubabase
-        </h1>
+        <h1 className="text-2xl font-bold text-primary">Dubabase</h1>
       </div>
       <div className="flex space-x-6">
         <Search

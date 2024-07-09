@@ -5,6 +5,7 @@ import MovieSearch from "@/components/MovieSearch";
 import { useDispatch } from "react-redux";
 import { setSelectedMovie } from "@/store/movieSlice";
 import { Movie } from "@/types";
+import PageLayout from "@/components/ui/PageLayout";
 
 const MovieSearchPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,10 +17,9 @@ const MovieSearchPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Search for a Movie</h2>
+    <PageLayout title="Search for a Movie">
       <MovieSearch onSelectMovie={handleMovieSelect} />
-    </div>
+    </PageLayout>
   );
 };
 

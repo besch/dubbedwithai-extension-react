@@ -1,15 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "Movie Dubbing Extension",
+  "name": "Dubabase",
   "version": "1.0",
-  "description": "Search for movies and apply or generate dubbing",
+  "description": "Play movie and apply dubbing to it",
   "permissions": [
     "activeTab",
     "tabs",
     "offscreen",
     "alarms",
     "storage",
-    "scripting",
     "identity",
     "identity.email"
   ],
@@ -29,11 +28,13 @@
       "128": "icons/mic-inactive128.png"
     }
   },
-  "icons": {
-    "16": "icons/mic-inactive16.png",
-    "48": "icons/mic-inactive48.png",
-    "128": "icons/mic-inactive128.png"
-  },
+  "icons": [
+    {
+      "16": "icons/mic-inactive16.png",
+      "48": "icons/mic-inactive48.png",
+      "128": "icons/mic-inactive128.png"
+    }
+  ],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

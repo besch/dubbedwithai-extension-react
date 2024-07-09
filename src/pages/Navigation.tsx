@@ -1,4 +1,3 @@
-// src/components/Navigation.tsx
 import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -33,7 +32,15 @@ const Navigation: React.FC = () => {
 
   return (
     <nav className="flex justify-between items-center p-4 bg-gray-100">
-      <div className="flex space-x-4">
+      <div className="flex items-center space-x-4">
+        <h1
+          className="text-2xl font-bold text-blue-600 cursor-pointer"
+          onClick={() => navigate("/")}
+        >
+          Dubabase
+        </h1>
+      </div>
+      <div className="flex space-x-6">
         <Search
           className="cursor-pointer hover:text-blue-500 transition-colors"
           onClick={() => navigate("/search")}

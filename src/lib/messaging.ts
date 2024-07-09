@@ -1,5 +1,3 @@
-// src/lib/messaging.ts
-
 export const sendMessageToActiveTab = (message: any): Promise<any> => {
   return new Promise((resolve, reject) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

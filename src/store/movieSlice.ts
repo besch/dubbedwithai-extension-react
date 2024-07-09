@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Language, Movie } from "@/types";
 import { getAuthToken } from "@/extension/auth";
 import { RootState } from "@/store/index";
+import { sendMessageToActiveTab } from "@/lib/messaging";
 
 interface MovieState {
   selectedMovie: Movie | null;
@@ -123,6 +124,23 @@ export const searchMovies = createAsyncThunk(
   }
 );
 
+export const checkDubbingStatus = createAsyncThunk(
+  "movie/checkDubbingStatus",
+  async (_, { dispatch }) => {
+    try {
+      const response = await sendMessageToActiveTab({
+        action: "checkDubbingStatus",
+      });
+      if (response.status === "checked") {
+        dispatch(setIsDubbingActive(response.isDubbingActive));
+      }
+    } catch (error) {
+      console.error("Failed to check dubbing status:", error);
+      dispatch(setIsDubbingActive(false));
+    }
+  }
+);
+
 const movieSlice = createSlice({
   name: "movie",
   initialState,
@@ -201,6 +219,9 @@ const movieSlice = createSlice({
       })
       .addCase(startDubbingProcess.rejected, (state, action) => {
         state.error = action.error.message || "Failed to start dubbing process";
+      })
+      .addCase(checkDubbingStatus.rejected, (state) => {
+        state.isDubbingActive = false;
       });
   },
 });

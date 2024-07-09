@@ -1,10 +1,12 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
+import { useSelector, useDispatch } from "react-redux";
 import { Search, Mic, User, Settings } from "lucide-react";
+import { checkDubbingStatus } from "@/store/movieSlice";
+import { RootState, AppDispatch } from "@/store";
 
 const Navigation: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -25,6 +27,13 @@ const Navigation: React.FC = () => {
     return `${baseClass} ${inactiveClass}`;
   };
 
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    if (path === "/dubbing") {
+      dispatch(checkDubbingStatus());
+    }
+  };
+
   return (
     <nav className="flex justify-between items-center p-4 bg-gray-100">
       <div className="flex items-center space-x-4">
@@ -38,24 +47,24 @@ const Navigation: React.FC = () => {
       <div className="flex space-x-6">
         <Search
           className={getIconClass("/search")}
-          onClick={() => navigate("/search")}
+          onClick={() => handleNavigate("/search")}
           size={24}
         />
         <Mic
           className={`${getIconClass("/dubbing")} ${
             isDubbingActive ? "text-red-500 animate-flicker" : ""
           }`}
-          onClick={() => navigate("/dubbing")}
+          onClick={() => handleNavigate("/dubbing")}
           size={24}
         />
         <Settings
           className={getIconClass("/settings")}
-          onClick={() => navigate("/settings")}
+          onClick={() => handleNavigate("/settings")}
           size={24}
         />
         <User
           className={getIconClass("/profile")}
-          onClick={() => navigate("/profile")}
+          onClick={() => handleNavigate("/profile")}
           size={24}
         />
       </div>

@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import DubbingControls from "@/components/DubbingControls";
-import CurrentSubtitle from "@/components/CurrentSubtitle";
-import { setIsDubbingActive } from "@/store/movieSlice";
+import { setIsDubbingActive, checkDubbingStatus } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
 import { sendMessageToActiveTab } from "@/lib/messaging";
 
@@ -14,30 +13,11 @@ const DubbingPage: React.FC = () => {
   );
   const [error, setError] = useState<string | null>(null);
 
-  const checkDubbingStatus = useCallback(async () => {
-    try {
-      const response: any = await sendMessageToActiveTab({
-        action: "checkDubbingStatus",
-      });
-      if (response.status === "checked") {
-        dispatch(setIsDubbingActive(response.isDubbingActive));
-      } else if (response.status === "error") {
-        setError(response.message);
-        dispatch(setIsDubbingActive(false));
-      } else {
-        throw new Error("Unexpected response from content script");
-      }
-    } catch (error) {
-      console.error("Failed to check dubbing status:", error);
-      dispatch(setIsDubbingActive(false));
-    }
-  }, [dispatch]);
-
   useEffect(() => {
     if (selectedMovie && selectedLanguage) {
-      checkDubbingStatus();
+      dispatch(checkDubbingStatus());
     }
-  }, [selectedMovie, selectedLanguage, checkDubbingStatus]);
+  }, [selectedMovie, selectedLanguage, dispatch]);
 
   const handleDubbingToggle = async (isActive: boolean) => {
     setError(null);
@@ -108,7 +88,6 @@ const DubbingPage: React.FC = () => {
         isDubbingActive={isDubbingActive}
         onDubbingToggle={handleDubbingToggle}
       />
-      <CurrentSubtitle />
     </div>
   );
 };

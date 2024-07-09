@@ -8,7 +8,11 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { checkAuthStatus } from "@/store/authSlice";
-import { loadMovieState, updateDubbingState } from "@/store/movieSlice";
+import {
+  loadMovieState,
+  updateDubbingState,
+  checkDubbingStatus,
+} from "@/store/movieSlice";
 import AuthPage from "@/pages/AuthPage";
 import MovieSearchPage from "@/pages/MovieSearchPage";
 import LanguageSelectionPage from "@/pages/LanguageSelectionPage";
@@ -16,7 +20,6 @@ import DubbingPage from "@/pages/DubbingPage";
 import ProfilePage from "@/pages/ProfilePage";
 import Navigation from "@/pages/Navigation";
 import SettingsPage from "./pages/SettingsPage";
-import CurrentSubtitle from "@/components/CurrentSubtitle";
 
 interface SubtitleItem {
   text: string;
@@ -40,6 +43,7 @@ const App: React.FC = () => {
     const initializeApp = async () => {
       await dispatch(checkAuthStatus());
       await dispatch(loadMovieState());
+      await dispatch(checkDubbingStatus()); // Add this line
       setIsLoading(false);
     };
 

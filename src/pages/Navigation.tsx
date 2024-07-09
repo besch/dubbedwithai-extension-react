@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
-import { Search, Mic, User } from "lucide-react";
+import { Search, Mic, User, Settings } from "lucide-react";
 import { updateDubbingState } from "@/store/movieSlice";
 
 const Navigation: React.FC = () => {
@@ -56,6 +56,11 @@ const Navigation: React.FC = () => {
         <User
           className="cursor-pointer hover:text-blue-500 transition-colors"
           onClick={() => navigate("/profile")}
+          size={24}
+        />
+        <Settings
+          className="cursor-pointer hover:text-blue-500 transition-colors"
+          onClick={() => navigate("/settings")}
           size={24}
         />
       </div>

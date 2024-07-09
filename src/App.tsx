@@ -17,6 +17,7 @@ import LanguageSelectionPage from "@/pages/LanguageSelectionPage";
 import DubbingPage from "@/pages/DubbingPage";
 import ProfilePage from "@/pages/ProfilePage";
 import Navigation from "@/pages/Navigation";
+import SettingsPage from "./pages/SettingsPage";
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -44,7 +45,7 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="w-[300px] h-[400px] bg-white rounded shadow-md">
+      <div className="w-[350px] h-[400px] bg-white rounded shadow-md">
         <Navigation />
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
@@ -83,6 +84,16 @@ const App: React.FC = () => {
             element={
               isAuthenticated ? (
                 <ProfilePage />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              isAuthenticated ? (
+                <SettingsPage />
               ) : (
                 <Navigate to="/auth" replace />
               )

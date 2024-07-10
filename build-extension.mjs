@@ -7,6 +7,7 @@ import path from "path";
 import fs from "fs";
 
 dotenv.config();
+dotenv.config({ override: true });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,6 +29,7 @@ const options = {
       /^["'`]|["'`]$/g,
       ""
     );
+    console.log("url", url);
     return url;
   },
 };

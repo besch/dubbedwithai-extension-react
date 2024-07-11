@@ -19,7 +19,6 @@ export class AudioPlayer {
     source.buffer = buffer;
     source.connect(this.audioContext.destination);
 
-    // Ensure offset is not negative and not beyond the buffer duration
     const startOffset = Math.max(0, Math.min(offset, buffer.duration));
     source.start(0, startOffset);
 

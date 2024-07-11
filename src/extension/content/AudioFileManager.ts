@@ -5,7 +5,6 @@ export class AudioFileManager {
   private audioCache: AudioCache;
   private inMemoryCache: Map<string, AudioBuffer> = new Map();
   private ongoingRequests: Map<string, Promise<AudioBuffer | null>> = new Map();
-  private requestedFiles: Set<string> = new Set();
 
   constructor(private audioContext: AudioContext) {
     this.audioCache = new AudioCache();
@@ -18,37 +17,10 @@ export class AudioFileManager {
   ): Promise<AudioBuffer | null> {
     const cacheKey = `${movieId}-${subtitleId}-${fileName}`;
 
-    if (this.requestedFiles.has(cacheKey)) {
-      while (
-        this.ongoingRequests.has(cacheKey) ||
-        !this.inMemoryCache.has(cacheKey)
-      ) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-      return this.inMemoryCache.get(cacheKey) || null;
-    }
+    if (this.inMemoryCache.has(cacheKey))
+      return this.inMemoryCache.get(cacheKey)!;
 
-    this.requestedFiles.add(cacheKey);
-
-    try {
-      if (this.inMemoryCache.has(cacheKey))
-        return this.inMemoryCache.get(cacheKey)!;
-      if (this.ongoingRequests.has(cacheKey))
-        return this.ongoingRequests.get(cacheKey)!;
-
-      const cachedAudio = await this.audioCache.getAudio(cacheKey);
-      if (cachedAudio) {
-        try {
-          const buffer = await this.audioContext.decodeAudioData(
-            cachedAudio.slice(0)
-          );
-          this.inMemoryCache.set(cacheKey, buffer);
-          return buffer;
-        } catch (e) {
-          log(LogLevel.ERROR, "Error decoding cached audio data:", e);
-        }
-      }
-
+    if (!this.ongoingRequests.has(cacheKey)) {
       const request = this.fetchAndProcessAudio(
         movieId,
         subtitleId,
@@ -56,9 +28,15 @@ export class AudioFileManager {
         cacheKey
       );
       this.ongoingRequests.set(cacheKey, request);
-      return await request;
-    } finally {
+    }
+
+    try {
+      const buffer = await this.ongoingRequests.get(cacheKey)!;
       this.ongoingRequests.delete(cacheKey);
+      return buffer;
+    } catch (error) {
+      log(LogLevel.ERROR, "Error fetching or processing audio:", error);
+      return null;
     }
   }
 
@@ -68,27 +46,27 @@ export class AudioFileManager {
     fileName: string,
     cacheKey: string
   ): Promise<AudioBuffer | null> {
-    try {
-      const audioData = await this.fetchAudioFile(
-        movieId,
-        subtitleId,
-        fileName
-      );
-      if (!audioData) return null;
+    let audioData = await this.audioCache.getAudio(cacheKey);
 
+    if (!audioData) {
+      audioData = await this.fetchAudioFile(movieId, subtitleId, fileName);
+      if (!audioData) return null;
+      await this.audioCache.storeAudio(cacheKey, audioData);
+    }
+
+    try {
       const buffer = await this.audioContext.decodeAudioData(
         audioData.slice(0)
       );
       this.inMemoryCache.set(cacheKey, buffer);
-      await this.audioCache.storeAudio(cacheKey, audioData);
       return buffer;
     } catch (e) {
-      log(LogLevel.ERROR, "Error fetching or processing audio:", e);
+      log(LogLevel.ERROR, "Error decoding audio data:", e);
       return null;
     }
   }
 
-  private fetchAudioFile(
+  private async fetchAudioFile(
     movieId: string,
     subtitleId: string,
     fileName: string
@@ -110,6 +88,5 @@ export class AudioFileManager {
   clearCache(): void {
     this.inMemoryCache.clear();
     this.ongoingRequests.clear();
-    this.requestedFiles.clear();
   }
 }

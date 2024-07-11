@@ -6,7 +6,4 @@ module.exports = {
       "@": path.resolve(__dirname, "src/"),
     },
   },
-  babel: {
-    plugins: [["transform-remove-console", { exclude: ["error", "warn"] }]],
-  },
 };

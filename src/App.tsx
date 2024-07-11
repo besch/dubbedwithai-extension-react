@@ -23,9 +23,6 @@ import SettingsPage from "@/pages/SettingsPage";
 import CurrentSubtitle from "@/components/CurrentSubtitle";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
-const APP_WIDTH = 350;
-const APP_HEIGHT = 400;
-
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -68,7 +65,7 @@ const App: React.FC = () => {
   return (
     <Router>
       <div
-        className={`w-[350px] h-[400px] bg-background text-foreground flex flex-col`}
+        className={`w-[350px] h-[430px] bg-background text-foreground flex flex-col`}
       >
         <Navigation />
         <div className="flex-grow overflow-auto">

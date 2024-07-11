@@ -46,6 +46,12 @@ const SettingsPage: React.FC = () => {
     setIsApplied(false);
   };
 
+  const handleOffsetAdjust = (amount: number) => {
+    const newOffset = Math.round((localOffset + amount) * 10) / 10;
+    setLocalOffset(newOffset);
+    setIsApplied(false);
+  };
+
   const handleOffsetApply = () => {
     dispatch(setSubtitleOffset(localOffset));
     setIsApplied(true);
@@ -54,6 +60,7 @@ const SettingsPage: React.FC = () => {
 
   const handleOffsetReset = () => {
     dispatch(resetSubtitleOffset());
+    setLocalOffset(0);
     setIsApplied(true);
     setTimeout(() => setIsApplied(false), 2000);
   };
@@ -61,59 +68,79 @@ const SettingsPage: React.FC = () => {
   return (
     <PageLayout title="Subtitle Settings">
       <div className="space-y-4">
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Time: {formatTime(currentTime)} | Adjusted:{" "}
-            {formatTime(adjustedTime)}
-          </p>
+        <div className="flex justify-between items-center bg-secondary p-3 rounded-md">
+          <div className="text-sm font-medium">
+            <span className="text-white">Current Time:</span>{" "}
+            <span className="text-white">{formatTime(currentTime)}</span>
+          </div>
+          <div className="text-sm font-medium">
+            <span className="text-white">Adjusted Time:</span>{" "}
+            <span className="text-white">{formatTime(adjustedTime)}</span>
+          </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-4">
           <label
             htmlFor="subtitleOffset"
-            className="block text-sm font-medium text-foreground"
+            className="block text-lg font-semibold text-foreground"
           >
-            Subtitle Offset (seconds)
+            Subtitle Offset
           </label>
-          <input
-            type="range"
-            id="subtitleOffset"
-            min="-100"
-            max="100"
-            step="0.1"
-            value={localOffset}
-            onChange={handleOffsetChange}
-            className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
-          />
+          <div className="flex items-center space-x-4">
+            <Button
+              onClick={() => handleOffsetAdjust(-0.5)}
+              variant="outline"
+              size="sm"
+            >
+              -0.5s
+            </Button>
+            <input
+              type="range"
+              id="subtitleOffset"
+              min="-100"
+              max="100"
+              step="0.1"
+              value={localOffset}
+              onChange={handleOffsetChange}
+              className="flex-grow h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
+            />
+            <Button
+              onClick={() => handleOffsetAdjust(0.5)}
+              variant="outline"
+              size="sm"
+            >
+              +0.5s
+            </Button>
+          </div>
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>-100s</span>
             <span>0s</span>
             <span>+100s</span>
           </div>
-          <div className="text-center text-lg font-semibold text-primary">
+          <div className="text-center text-2xl font-bold text-primary">
             {localOffset.toFixed(1)}s
           </div>
         </div>
 
-        <div className="flex space-x-2">
+        <div className="flex space-x-4">
           <Button
             onClick={handleOffsetApply}
             variant={isApplied ? "secondary" : "primary"}
-            className="flex-1"
+            className="flex-1 py-2"
           >
             {isApplied ? "Applied!" : "Apply Offset"}
           </Button>
           <Button
             onClick={handleOffsetReset}
             variant="outline"
-            className="flex-1"
+            className="flex-1 py-2"
           >
             Reset Offset
           </Button>
         </div>
 
         {isApplied && (
-          <div className="text-center text-primary font-medium animate-pulse">
+          <div className="text-center text-lg text-primary font-semibold animate-pulse bg-primary/10 p-2 rounded-md">
             Offset has been applied successfully!
           </div>
         )}

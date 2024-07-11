@@ -1,6 +1,6 @@
-// src/components/DubbingControls.tsx
 import React from "react";
 import Button from "@/components/ui/Button";
+import { Play, Pause } from "lucide-react";
 
 interface DubbingControlsProps {
   isDubbingActive: boolean;
@@ -13,9 +13,19 @@ const DubbingControls: React.FC<DubbingControlsProps> = ({
 }) => (
   <Button
     onClick={() => onDubbingToggle(!isDubbingActive)}
-    variant={isDubbingActive ? "destructive" : "primary"}
+    variant={isDubbingActive ? "outline" : "primary"}
   >
-    {isDubbingActive ? "Stop Dubbing" : "Start Dubbing"}
+    {isDubbingActive ? (
+      <>
+        <Pause className="w-4 h-4 mr-2" />
+        Stop Dubbing
+      </>
+    ) : (
+      <>
+        <Play className="w-4 h-4 mr-2" />
+        Start Dubbing
+      </>
+    )}
   </Button>
 );
 

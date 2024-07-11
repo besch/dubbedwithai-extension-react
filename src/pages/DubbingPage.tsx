@@ -50,7 +50,9 @@ const DubbingPage: React.FC = () => {
       dispatch(setIsDubbingActive(isActive));
     } catch (error) {
       console.error("Failed to toggle dubbing:", error);
-      setError("Failed to toggle dubbing. Please try again.");
+      setError(
+        "Failed to toggle dubbing or video player not found. Please try again."
+      );
       dispatch(setIsDubbingActive(false));
     }
   };

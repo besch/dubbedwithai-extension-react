@@ -6,7 +6,6 @@ import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs";
 
-dotenv.config();
 dotenv.config({ override: true });
 
 const __filename = fileURLToPath(import.meta.url);

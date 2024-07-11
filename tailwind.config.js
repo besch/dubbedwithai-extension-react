@@ -74,12 +74,27 @@ module.exports = {
           "0%, 100%": { color: "hsl(var(--destructive))" },
           "50%": { color: "hsl(var(--background))" },
         },
+        fadeIn: {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        spin: {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
+        pulse: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "flash-blue-red": "flashBlueRed 1s linear infinite",
         "flash-red": "flashRed 1s linear infinite",
+        "fade-in": "fadeIn 0.3s ease-in",
+        spin: "spin 1s linear infinite",
+        pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },

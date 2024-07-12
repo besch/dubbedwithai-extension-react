@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { Movie } from "@/types";
 import MovieItem from "@/components/MovieItem";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Search } from "lucide-react";
 import { searchMovies, setSelectedMovie } from "@/store/movieSlice";
 
@@ -53,9 +54,13 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
         />
         <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
       </div>
-      {isLoading && <p>Loading...</p>}
-      {error && <p className="text-red-500">{error}</p>}
-      {searchResults && searchResults.length > 0 && (
+      {isLoading && (
+        <div className="flex justify-center items-center mt-4">
+          <LoadingSpinner />
+        </div>
+      )}
+      {error && <p className="text-red-500 mt-2">{error}</p>}
+      {searchResults && searchResults.length > 0 ? (
         <ul className="mt-2 max-h-60 overflow-y-auto">
           {searchResults.map((movie) => (
             <MovieItem
@@ -65,6 +70,14 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
             />
           ))}
         </ul>
+      ) : (
+        movieQuery.length > 2 &&
+        !isLoading &&
+        !error && (
+          <p className="mt-2 text-gray-600">
+            No movies found. Try another search term.
+          </p>
+        )
       )}
     </div>
   );

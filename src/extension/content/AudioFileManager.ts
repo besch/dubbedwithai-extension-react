@@ -5,6 +5,7 @@ export class AudioFileManager {
   private audioCache: AudioCache;
   private inMemoryCache: Map<string, AudioBuffer> = new Map();
   private ongoingRequests: Map<string, Promise<AudioBuffer | null>> = new Map();
+  private notFoundFiles: Set<string> = new Set();
 
   constructor(private audioContext: AudioContext) {
     this.audioCache = new AudioCache();
@@ -17,8 +18,13 @@ export class AudioFileManager {
   ): Promise<AudioBuffer | null> {
     const cacheKey = `${movieId}-${subtitleId}-${fileName}`;
 
-    if (this.inMemoryCache.has(cacheKey))
+    if (this.notFoundFiles.has(cacheKey)) {
+      return null;
+    }
+
+    if (this.inMemoryCache.has(cacheKey)) {
       return this.inMemoryCache.get(cacheKey)!;
+    }
 
     if (!this.ongoingRequests.has(cacheKey)) {
       const request = this.fetchAndProcessAudio(
@@ -33,9 +39,13 @@ export class AudioFileManager {
     try {
       const buffer = await this.ongoingRequests.get(cacheKey)!;
       this.ongoingRequests.delete(cacheKey);
+      if (buffer === null) {
+        this.notFoundFiles.add(cacheKey);
+      }
       return buffer;
     } catch (error) {
       log(LogLevel.ERROR, "Error fetching or processing audio:", error);
+      this.notFoundFiles.add(cacheKey);
       return null;
     }
   }
@@ -50,7 +60,10 @@ export class AudioFileManager {
 
     if (!audioData) {
       audioData = await this.fetchAudioFile(movieId, subtitleId, fileName);
-      if (!audioData) return null;
+      if (!audioData) {
+        this.notFoundFiles.add(cacheKey);
+        return null;
+      }
       await this.audioCache.storeAudio(cacheKey, audioData);
     }
 
@@ -62,6 +75,7 @@ export class AudioFileManager {
       return buffer;
     } catch (e) {
       log(LogLevel.ERROR, "Error decoding audio data:", e);
+      this.notFoundFiles.add(cacheKey);
       return null;
     }
   }
@@ -88,5 +102,6 @@ export class AudioFileManager {
   clearCache(): void {
     this.inMemoryCache.clear();
     this.ongoingRequests.clear();
+    this.notFoundFiles.clear();
   }
 }

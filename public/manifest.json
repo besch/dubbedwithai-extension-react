@@ -19,7 +19,7 @@
       "https://www.googleapis.com/auth/userinfo.profile"
     ]
   },
-  "host_permissions": ["https://*/", "http://*/"],
+  "host_permissions": ["https://dubbedwithai.vercel.app/*"],
   "action": {
     "default_popup": "index.html",
     "default_icon": {

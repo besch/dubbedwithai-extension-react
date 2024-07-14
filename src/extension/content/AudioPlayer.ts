@@ -11,7 +11,7 @@ export class AudioPlayer {
 
   async playAudio(
     buffer: AudioBuffer,
-    fileName: string,
+    filePath: string,
     subtitle: Subtitle,
     offset: number = 0
   ): Promise<void> {
@@ -22,33 +22,33 @@ export class AudioPlayer {
     const startOffset = Math.max(0, Math.min(offset, buffer.duration));
     source.start(0, startOffset);
 
-    this.activeAudio.set(fileName, { source, subtitle });
-    source.onended = () => this.activeAudio.delete(fileName);
+    this.activeAudio.set(filePath, { source, subtitle });
+    source.onended = () => this.activeAudio.delete(filePath);
   }
 
   stopExpiredAudio(adjustedTime: number): void {
-    this.activeAudio.forEach((audioInfo, fileName) => {
+    this.activeAudio.forEach((audioInfo, filePath) => {
       const endTime = timeStringToSeconds(audioInfo.subtitle.end);
       if (adjustedTime >= endTime) {
-        this.stopAudio(fileName);
+        this.stopAudio(filePath);
       }
     });
   }
 
-  stopAudio(fileName: string): void {
-    const audioInfo = this.activeAudio.get(fileName);
+  stopAudio(filePath: string): void {
+    const audioInfo = this.activeAudio.get(filePath);
     if (audioInfo) {
       audioInfo.source.stop();
-      this.activeAudio.delete(fileName);
+      this.activeAudio.delete(filePath);
     }
   }
 
   stopAllAudio(): void {
-    this.activeAudio.forEach((_, fileName) => this.stopAudio(fileName));
+    this.activeAudio.forEach((_, filePath) => this.stopAudio(filePath));
   }
 
-  isAudioActive(fileName: string): boolean {
-    return this.activeAudio.has(fileName);
+  isAudioActive(filePath: string): boolean {
+    return this.activeAudio.has(filePath);
   }
 
   setVolume(volume: number): void {

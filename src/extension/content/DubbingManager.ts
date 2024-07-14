@@ -1,3 +1,4 @@
+import { throttle } from "lodash";
 import { AudioFileManager } from "./AudioFileManager";
 import { SubtitleManager } from "./SubtitleManager";
 import { AudioPlayer } from "./AudioPlayer";
@@ -24,6 +25,13 @@ export class DubbingManager {
   private lastSentSubtitle: Subtitle | null = null;
   private lastSentTime: number = 0;
   private config: DubbingConfig;
+  private lastGeneratedTime: number = 0;
+  private generationInterval: number = 30;
+  private maxRetries: number = 3;
+  private retryDelay: number = 1000;
+  private audioGenerationQueue: Set<string> = new Set();
+
+  private throttledGenerateUpcomingDubbings: ReturnType<typeof throttle>;
 
   constructor(config: Partial<DubbingConfig> = {}) {
     this.config = { ...DEFAULT_DUBBING_CONFIG, ...config };
@@ -33,6 +41,11 @@ export class DubbingManager {
     this.audioPlayer = new AudioPlayer(this.audioContext);
     this.originalVolume = this.config.defaultVolume;
     this.setupMessageListener();
+    this.throttledGenerateUpcomingDubbings = throttle(
+      this.generateUpcomingDubbings.bind(this),
+      60000, // Allow only one call per minute
+      { leading: true, trailing: false }
+    );
     chrome.storage.onChanged.addListener((changes, namespace) => {
       if (namespace === "local" && changes.movieState) {
         const newMovieState = changes.movieState.newValue;
@@ -47,6 +60,28 @@ export class DubbingManager {
     this.currentMovieId = movieId;
     this.currentSubtitleId = subtitleId;
     this.startDubbing();
+  }
+
+  private async requestAudioGeneration(subtitle: Subtitle): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const audioFilePath = this.getAudioFilePath(subtitle);
+      chrome.runtime.sendMessage(
+        {
+          action: "generateAudio",
+          movieId: this.currentMovieId,
+          subtitleId: this.currentSubtitleId,
+          text: subtitle.text,
+          filePath: audioFilePath,
+        },
+        (response) => {
+          if (response.error) {
+            reject(new Error(response.error));
+          } else {
+            resolve();
+          }
+        }
+      );
+    });
   }
 
   private async startDubbing(): Promise<void> {
@@ -97,14 +132,6 @@ export class DubbingManager {
     }
   }
 
-  private async getAudioBuffer(fileName: string): Promise<AudioBuffer | null> {
-    return this.audioFileManager.getAudioBuffer(
-      this.currentMovieId!,
-      this.currentSubtitleId!,
-      fileName
-    );
-  }
-
   private setupMessageListener(): void {
     chrome.runtime.onMessage.addListener(
       (message: { action: string; movieId?: string; subtitleId?: string }) => {
@@ -144,35 +171,6 @@ export class DubbingManager {
         );
       }
     });
-  }
-
-  private async handleApplyDubbing(
-    movieId: string,
-    subtitleId: string
-  ): Promise<void> {
-    this.currentMovieId = movieId;
-    this.currentSubtitleId = subtitleId;
-
-    try {
-      const subtitles = await this.subtitleManager.getSubtitles(
-        movieId,
-        subtitleId
-      );
-      if (subtitles) {
-        this.findAndHandleVideo();
-      } else {
-        throw new Error(
-          `Failed to load subtitles for movie ${movieId} and subtitle ${subtitleId}`
-        );
-      }
-    } catch (error) {
-      log(
-        LogLevel.ERROR,
-        `Error applying dubbing: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
-    }
   }
 
   private handleVideo(video: HTMLVideoElement): void {
@@ -224,9 +222,12 @@ export class DubbingManager {
       this.playCurrentSubtitles(currentTime);
     }
     this.audioPlayer.stopExpiredAudio(adjustedTime);
-    this.preloadUpcomingSubtitles(adjustedTime);
+    this.preloadUpcomingSubtitles(currentTime);
 
     this.sendCurrentSubtitleInfo(adjustedTime, currentSubtitles);
+
+    // Generate upcoming dubbings if needed
+    this.throttledGenerateUpcomingDubbings(currentTime);
 
     chrome.runtime.sendMessage({
       action: "updateCurrentTime",
@@ -234,6 +235,104 @@ export class DubbingManager {
       adjustedTime: adjustedTime,
     });
   };
+
+  private async generateUpcomingDubbings(currentTime: number): Promise<void> {
+    if (!this.currentMovieId || !this.currentSubtitleId) return;
+
+    const currentTimestamp = Date.now();
+    if (currentTimestamp - this.lastGeneratedTime < this.generationInterval) {
+      return;
+    }
+    this.lastGeneratedTime = currentTimestamp;
+
+    const oneMinuteAhead = currentTime + 60; // 60 seconds ahead
+    const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
+      currentTime,
+      60
+    );
+
+    for (const subtitle of upcomingSubtitles) {
+      const audioFilePath = this.getAudioFilePath(subtitle);
+      const cacheKey = audioFilePath;
+
+      if (this.audioGenerationQueue.has(cacheKey)) {
+        continue; // Skip if already in queue
+      }
+
+      const fileExists = await this.audioFileManager.checkFileExists(
+        audioFilePath
+      );
+
+      if (!fileExists) {
+        this.audioGenerationQueue.add(cacheKey);
+        this.requestAudioGenerationWithRetry(subtitle, cacheKey);
+      }
+    }
+  }
+
+  private async requestAudioGenerationWithRetry(
+    subtitle: Subtitle,
+    cacheKey: string,
+    retryCount: number = 0
+  ): Promise<void> {
+    try {
+      await this.requestAudioGeneration(subtitle);
+      this.audioGenerationQueue.delete(cacheKey);
+    } catch (error) {
+      if (retryCount < this.maxRetries) {
+        const delay = this.retryDelay * Math.pow(2, retryCount);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        await this.requestAudioGenerationWithRetry(
+          subtitle,
+          cacheKey,
+          retryCount + 1
+        );
+      } else {
+        log(
+          LogLevel.ERROR,
+          `Failed to generate audio after ${this.maxRetries} retries:`,
+          error
+        );
+        this.audioGenerationQueue.delete(cacheKey);
+      }
+    }
+  }
+
+  private getAudioFileName(subtitle: Subtitle): string {
+    const startMs = this.timeStringToMs(subtitle.start);
+    const endMs = this.timeStringToMs(subtitle.end);
+    return `${startMs}-${endMs}.mp3`;
+  }
+
+  private timeStringToMs(timeString: string): number {
+    const [hours, minutes, secondsAndMs] = timeString.split(":");
+    const [seconds, ms] = secondsAndMs.split(",");
+    return (
+      parseInt(hours) * 3600000 +
+      parseInt(minutes) * 60000 +
+      parseInt(seconds) * 1000 +
+      parseInt(ms)
+    );
+  }
+
+  private async preloadUpcomingSubtitles(currentTime: number): Promise<void> {
+    const adjustedTime = currentTime - this.subtitleOffset;
+    const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
+      adjustedTime,
+      this.config.preloadTime
+    );
+
+    for (const subtitle of upcomingSubtitles) {
+      const filePath = this.getAudioFilePath(subtitle);
+      await this.audioFileManager.getAudioBuffer(filePath);
+    }
+  }
+
+  private getAudioFilePath(subtitle: Subtitle): string {
+    const startMs = this.timeStringToMs(subtitle.start);
+    const endMs = this.timeStringToMs(subtitle.end);
+    return `${this.currentMovieId}/${this.currentSubtitleId}/${startMs}-${endMs}.mp3`;
+  }
 
   private adjustVolume(
     video: HTMLVideoElement,
@@ -251,47 +350,40 @@ export class DubbingManager {
     const currentSubtitles =
       this.subtitleManager.getCurrentSubtitles(adjustedTime);
     currentSubtitles.forEach((subtitle) => {
-      const audioFileName = getAudioFileName(subtitle);
-      const startTime = timeStringToSeconds(subtitle.start);
-      const endTime = timeStringToSeconds(subtitle.end);
+      const audioFilePath = this.getAudioFilePath(subtitle);
+      const startTime = this.timeStringToMs(subtitle.start) / 1000; // Convert to seconds
+      const endTime = this.timeStringToMs(subtitle.end) / 1000; // Convert to seconds
 
       if (
         adjustedTime >= startTime &&
         adjustedTime < endTime &&
-        !this.audioPlayer.isAudioActive(audioFileName)
+        !this.audioPlayer.isAudioActive(audioFilePath)
       ) {
         const audioOffset = Math.max(0, adjustedTime - startTime);
-        this.playAudioIfAvailable(audioFileName, subtitle, audioOffset);
+        this.playAudioIfAvailable(subtitle, audioOffset);
       }
     });
   }
 
-  private preloadUpcomingSubtitles(currentTime: number): void {
-    const adjustedTime = currentTime - this.subtitleOffset;
-    const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
-      adjustedTime,
-      this.config.preloadTime
-    );
-    upcomingSubtitles.forEach((subtitle) => {
-      const audioFileName = getAudioFileName(subtitle);
-      this.getAudioBuffer(audioFileName);
-    });
+  private timeStringToSeconds(timeString: string): number {
+    const [hours, minutes, seconds] = timeString.split(":").map(Number);
+    return hours * 3600 + minutes * 60 + seconds;
   }
 
   private async playAudioIfAvailable(
-    fileName: string,
     subtitle: Subtitle,
     offset: number = 0
   ): Promise<void> {
+    const filePath = this.getAudioFilePath(subtitle);
     try {
-      const buffer = await this.getAudioBuffer(fileName);
+      const buffer = await this.audioFileManager.getAudioBuffer(filePath);
       if (buffer) {
-        await this.audioPlayer.playAudio(buffer, fileName, subtitle, offset);
+        await this.audioPlayer.playAudio(buffer, filePath, subtitle, offset);
       } else {
-        log(LogLevel.WARN, `Audio buffer not available for file: ${fileName}`);
+        log(LogLevel.WARN, `Audio buffer not available for file: ${filePath}`);
       }
     } catch (error) {
-      log(LogLevel.ERROR, `Error playing audio for file: ${fileName}`, error);
+      log(LogLevel.ERROR, `Error playing audio for file: ${filePath}`, error);
     }
   }
 
@@ -301,8 +393,8 @@ export class DubbingManager {
   ): void {
     if (currentSubtitles.length > 0) {
       const currentSubtitle = currentSubtitles[0];
-      const startTime = timeStringToSeconds(currentSubtitle.start);
-      const endTime = timeStringToSeconds(currentSubtitle.end);
+      const startTime = this.timeStringToSeconds(currentSubtitle.start);
+      const endTime = this.timeStringToSeconds(currentSubtitle.end);
 
       if (
         currentSubtitle !== this.lastSentSubtitle ||

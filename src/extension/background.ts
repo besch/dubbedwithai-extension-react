@@ -62,8 +62,97 @@ class BackgroundService {
       case "updateCurrentTime":
         chrome.runtime.sendMessage(message);
         break;
+      case "checkAudioFileExists":
+        this.handleCheckAudioFileExists(message, sendResponse);
+        return true;
+      case "generateAudio":
+        this.handleGenerateAudio(message, sendResponse);
+        return true;
     }
     return false;
+  }
+
+  private async handleCheckAudioFileExists(
+    message: any,
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    const { filePath } = message;
+    try {
+      const token = await getAuthToken();
+      if (!token) throw new Error("No auth token available");
+
+      // Extract fileName from filePath
+      const fileName = filePath.split("/").pop();
+
+      if (!fileName) {
+        throw new Error("Invalid filePath");
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/google-storage/check-file-exists`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ fileName }),
+        }
+      );
+
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      sendResponse({ exists: data.exists });
+    } catch (e) {
+      console.error("Error checking if audio file exists:", e);
+      sendResponse({
+        exists: false,
+        error: e instanceof Error ? e.message : "Unknown error",
+      });
+    }
+  }
+
+  private async handleGenerateAudio(
+    message: any,
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    const { text, filePath } = message;
+    try {
+      const token = await getAuthToken();
+      if (!token) throw new Error("No auth token available");
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/openai/generate-audio`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            text,
+            filePath,
+          }),
+        }
+      );
+
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+
+      const result = await response.json();
+      sendResponse({ success: true, message: result.message });
+    } catch (e: unknown) {
+      console.error("Error generating audio:", e);
+      if (e instanceof Error) {
+        sendResponse({ error: "Failed to generate audio", details: e.message });
+      } else {
+        sendResponse({
+          error: "Failed to generate audio",
+          details: "An unknown error occurred",
+        });
+      }
+    }
   }
 
   private onSuspend(): void {
@@ -239,11 +328,7 @@ class BackgroundService {
     }
   }
 
-  private async fetchAudioFile(
-    movieId: string,
-    subtitleId: string,
-    fileName: string
-  ): Promise<ArrayBuffer | null> {
+  private async fetchAudioFile(filePath: string): Promise<ArrayBuffer | null> {
     try {
       const token = await getAuthToken();
       if (!token) throw new Error("No auth token available");
@@ -256,7 +341,7 @@ class BackgroundService {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ movieId, subtitleId, fileName }),
+          body: JSON.stringify({ filePath }),
         }
       );
 
@@ -296,11 +381,7 @@ class BackgroundService {
     message: any,
     sendResponse: (response: any) => void
   ): Promise<void> {
-    const audioData = await this.fetchAudioFile(
-      message.movieId,
-      message.subtitleId,
-      message.fileName
-    );
+    const audioData = await this.fetchAudioFile(message.filePath);
     sendResponse({
       action: "audioFileData",
       data: audioData ? this.arrayBufferToBase64(audioData) : null,

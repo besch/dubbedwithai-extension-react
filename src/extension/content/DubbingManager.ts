@@ -12,6 +12,12 @@ const DEFAULT_DUBBING_CONFIG: DubbingConfig = {
   subtitleUpdateInterval: 0.5,
 };
 
+interface AudioGenerationRequest {
+  subtitle: Subtitle;
+  filePath: string;
+  inProgress: boolean;
+}
+
 export class DubbingManager {
   private subtitleOffset: number = 0;
   private audioFileManager: AudioFileManager;
@@ -29,7 +35,7 @@ export class DubbingManager {
   private generationInterval: number = 30;
   private maxRetries: number = 3;
   private retryDelay: number = 1000;
-  private audioGenerationQueue: Set<string> = new Set();
+  private audioGenerationQueue: Map<string, AudioGenerationRequest> = new Map();
 
   private throttledGenerateUpcomingDubbings: ReturnType<typeof throttle>;
 
@@ -60,28 +66,6 @@ export class DubbingManager {
     this.currentMovieId = movieId;
     this.currentSubtitleId = subtitleId;
     this.startDubbing();
-  }
-
-  private async requestAudioGeneration(subtitle: Subtitle): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const audioFilePath = this.getAudioFilePath(subtitle);
-      chrome.runtime.sendMessage(
-        {
-          action: "generateAudio",
-          movieId: this.currentMovieId,
-          subtitleId: this.currentSubtitleId,
-          text: subtitle.text,
-          filePath: audioFilePath,
-        },
-        (response) => {
-          if (response.error) {
-            reject(new Error(response.error));
-          } else {
-            resolve();
-          }
-        }
-      );
-    });
   }
 
   private async startDubbing(): Promise<void> {
@@ -245,46 +229,60 @@ export class DubbingManager {
     }
     this.lastGeneratedTime = currentTimestamp;
 
-    const oneMinuteAhead = currentTime + 60; // 60 seconds ahead
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
       currentTime,
       60
     );
 
-    for (const subtitle of upcomingSubtitles) {
-      const audioFilePath = this.getAudioFilePath(subtitle);
-      const cacheKey = audioFilePath;
+    const checkFileExistsPromises = upcomingSubtitles.map(async (subtitle) => {
+      const filePath = this.getAudioFilePath(subtitle);
 
-      if (this.audioGenerationQueue.has(cacheKey)) {
-        continue; // Skip if already in queue
+      if (this.audioGenerationQueue.has(filePath)) {
+        return;
       }
 
-      const fileExists = await this.audioFileManager.checkFileExists(
-        audioFilePath
-      );
+      const fileExists = await this.audioFileManager.checkFileExists(filePath);
 
       if (!fileExists) {
-        this.audioGenerationQueue.add(cacheKey);
-        this.requestAudioGenerationWithRetry(subtitle, cacheKey);
+        this.audioGenerationQueue.set(filePath, {
+          subtitle,
+          filePath,
+          inProgress: false,
+        });
+      }
+    });
+
+    await Promise.all(checkFileExistsPromises);
+
+    // Process the queue
+    await this.processAudioGenerationQueue();
+  }
+
+  private async processAudioGenerationQueue(): Promise<void> {
+    const entries = Array.from(this.audioGenerationQueue.entries());
+    for (const [filePath, request] of entries) {
+      if (!request.inProgress) {
+        request.inProgress = true;
+        await this.requestAudioGenerationWithRetry(request.subtitle, filePath);
       }
     }
   }
 
   private async requestAudioGenerationWithRetry(
     subtitle: Subtitle,
-    cacheKey: string,
+    filePath: string,
     retryCount: number = 0
   ): Promise<void> {
     try {
       await this.requestAudioGeneration(subtitle);
-      this.audioGenerationQueue.delete(cacheKey);
+      this.audioGenerationQueue.delete(filePath);
     } catch (error) {
       if (retryCount < this.maxRetries) {
         const delay = this.retryDelay * Math.pow(2, retryCount);
         await new Promise((resolve) => setTimeout(resolve, delay));
         await this.requestAudioGenerationWithRetry(
           subtitle,
-          cacheKey,
+          filePath,
           retryCount + 1
         );
       } else {
@@ -293,9 +291,34 @@ export class DubbingManager {
           `Failed to generate audio after ${this.maxRetries} retries:`,
           error
         );
-        this.audioGenerationQueue.delete(cacheKey);
+        this.audioGenerationQueue.delete(filePath);
+      }
+    } finally {
+      const request = this.audioGenerationQueue.get(filePath);
+      if (request) {
+        request.inProgress = false;
       }
     }
+  }
+
+  private async requestAudioGeneration(subtitle: Subtitle): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const filePath = this.getAudioFilePath(subtitle);
+      chrome.runtime.sendMessage(
+        {
+          action: "generateAudio",
+          text: subtitle.text,
+          filePath: filePath,
+        },
+        (response) => {
+          if (response.error) {
+            reject(new Error(response.error));
+          } else {
+            resolve();
+          }
+        }
+      );
+    });
   }
 
   private getAudioFileName(subtitle: Subtitle): string {

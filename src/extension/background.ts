@@ -107,6 +107,18 @@ class BackgroundService {
     sendResponse: (response: any) => void
   ): Promise<void> {
     const { text, filePath } = message;
+
+    if (!text || !filePath) {
+      sendResponse({
+        error: "Missing required parameters",
+        details: {
+          text: text ? "provided" : "missing",
+          filePath: filePath ? "provided" : "missing",
+        },
+      });
+      return;
+    }
+
     try {
       const response = await this.fetchWithAuth(
         `${API_BASE_URL}/api/openai/generate-audio`,
@@ -117,6 +129,7 @@ class BackgroundService {
       );
 
       const result = await response.json();
+      console.log("Audio generation successful:", result); // Add this line for debugging
       sendResponse({ success: true, message: result.message });
     } catch (e: unknown) {
       console.error("Error generating audio:", e);

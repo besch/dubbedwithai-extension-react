@@ -24,7 +24,7 @@ const Button: React.FC<ButtonProps> = ({
             variant === "secondary",
           "bg-destructive text-destructive-foreground hover:bg-destructive/90":
             variant === "destructive",
-          "border border-input hover:bg-accent hover:text-accent-foreground":
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground":
             variant === "outline",
           "hover:bg-accent hover:text-accent-foreground": variant === "ghost",
           "h-10 py-2 px-4": size === "default",

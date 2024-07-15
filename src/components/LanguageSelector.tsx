@@ -27,18 +27,18 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     <div className="relative mt-4">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-2 border rounded bg-white flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full p-2 border border-border rounded bg-input text-foreground flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary"
       >
         <span>Select a language</span>
         <ChevronDown className="w-4 h-4" />
       </button>
       {isOpen && (
-        <ul className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-auto">
+        <ul className="absolute z-10 w-full mt-1 bg-background border border-border rounded shadow-lg max-h-60 overflow-auto">
           {languages.map((lang: Language) => (
             <li
               key={lang.id}
               onClick={() => handleSelectLanguage(lang)}
-              className="p-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
+              className="p-2 hover:bg-accent hover:bg-opacity-10 cursor-pointer flex items-center justify-between text-foreground"
             >
               <span>
                 {languageCodes[lang.attributes.language] ||
@@ -50,7 +50,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                   {lang.attributes.ratings.toFixed(1)}
                 </span>
                 <span className="flex items-center">
-                  <Download className="w-4 h-4 text-blue-500 mr-1" />
+                  <Download className="w-4 h-4 text-primary mr-1" />
                   {lang.attributes.download_count.toLocaleString()}
                 </span>
               </div>

@@ -1,5 +1,3 @@
-// src/components/MovieSearch.tsx
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
@@ -50,16 +48,19 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
           value={movieQuery}
           onChange={(e) => setMovieQuery(e.target.value)}
           placeholder="Search for a movie"
-          className="w-full p-2 pl-10 border rounded"
+          className="w-full p-2 pl-10 border rounded bg-input text-foreground border-border placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
         />
-        <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
+        <Search
+          className="absolute left-3 top-2.5 text-muted-foreground"
+          size={20}
+        />
       </div>
       {isLoading && (
         <div className="flex justify-center items-center mt-4">
           <LoadingSpinner />
         </div>
       )}
-      {error && <p className="text-red-500 mt-2">{error}</p>}
+      {error && <p className="text-destructive mt-2">{error}</p>}
       {searchResults && searchResults.length > 0 ? (
         <ul className="mt-2 max-h-60 overflow-y-auto">
           {searchResults.map((movie) => (
@@ -74,7 +75,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
         movieQuery.length > 2 &&
         !isLoading &&
         !error && (
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-muted-foreground">
             No movies found. Try another search term.
           </p>
         )

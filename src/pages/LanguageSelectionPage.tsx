@@ -12,7 +12,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 const LanguageSkeleton: React.FC = () => (
   <div className="space-y-2">
     {[1, 2, 3].map((i) => (
-      <div key={i} className="h-10 bg-gray-200 rounded-md animate-pulse"></div>
+      <div key={i} className="h-10 bg-muted rounded-md animate-pulse"></div>
     ))}
   </div>
 );
@@ -45,17 +45,19 @@ const LanguageSelectionPage: React.FC = () => {
         </div>
       )}
 
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg shadow-sm">
+      <div className="mt-6 p-4 bg-card rounded-lg shadow-sm">
         {isLoading ? (
           <div className="animate-fade-in">
             <LanguageSkeleton />
             <div className="flex justify-center items-center mt-4">
               <LoadingSpinner />
-              <p className="ml-2 text-sm text-gray-500">Loading languages...</p>
+              <p className="ml-2 text-sm text-muted-foreground">
+                Loading languages...
+              </p>
             </div>
           </div>
         ) : error ? (
-          <div className="p-4 text-red-500 bg-red-100 rounded-md animate-fade-in">
+          <div className="p-4 text-destructive bg-destructive/10 rounded-md animate-fade-in">
             Error: {error}
           </div>
         ) : languages.length > 0 ? (
@@ -66,7 +68,7 @@ const LanguageSelectionPage: React.FC = () => {
             />
           </div>
         ) : (
-          <p className="text-gray-600 bg-gray-100 p-4 rounded-md animate-fade-in">
+          <p className="text-muted-foreground bg-muted p-4 rounded-md animate-fade-in">
             No languages available for this movie.
           </p>
         )}

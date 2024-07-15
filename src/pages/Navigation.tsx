@@ -21,8 +21,8 @@ const Navigation: React.FC = () => {
     return cn(
       "cursor-pointer transition-colors",
       location.pathname === path
-        ? "text-primary"
-        : "text-muted-foreground hover:text-primary"
+        ? "text-foreground"
+        : "text-muted-foreground hover:text-foreground"
     );
   };
 
@@ -47,11 +47,11 @@ const Navigation: React.FC = () => {
   };
 
   return (
-    <nav className="flex justify-between items-center p-4 bg-background border-b">
+    <nav className="flex justify-between items-center p-4 bg-background border-b border-border">
       <div className="flex items-center space-x-4">
-        <h1 className="text-2xl font-bold text-primary">Dubabase</h1>
+        <h1 className="text-2xl font-bold text-foreground">Dubabase</h1>
       </div>
-      <div className="flex space-x-6">
+      <div className="flex space-x-6 items-center">
         <Search
           className={getIconClass("/search")}
           onClick={() => handleNavigate("/search")}

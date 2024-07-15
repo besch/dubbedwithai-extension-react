@@ -3,7 +3,7 @@ import { AudioFileManager } from "./AudioFileManager";
 import { SubtitleManager } from "./SubtitleManager";
 import { AudioPlayer } from "./AudioPlayer";
 import { DubbingConfig, Subtitle } from "./types";
-import { getAudioFileName, log, timeStringToSeconds, LogLevel } from "./utils";
+import { log, LogLevel } from "./utils";
 
 const DEFAULT_DUBBING_CONFIG: DubbingConfig = {
   defaultVolume: 1,

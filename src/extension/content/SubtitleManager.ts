@@ -6,6 +6,35 @@ export class SubtitleManager {
   private subtitleRequests: Map<string, Promise<Subtitle[] | null>> = new Map();
   private sortedSubtitles: Subtitle[] = [];
 
+  async getSubtitles(
+    movieId: string,
+    subtitleId: string
+  ): Promise<Subtitle[] | null> {
+    const cacheKey = `${movieId}-${subtitleId}`;
+
+    if (this.subtitlesCache.has(cacheKey)) {
+      return this.subtitlesCache.get(cacheKey)!;
+    }
+
+    if (!this.subtitleRequests.has(cacheKey)) {
+      const subtitlePromise = this.fetchSubtitles(movieId, subtitleId);
+      this.subtitleRequests.set(cacheKey, subtitlePromise);
+    }
+
+    const subtitlePromise = this.subtitleRequests.get(cacheKey);
+    this.subtitleRequests.delete(cacheKey);
+
+    const subtitles = await (subtitlePromise ?? Promise.resolve(null));
+
+    // If subtitles were successfully fetched, cache them
+    if (subtitles) {
+      this.subtitlesCache.set(cacheKey, subtitles);
+      this.sortSubtitles(subtitles);
+    }
+
+    return subtitles;
+  }
+
   getUpcomingSubtitles(adjustedTime: number, preloadTime: number): Subtitle[] {
     return this.sortedSubtitles.filter((subtitle) => {
       const startTime = timeStringToSeconds(subtitle.start);
@@ -15,56 +44,41 @@ export class SubtitleManager {
     });
   }
 
-  reset(): void {
-    this.sortedSubtitles = [];
-  }
-
-  async getSubtitles(
-    movieId: string,
-    subtitleId: string
-  ): Promise<Subtitle[] | null> {
-    const cacheKey = `${movieId}-${subtitleId}`;
-
-    if (this.subtitlesCache.has(cacheKey))
-      return this.subtitlesCache.get(cacheKey)!;
-
-    if (!this.subtitleRequests.has(cacheKey)) {
-      const subtitlePromise = new Promise<Subtitle[] | null>((resolve) => {
-        chrome.runtime.sendMessage(
-          { action: "requestSubtitles", movieId, subtitleId },
-          (response: any) => {
-            if (response?.action === "subtitlesData") {
-              this.subtitlesCache.set(cacheKey, response.data);
-              this.sortSubtitles(response.data);
-              resolve(response.data);
-            } else {
-              resolve(null);
-            }
-          }
-        );
-      });
-
-      this.subtitleRequests.set(cacheKey, subtitlePromise);
-    }
-
-    const subtitlePromise = this.subtitleRequests.get(cacheKey);
-    this.subtitleRequests.delete(cacheKey);
-
-    // Wait for the promise to resolve and return its result
-    return subtitlePromise ? await subtitlePromise : null;
-  }
-
-  private sortSubtitles(subtitles: Subtitle[]): void {
-    this.sortedSubtitles = [...subtitles].sort(
-      (a, b) => timeStringToSeconds(a.start) - timeStringToSeconds(b.start)
-    );
-  }
-
   getCurrentSubtitles(adjustedTime: number): Subtitle[] {
     return this.sortedSubtitles.filter((subtitle) => {
       const startTime = timeStringToSeconds(subtitle.start);
       const endTime = timeStringToSeconds(subtitle.end);
       return adjustedTime >= startTime && adjustedTime < endTime;
     });
+  }
+
+  reset(): void {
+    this.sortedSubtitles = [];
+  }
+
+  private async fetchSubtitles(
+    movieId: string,
+    subtitleId: string
+  ): Promise<Subtitle[] | null> {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        { action: "requestSubtitles", movieId, subtitleId },
+        (response: any) => {
+          if (response?.action === "subtitlesData") {
+            this.subtitlesCache.set(`${movieId}-${subtitleId}`, response.data);
+            this.sortSubtitles(response.data);
+            resolve(response.data);
+          } else {
+            resolve(null);
+          }
+        }
+      );
+    });
+  }
+
+  private sortSubtitles(subtitles: Subtitle[]): void {
+    this.sortedSubtitles = [...subtitles].sort(
+      (a, b) => timeStringToSeconds(a.start) - timeStringToSeconds(b.start)
+    );
   }
 }

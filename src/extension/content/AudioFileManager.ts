@@ -12,43 +12,20 @@ export class AudioFileManager {
   }
 
   async checkFileExists(filePath: string): Promise<boolean> {
-    if (this.notFoundFiles.has(filePath)) {
-      return false;
-    }
-
-    if (
-      this.inMemoryCache.has(filePath) ||
-      this.ongoingRequests.has(filePath)
-    ) {
+    if (this.notFoundFiles.has(filePath)) return false;
+    if (this.inMemoryCache.has(filePath) || this.ongoingRequests.has(filePath))
       return true;
-    }
 
     const audioData = await this.audioCache.getAudio(filePath);
-    if (audioData) {
-      return true;
-    }
+    if (audioData) return true;
 
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage(
-        {
-          action: "checkAudioFileExists",
-          filePath,
-        },
-        (response) => {
-          resolve(response.exists);
-        }
-      );
-    });
+    return this.checkFileExistsInBackend(filePath);
   }
 
   async getAudioBuffer(filePath: string): Promise<AudioBuffer | null> {
-    if (this.notFoundFiles.has(filePath)) {
-      return null;
-    }
-
-    if (this.inMemoryCache.has(filePath)) {
+    if (this.notFoundFiles.has(filePath)) return null;
+    if (this.inMemoryCache.has(filePath))
       return this.inMemoryCache.get(filePath)!;
-    }
 
     if (!this.ongoingRequests.has(filePath)) {
       const request = this.fetchAndProcessAudio(filePath);
@@ -60,29 +37,28 @@ export class AudioFileManager {
       this.ongoingRequests.delete(filePath);
       if (buffer === null) {
         this.notFoundFiles.add(filePath);
-        // Trigger audio generation
         this.requestAudioGeneration(filePath);
       }
       return buffer;
     } catch (error) {
       log(LogLevel.ERROR, "Error fetching or processing audio:", error);
       this.notFoundFiles.add(filePath);
-      // Trigger audio generation
       this.requestAudioGeneration(filePath);
       return null;
     }
   }
 
-  private async requestAudioGeneration(filePath: string): Promise<void> {
+  clearCache(): void {
+    this.inMemoryCache.clear();
+    this.ongoingRequests.clear();
+    this.notFoundFiles.clear();
+  }
+
+  private async checkFileExistsInBackend(filePath: string): Promise<boolean> {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage(
-        {
-          action: "generateAudio",
-          filePath,
-        },
-        () => {
-          resolve();
-        }
+        { action: "checkAudioFileExists", filePath },
+        (response) => resolve(response.exists)
       );
     });
   }
@@ -129,9 +105,11 @@ export class AudioFileManager {
     });
   }
 
-  clearCache(): void {
-    this.inMemoryCache.clear();
-    this.ongoingRequests.clear();
-    this.notFoundFiles.clear();
+  private async requestAudioGeneration(filePath: string): Promise<void> {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({ action: "generateAudio", filePath }, () =>
+        resolve()
+      );
+    });
   }
 }

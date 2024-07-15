@@ -4,11 +4,14 @@ import { DubbingMessage } from "./content/types";
 
 const API_BASE_URL = process.env.REACT_APP_BASE_API_URL;
 const ICON_BASE_PATH = chrome.runtime.getURL("icons/");
-const ICON_SIZES = [16, 48, 128];
-const ICON_STATES = ["active", "active-filled", "inactive"];
+const ICON_SIZES = [16, 48, 128] as const;
+const ICON_STATES = ["active", "active-filled", "inactive"] as const;
+
+type IconSize = (typeof ICON_SIZES)[number];
+type IconState = (typeof ICON_STATES)[number];
 
 class BackgroundService {
-  private iconCache: { [key: string]: ImageData } = {};
+  private iconCache: Record<string, ImageData> = {};
   private isPulsing = false;
   private pulseState = false;
 
@@ -45,29 +48,25 @@ class BackgroundService {
     sender: chrome.runtime.MessageSender,
     sendResponse: (response?: any) => void
   ): boolean {
-    switch (message.action) {
-      case "requestSubtitles":
-        this.handleSubtitlesRequest(message, sendResponse);
-        return true;
-      case "requestAudioFile":
-        this.handleAudioFileRequest(message, sendResponse);
-        return true;
-      case "checkAuthStatus":
-        this.handleAuthStatusCheck(sendResponse);
-        return true;
-      case "updateDubbingState":
-        if (sender.tab?.id)
-          this.updateDubbingState(message.payload, sender.tab.id);
-        break;
-      case "updateCurrentTime":
-        chrome.runtime.sendMessage(message);
-        break;
-      case "checkAudioFileExists":
-        this.handleCheckAudioFileExists(message, sendResponse);
-        return true;
-      case "generateAudio":
-        this.handleGenerateAudio(message, sendResponse);
-        return true;
+    const handlers: Record<
+      string,
+      (msg: any, res: (response?: any) => void) => void
+    > = {
+      requestSubtitles: this.handleSubtitlesRequest.bind(this),
+      requestAudioFile: this.handleAudioFileRequest.bind(this),
+      checkAuthStatus: this.handleAuthStatusCheck.bind(this),
+      updateDubbingState: (msg, res) => {
+        if (sender.tab?.id) this.updateDubbingState(msg.payload, sender.tab.id);
+      },
+      updateCurrentTime: (msg) => chrome.runtime.sendMessage(msg),
+      checkAudioFileExists: this.handleCheckAudioFileExists.bind(this),
+      generateAudio: this.handleGenerateAudio.bind(this),
+    };
+
+    const handler = handlers[message.action];
+    if (handler) {
+      handler(message, sendResponse);
+      return true;
     }
     return false;
   }
@@ -81,27 +80,17 @@ class BackgroundService {
       const token = await getAuthToken();
       if (!token) throw new Error("No auth token available");
 
-      // Extract fileName from filePath
       const fileName = filePath.split("/").pop();
+      if (!fileName) throw new Error("Invalid filePath");
 
-      if (!fileName) {
-        throw new Error("Invalid filePath");
-      }
-
-      const response = await fetch(
+      const response = await this.fetchWithAuth(
         `${API_BASE_URL}/api/google-storage/check-file-exists`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
           body: JSON.stringify({ fileName }),
         }
       );
 
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       sendResponse({ exists: data.exists });
     } catch (e) {
@@ -119,40 +108,43 @@ class BackgroundService {
   ): Promise<void> {
     const { text, filePath } = message;
     try {
-      const token = await getAuthToken();
-      if (!token) throw new Error("No auth token available");
-
-      const response = await fetch(
+      const response = await this.fetchWithAuth(
         `${API_BASE_URL}/api/openai/generate-audio`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            text,
-            filePath,
-          }),
+          body: JSON.stringify({ text, filePath }),
         }
       );
-
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
 
       const result = await response.json();
       sendResponse({ success: true, message: result.message });
     } catch (e: unknown) {
       console.error("Error generating audio:", e);
-      if (e instanceof Error) {
-        sendResponse({ error: "Failed to generate audio", details: e.message });
-      } else {
-        sendResponse({
-          error: "Failed to generate audio",
-          details: "An unknown error occurred",
-        });
-      }
+      sendResponse({
+        error: "Failed to generate audio",
+        details: e instanceof Error ? e.message : "An unknown error occurred",
+      });
     }
+  }
+
+  private async fetchWithAuth(
+    url: string,
+    options: RequestInit = {}
+  ): Promise<Response> {
+    const token = await getAuthToken();
+    if (!token) throw new Error("No auth token available");
+
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return response;
   }
 
   private onSuspend(): void {
@@ -189,28 +181,27 @@ class BackgroundService {
   private async preloadIcons(): Promise<void> {
     for (const size of ICON_SIZES) {
       for (const state of ICON_STATES) {
-        const iconUrl = `${ICON_BASE_PATH}mic-${state}${size}.png`;
-        try {
-          const response = await fetch(iconUrl);
-          const blob = await response.blob();
-          const imageBitmap = await createImageBitmap(blob);
-          const canvas = new OffscreenCanvas(size, size);
-          const ctx = canvas.getContext("2d");
-          if (ctx) {
-            ctx.drawImage(imageBitmap, 0, 0);
-            this.iconCache[`${state}${size}`] = ctx.getImageData(
-              0,
-              0,
-              size,
-              size
-            );
-          }
-        } catch (error) {
-          console.error(`Failed to preload icon: ${iconUrl}`, error);
-        }
+        await this.preloadIcon(size, state);
       }
     }
     console.log("Icons preloaded and cached");
+  }
+
+  private async preloadIcon(size: IconSize, state: IconState): Promise<void> {
+    const iconUrl = `${ICON_BASE_PATH}mic-${state}${size}.png`;
+    try {
+      const response = await fetch(iconUrl);
+      const blob = await response.blob();
+      const imageBitmap = await createImageBitmap(blob);
+      const canvas = new OffscreenCanvas(size, size);
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(imageBitmap, 0, 0);
+        this.iconCache[`${state}${size}`] = ctx.getImageData(0, 0, size, size);
+      }
+    } catch (error) {
+      console.error(`Failed to preload icon: ${iconUrl}`, error);
+    }
   }
 
   private async initializeStorage(): Promise<void> {

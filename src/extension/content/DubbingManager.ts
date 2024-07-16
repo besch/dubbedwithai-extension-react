@@ -235,11 +235,11 @@ export class DubbingManager {
       60000 // 60 seconds in milliseconds
     );
 
-    const checkFileExistsPromises = upcomingSubtitles.map(async (subtitle) => {
+    for (const subtitle of upcomingSubtitles) {
       const filePath = this.getAudioFilePath(subtitle);
 
       if (this.audioGenerationQueue.has(filePath)) {
-        return;
+        continue; // Skip if already in queue
       }
 
       const fileExists = await this.audioFileManager.checkFileExists(filePath);
@@ -251,9 +251,7 @@ export class DubbingManager {
           inProgress: false,
         });
       }
-    });
-
-    await Promise.all(checkFileExistsPromises);
+    }
 
     // Process the queue
     await this.processAudioGenerationQueue();
@@ -264,7 +262,16 @@ export class DubbingManager {
     for (const [filePath, request] of entries) {
       if (!request.inProgress) {
         request.inProgress = true;
-        await this.requestAudioGenerationWithRetry(request.subtitle, filePath);
+        try {
+          await this.requestAudioGenerationWithRetry(
+            request.subtitle,
+            filePath
+          );
+          this.audioGenerationQueue.delete(filePath); // Remove from queue after successful generation
+        } catch (error) {
+          console.error(`Failed to generate audio for ${filePath}:`, error);
+          request.inProgress = false; // Reset in-progress flag to allow future retries
+        }
       }
     }
   }
@@ -276,7 +283,6 @@ export class DubbingManager {
   ): Promise<void> {
     try {
       await this.requestAudioGeneration(subtitle);
-      this.audioGenerationQueue.delete(filePath);
     } catch (error) {
       if (retryCount < this.maxRetries) {
         const delay = this.retryDelay * Math.pow(2, retryCount);
@@ -287,17 +293,7 @@ export class DubbingManager {
           retryCount + 1
         );
       } else {
-        log(
-          LogLevel.ERROR,
-          `Failed to generate audio after ${this.maxRetries} retries:`,
-          error
-        );
-        this.audioGenerationQueue.delete(filePath);
-      }
-    } finally {
-      const request = this.audioGenerationQueue.get(filePath);
-      if (request) {
-        request.inProgress = false;
+        throw error; // Throw error after max retries
       }
     }
   }
@@ -326,7 +322,7 @@ export class DubbingManager {
     const adjustedTime = currentTime - this.subtitleOffset;
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
       adjustedTime,
-      this.config.preloadTime * 1000 // Convert preloadTime to milliseconds
+      this.config.preloadTime * 1000
     );
 
     console.log(`Preloading ${upcomingSubtitles.length} upcoming subtitles`);
@@ -334,15 +330,26 @@ export class DubbingManager {
     const preloadPromises = upcomingSubtitles.map(async (subtitle) => {
       const filePath = this.getAudioFilePath(subtitle);
       try {
+        if (this.audioGenerationQueue.has(filePath)) {
+          console.log(
+            `Audio generation in progress for subtitle: ${subtitle.text}`
+          );
+          return;
+        }
+
         const exists = await this.audioFileManager.checkFileExists(filePath);
         if (exists) {
           await this.audioFileManager.getAudioBuffer(filePath);
           console.log(`Preloaded audio for subtitle: ${subtitle.text}`);
         } else {
           console.log(
-            `Audio file not found for subtitle: ${subtitle.text}. Requesting generation.`
+            `Audio file not found for subtitle: ${subtitle.text}. Queueing for generation.`
           );
-          await this.requestAudioGeneration(subtitle);
+          this.audioGenerationQueue.set(filePath, {
+            subtitle,
+            filePath,
+            inProgress: false,
+          });
         }
       } catch (error) {
         console.error(
@@ -353,6 +360,7 @@ export class DubbingManager {
     });
 
     await Promise.all(preloadPromises);
+    await this.processAudioGenerationQueue();
   }
 
   private getAudioFilePath(subtitle: Subtitle): string {

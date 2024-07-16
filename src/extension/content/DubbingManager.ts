@@ -33,8 +33,6 @@ export class DubbingManager {
   private config: DubbingConfig;
   private lastGeneratedTime: number = 0;
   private generationInterval: number = 30;
-  private maxRetries: number = 3;
-  private retryDelay: number = 1000;
   private audioGenerationQueue: Map<string, AudioGenerationRequest> = new Map();
 
   private throttledGenerateUpcomingDubbings: ReturnType<typeof throttle>;
@@ -240,9 +238,10 @@ export class DubbingManager {
 
       if (
         this.audioGenerationQueue.has(filePath) ||
-        (await this.audioFileManager.checkFileExists(filePath))
+        (await this.audioFileManager.checkFileExists(filePath)) ||
+        this.audioFileManager.isGenerating(filePath) // New check
       ) {
-        continue; // Skip if already in queue or exists
+        continue;
       }
 
       this.audioGenerationQueue.set(filePath, {
@@ -303,7 +302,10 @@ export class DubbingManager {
     const preloadPromises = upcomingSubtitles.map(async (subtitle) => {
       const filePath = this.getAudioFilePath(subtitle);
       try {
-        if (this.audioGenerationQueue.has(filePath)) {
+        if (
+          this.audioGenerationQueue.has(filePath) ||
+          this.audioFileManager.isGenerating(filePath) // New check
+        ) {
           console.log(
             `Audio generation in progress for subtitle: ${subtitle.text}`
           );

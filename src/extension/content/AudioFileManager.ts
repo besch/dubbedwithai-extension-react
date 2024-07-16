@@ -12,6 +12,10 @@ export class AudioFileManager {
     this.audioCache = new AudioCache();
   }
 
+  isGenerating(filePath: string): boolean {
+    return this.audioGenerationQueue.has(filePath);
+  }
+
   async checkFileExists(filePath: string): Promise<boolean> {
     if (
       this.notFoundFiles.has(filePath) ||

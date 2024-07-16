@@ -6,24 +6,38 @@ export class AudioFileManager {
   private inMemoryCache: Map<string, AudioBuffer> = new Map();
   private ongoingRequests: Map<string, Promise<AudioBuffer | null>> = new Map();
   private notFoundFiles: Set<string> = new Set();
+  private audioGenerationQueue: Set<string> = new Set();
 
   constructor(private audioContext: AudioContext) {
     this.audioCache = new AudioCache();
   }
 
   async checkFileExists(filePath: string): Promise<boolean> {
-    if (this.notFoundFiles.has(filePath)) return false;
+    if (
+      this.notFoundFiles.has(filePath) ||
+      this.audioGenerationQueue.has(filePath)
+    )
+      return false;
     if (this.inMemoryCache.has(filePath) || this.ongoingRequests.has(filePath))
       return true;
 
     const audioData = await this.audioCache.getAudio(filePath);
     if (audioData) return true;
 
-    return this.checkFileExistsInBackend(filePath);
+    const exists = await this.checkFileExistsInBackend(filePath);
+    if (!exists) {
+      this.audioGenerationQueue.add(filePath);
+    }
+    return exists;
   }
 
   async getAudioBuffer(filePath: string): Promise<AudioBuffer | null> {
-    if (this.notFoundFiles.has(filePath)) return null;
+    if (
+      this.notFoundFiles.has(filePath) ||
+      this.audioGenerationQueue.has(filePath)
+    )
+      return null;
+
     if (this.inMemoryCache.has(filePath))
       return this.inMemoryCache.get(filePath)!;
 
@@ -106,10 +120,13 @@ export class AudioFileManager {
   }
 
   private async requestAudioGeneration(filePath: string): Promise<void> {
+    if (this.audioGenerationQueue.has(filePath)) return;
+    this.audioGenerationQueue.add(filePath);
     return new Promise((resolve) => {
-      chrome.runtime.sendMessage({ action: "generateAudio", filePath }, () =>
-        resolve()
-      );
+      chrome.runtime.sendMessage({ action: "generateAudio", filePath }, () => {
+        this.audioGenerationQueue.delete(filePath);
+        resolve();
+      });
     });
   }
 }

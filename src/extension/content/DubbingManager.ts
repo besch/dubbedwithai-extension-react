@@ -238,19 +238,18 @@ export class DubbingManager {
     for (const subtitle of upcomingSubtitles) {
       const filePath = this.getAudioFilePath(subtitle);
 
-      if (this.audioGenerationQueue.has(filePath)) {
-        continue; // Skip if already in queue
+      if (
+        this.audioGenerationQueue.has(filePath) ||
+        (await this.audioFileManager.checkFileExists(filePath))
+      ) {
+        continue; // Skip if already in queue or exists
       }
 
-      const fileExists = await this.audioFileManager.checkFileExists(filePath);
-
-      if (!fileExists) {
-        this.audioGenerationQueue.set(filePath, {
-          subtitle,
-          filePath,
-          inProgress: false,
-        });
-      }
+      this.audioGenerationQueue.set(filePath, {
+        subtitle,
+        filePath,
+        inProgress: false,
+      });
     }
 
     // Process the queue
@@ -267,10 +266,10 @@ export class DubbingManager {
             request.subtitle,
             filePath
           );
-          this.audioGenerationQueue.delete(filePath); // Remove from queue after successful generation
+          this.audioGenerationQueue.delete(filePath);
         } catch (error) {
           console.error(`Failed to generate audio for ${filePath}:`, error);
-          request.inProgress = false; // Reset in-progress flag to allow future retries
+          request.inProgress = false;
         }
       }
     }

@@ -221,11 +221,9 @@ export class DubbingManager {
   private async generateUpcomingDubbings(currentTime: number): Promise<void> {
     if (!this.currentMovieId || !this.currentSubtitleId) return;
 
-    const currentTimestamp = Date.now();
-    if (currentTimestamp - this.lastGeneratedTime < this.generationInterval) {
-      return;
-    }
-    this.lastGeneratedTime = currentTimestamp;
+    console.log("Generating upcoming dubbings for time:", currentTime);
+    console.log("Current movie ID:", this.currentMovieId);
+    console.log("Current subtitle ID:", this.currentSubtitleId);
 
     const currentTimeMs = currentTime * 1000;
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
@@ -233,17 +231,21 @@ export class DubbingManager {
       60000 // 60 seconds in milliseconds
     );
 
+    console.log("Upcoming subtitles:", upcomingSubtitles);
+
     for (const subtitle of upcomingSubtitles) {
       const filePath = this.getAudioFilePath(subtitle);
+      console.log("Checking file:", filePath);
 
       if (
         this.audioGenerationQueue.has(filePath) ||
-        (await this.audioFileManager.checkFileExists(filePath)) ||
-        this.audioFileManager.isGenerating(filePath) // New check
+        (await this.audioFileManager.checkFileExists(filePath))
       ) {
+        console.log("File already exists or is being generated:", filePath);
         continue;
       }
 
+      console.log("Queueing file for generation:", filePath);
       this.audioGenerationQueue.set(filePath, {
         subtitle,
         filePath,
@@ -297,8 +299,6 @@ export class DubbingManager {
       this.config.preloadTime * 1000
     );
 
-    console.log(`Preloading ${upcomingSubtitles.length} upcoming subtitles`);
-
     const preloadPromises = upcomingSubtitles.map(async (subtitle) => {
       const filePath = this.getAudioFilePath(subtitle);
       try {
@@ -315,7 +315,6 @@ export class DubbingManager {
         const exists = await this.audioFileManager.checkFileExists(filePath);
         if (exists) {
           await this.audioFileManager.getAudioBuffer(filePath);
-          console.log(`Preloaded audio for subtitle: ${subtitle.text}`);
         } else {
           console.log(
             `Audio file not found for subtitle: ${subtitle.text}. Queueing for generation.`
@@ -353,14 +352,21 @@ export class DubbingManager {
   }
 
   private playCurrentSubtitles(currentTime: number): void {
-    const adjustedTime = currentTime * 1000 - this.subtitleOffset;
+    const adjustedTime = currentTime - this.subtitleOffset;
 
     const currentSubtitles =
       this.subtitleManager.getCurrentSubtitles(adjustedTime);
+    console.log(
+      "currentTime (ms)",
+      currentTime,
+      this.subtitleOffset,
+      adjustedTime,
+      currentSubtitles
+    );
+
     currentSubtitles.forEach((subtitle) => {
       const audioFilePath = this.getAudioFilePath(subtitle);
       const startTime = subtitle.start / 1000; // Convert to seconds
-      const endTime = subtitle.end / 1000; // Convert to seconds
 
       if (
         adjustedTime >= subtitle.start &&

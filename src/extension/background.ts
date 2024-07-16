@@ -80,14 +80,11 @@ class BackgroundService {
       const token = await getAuthToken();
       if (!token) throw new Error("No auth token available");
 
-      const fileName = filePath.split("/").pop();
-      if (!fileName) throw new Error("Invalid filePath");
-
       const response = await this.fetchWithAuth(
         `${API_BASE_URL}/api/google-storage/check-file-exists`,
         {
           method: "POST",
-          body: JSON.stringify({ fileName }),
+          body: JSON.stringify({ filePath }),
         }
       );
 

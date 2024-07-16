@@ -89,6 +89,11 @@ module.exports = {
 //     concatenateModules: true,
 //   },
 //   plugins: [
+//     new webpack.DefinePlugin({
+//       "process.env.REACT_APP_BASE_API_URL": JSON.stringify(
+//         "${process.env.REACT_APP_BASE_API_URL}"
+//       ),
+//     }),
 //     new webpack.optimize.LimitChunkCountPlugin({
 //       maxChunks: 1,
 //     }),

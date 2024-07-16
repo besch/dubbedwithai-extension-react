@@ -46,8 +46,6 @@ class ContentScript {
   }
 
   private async handleDubbingAction(message: DubbingMessage): Promise<any> {
-    log(LogLevel.INFO, "Handling dubbing action:", message.action);
-
     switch (message.action) {
       case "initializeDubbing":
         return this.handleInitializeDubbing(message);
@@ -112,8 +110,6 @@ class ContentScript {
   private setupMessageListener() {
     chrome.runtime.onMessage.addListener(
       (message: DubbingMessage, sender, sendResponse) => {
-        log(LogLevel.INFO, "Received message in content script:", message);
-
         if (message.action === "checkDubbingStatus") {
           sendResponse({ isDubbingActive: this.isDubbingActive });
           return true;
@@ -121,11 +117,6 @@ class ContentScript {
 
         this.handleDubbingAction(message)
           .then((response) => {
-            log(
-              LogLevel.INFO,
-              "Sending response from content script:",
-              response
-            );
             sendResponse(response);
           })
           .catch((error) => {

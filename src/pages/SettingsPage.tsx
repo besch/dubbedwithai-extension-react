@@ -4,14 +4,7 @@ import { RootState, AppDispatch } from "@/store";
 import { setSubtitleOffset, resetSubtitleOffset } from "@/store/movieSlice";
 import PageLayout from "@/components/ui/PageLayout";
 import Button from "@/components/ui/Button";
-
-const formatTime = (time: number): string => {
-  const minutes = Math.floor(time / 60);
-  const seconds = Math.floor(time % 60);
-  return `${minutes.toString().padStart(2, "0")}:${seconds
-    .toString()
-    .padStart(2, "0")}`;
-};
+import { millisecondsToTimeString } from "@/extension/utils";
 
 const SettingsPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -71,11 +64,15 @@ const SettingsPage: React.FC = () => {
         <div className="flex justify-between items-center bg-secondary p-3 rounded-md">
           <div className="text-sm font-medium">
             <span className="text-white">Current Time:</span>{" "}
-            <span className="text-white">{formatTime(currentTime)}</span>
+            <span className="text-white">
+              {millisecondsToTimeString(currentTime)}
+            </span>
           </div>
           <div className="text-sm font-medium">
             <span className="text-white">Adjusted Time:</span>{" "}
-            <span className="text-white">{formatTime(adjustedTime)}</span>
+            <span className="text-white">
+              {millisecondsToTimeString(adjustedTime)}
+            </span>
           </div>
         </div>
 

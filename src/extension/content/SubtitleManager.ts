@@ -1,5 +1,4 @@
 import { Subtitle } from "./types";
-import { timeStringToSeconds } from "./utils";
 
 export class SubtitleManager {
   private subtitlesCache: Map<string, Subtitle[]> = new Map();

@@ -321,21 +321,6 @@ export class DubbingManager {
     });
   }
 
-  private getAudioFileName(subtitle: Subtitle): string {
-    return `${subtitle.start}-${subtitle.end}.mp3`;
-  }
-
-  private timeStringToMs(timeString: string): number {
-    const [hours, minutes, secondsAndMs] = timeString.split(":");
-    const [seconds, ms] = secondsAndMs.split(",");
-    return (
-      parseInt(hours) * 3600000 +
-      parseInt(minutes) * 60000 +
-      parseInt(seconds) * 1000 +
-      parseInt(ms)
-    );
-  }
-
   private async preloadUpcomingSubtitles(currentTime: number): Promise<void> {
     const adjustedTime = currentTime - this.subtitleOffset;
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
@@ -382,11 +367,6 @@ export class DubbingManager {
         this.playAudioIfAvailable(subtitle, audioOffset);
       }
     });
-  }
-
-  private timeStringToSeconds(timeString: string): number {
-    const [hours, minutes, seconds] = timeString.split(":").map(Number);
-    return hours * 3600 + minutes * 60 + seconds;
   }
 
   private async playAudioIfAvailable(

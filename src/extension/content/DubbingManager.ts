@@ -322,9 +322,7 @@ export class DubbingManager {
   }
 
   private getAudioFileName(subtitle: Subtitle): string {
-    const startMs = this.timeStringToMs(subtitle.start);
-    const endMs = this.timeStringToMs(subtitle.end);
-    return `${startMs}-${endMs}.mp3`;
+    return `${subtitle.start}-${subtitle.end}.mp3`;
   }
 
   private timeStringToMs(timeString: string): number {
@@ -352,9 +350,7 @@ export class DubbingManager {
   }
 
   private getAudioFilePath(subtitle: Subtitle): string {
-    const startMs = this.timeStringToMs(subtitle.start);
-    const endMs = this.timeStringToMs(subtitle.end);
-    return `${this.currentMovieId}/${this.currentSubtitleId}/${startMs}-${endMs}.mp3`;
+    return `${this.currentMovieId}/${this.currentSubtitleId}/${subtitle.start}-${subtitle.end}.mp3`;
   }
 
   private adjustVolume(
@@ -368,21 +364,21 @@ export class DubbingManager {
   }
 
   private playCurrentSubtitles(currentTime: number): void {
-    const adjustedTime = currentTime - this.subtitleOffset;
+    const adjustedTime = currentTime * 1000 - this.subtitleOffset;
 
     const currentSubtitles =
       this.subtitleManager.getCurrentSubtitles(adjustedTime);
     currentSubtitles.forEach((subtitle) => {
       const audioFilePath = this.getAudioFilePath(subtitle);
-      const startTime = this.timeStringToMs(subtitle.start) / 1000; // Convert to seconds
-      const endTime = this.timeStringToMs(subtitle.end) / 1000; // Convert to seconds
+      const startTime = subtitle.start / 1000; // Convert to seconds
+      const endTime = subtitle.end / 1000; // Convert to seconds
 
       if (
-        adjustedTime >= startTime &&
-        adjustedTime < endTime &&
+        adjustedTime >= subtitle.start &&
+        adjustedTime < subtitle.end &&
         !this.audioPlayer.isAudioActive(audioFilePath)
       ) {
-        const audioOffset = Math.max(0, adjustedTime - startTime);
+        const audioOffset = Math.max(0, adjustedTime / 1000 - startTime);
         this.playAudioIfAvailable(subtitle, audioOffset);
       }
     });
@@ -416,12 +412,13 @@ export class DubbingManager {
   ): void {
     if (currentSubtitles.length > 0) {
       const currentSubtitle = currentSubtitles[0];
-      const startTime = this.timeStringToSeconds(currentSubtitle.start);
-      const endTime = this.timeStringToSeconds(currentSubtitle.end);
+      const startTime = currentSubtitle.start / 1000;
+      const endTime = currentSubtitle.end / 1000;
 
       if (
         currentSubtitle !== this.lastSentSubtitle ||
-        adjustedTime - this.lastSentTime >= this.config.subtitleUpdateInterval
+        adjustedTime - this.lastSentTime >=
+          this.config.subtitleUpdateInterval * 1000
       ) {
         chrome.runtime.sendMessage({
           action: "currentSubtitle",
@@ -429,7 +426,7 @@ export class DubbingManager {
             text: currentSubtitle.text,
             start: startTime,
             end: endTime,
-            currentTime: adjustedTime,
+            currentTime: adjustedTime / 1000,
           },
         });
 

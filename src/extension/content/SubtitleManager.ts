@@ -37,18 +37,16 @@ export class SubtitleManager {
 
   getUpcomingSubtitles(adjustedTime: number, preloadTime: number): Subtitle[] {
     return this.sortedSubtitles.filter((subtitle) => {
-      const startTime = timeStringToSeconds(subtitle.start);
       return (
-        startTime > adjustedTime && startTime <= adjustedTime + preloadTime
+        subtitle.start > adjustedTime &&
+        subtitle.start <= adjustedTime + preloadTime * 1000
       );
     });
   }
 
   getCurrentSubtitles(adjustedTime: number): Subtitle[] {
     return this.sortedSubtitles.filter((subtitle) => {
-      const startTime = timeStringToSeconds(subtitle.start);
-      const endTime = timeStringToSeconds(subtitle.end);
-      return adjustedTime >= startTime && adjustedTime < endTime;
+      return adjustedTime >= subtitle.start && adjustedTime < subtitle.end;
     });
   }
 
@@ -77,8 +75,6 @@ export class SubtitleManager {
   }
 
   private sortSubtitles(subtitles: Subtitle[]): void {
-    this.sortedSubtitles = [...subtitles].sort(
-      (a, b) => timeStringToSeconds(a.start) - timeStringToSeconds(b.start)
-    );
+    this.sortedSubtitles = [...subtitles].sort((a, b) => a.start - b.start);
   }
 }

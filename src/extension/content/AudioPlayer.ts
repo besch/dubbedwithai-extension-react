@@ -28,8 +28,7 @@ export class AudioPlayer {
 
   stopExpiredAudio(adjustedTime: number): void {
     this.activeAudio.forEach((audioInfo, filePath) => {
-      const endTime = timeStringToSeconds(audioInfo.subtitle.end);
-      if (adjustedTime >= endTime) {
+      if (adjustedTime >= audioInfo.subtitle.end) {
         this.stopAudio(filePath);
       }
     });

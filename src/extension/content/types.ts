@@ -6,8 +6,8 @@ export interface DubbingConfig {
 }
 
 export interface Subtitle {
-  start: string;
-  end: string;
+  start: number;
+  end: number;
   text: string;
 }
 

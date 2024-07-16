@@ -195,7 +195,7 @@ export class DubbingManager {
 
   private handleTimeUpdate = (event: Event): void => {
     const video = event.target as HTMLVideoElement;
-    const currentTime = video.currentTime;
+    const currentTime = video.currentTime * 1000; // Convert to milliseconds
     const adjustedTime = currentTime - this.subtitleOffset;
 
     const currentSubtitles =
@@ -323,17 +323,36 @@ export class DubbingManager {
   }
 
   private async preloadUpcomingSubtitles(currentTime: number): Promise<void> {
-    const currentTimeMs = currentTime * 1000; // Convert currentTime to milliseconds
-    const adjustedTimeMs = currentTimeMs - this.subtitleOffset * 1000; // Assuming subtitleOffset is in seconds
+    const adjustedTime = currentTime - this.subtitleOffset;
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
-      adjustedTimeMs,
+      adjustedTime,
       this.config.preloadTime * 1000 // Convert preloadTime to milliseconds
     );
 
-    for (const subtitle of upcomingSubtitles) {
+    console.log(`Preloading ${upcomingSubtitles.length} upcoming subtitles`);
+
+    const preloadPromises = upcomingSubtitles.map(async (subtitle) => {
       const filePath = this.getAudioFilePath(subtitle);
-      await this.audioFileManager.getAudioBuffer(filePath);
-    }
+      try {
+        const exists = await this.audioFileManager.checkFileExists(filePath);
+        if (exists) {
+          await this.audioFileManager.getAudioBuffer(filePath);
+          console.log(`Preloaded audio for subtitle: ${subtitle.text}`);
+        } else {
+          console.log(
+            `Audio file not found for subtitle: ${subtitle.text}. Requesting generation.`
+          );
+          await this.requestAudioGeneration(subtitle);
+        }
+      } catch (error) {
+        console.error(
+          `Failed to preload audio for subtitle: ${subtitle.text}`,
+          error
+        );
+      }
+    });
+
+    await Promise.all(preloadPromises);
   }
 
   private getAudioFilePath(subtitle: Subtitle): string {

@@ -35,13 +35,10 @@ export class SubtitleManager {
   }
 
   getUpcomingSubtitles(adjustedTime: number, preloadTime: number): Subtitle[] {
-    const adjustedTimeMs = adjustedTime * 1000; // Convert adjustedTime to milliseconds
-    console.log("sortedSubtitles", this.sortedSubtitles);
     return this.sortedSubtitles.filter((subtitle) => {
-      // console.log(adjustedTime, subtitle.start);
       return (
-        subtitle.start > adjustedTimeMs &&
-        subtitle.start <= adjustedTimeMs + preloadTime * 1000
+        subtitle.start > adjustedTime &&
+        subtitle.start <= adjustedTime + preloadTime
       );
     });
   }

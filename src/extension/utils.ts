@@ -10,31 +10,54 @@ export interface SrtObject {
 }
 
 export function parseSrt(srtContent: string): Subtitle[] {
-  const srtObjects: Subtitle[] = [];
-  const blocks = srtContent.trim().split(/\n\s*\n/);
+  const subtitles: Subtitle[] = [];
+  const lines = srtContent.split(/\r?\n/);
+  let currentSubtitle: Partial<Subtitle> | null = null;
 
-  for (const block of blocks) {
-    const lines = block.split("\n");
-    if (lines.length < 3) continue;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
 
-    const [, timestamp, ...textLines] = lines;
-    const [start, end] = timestamp.split(" --> ").map(timeStringToMilliseconds);
-
-    const text = textLines
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .replace(/(<[^>]+>) /g, "$1")
-      .replace(/\s*(\{\\[^}]+\})\s*/g, "$1")
-      .trim();
-
-    srtObjects.push({
-      start,
-      end,
-      text,
-    });
+    if (/^\d+$/.test(line)) {
+      if (
+        currentSubtitle &&
+        currentSubtitle.start &&
+        currentSubtitle.end &&
+        currentSubtitle.text
+      ) {
+        subtitles.push(currentSubtitle as Subtitle);
+      }
+      currentSubtitle = {};
+    } else if (line.includes(" --> ")) {
+      const [startTime, endTime] = line.split(" --> ");
+      if (currentSubtitle) {
+        currentSubtitle.start = timeStringToMilliseconds(startTime.trim());
+        currentSubtitle.end = timeStringToMilliseconds(endTime.trim());
+      }
+    } else if (line !== "") {
+      if (currentSubtitle) {
+        currentSubtitle.text = currentSubtitle.text
+          ? currentSubtitle.text + "\n" + line
+          : line;
+      }
+    }
   }
 
-  return srtObjects;
+  if (
+    currentSubtitle &&
+    currentSubtitle.start &&
+    currentSubtitle.end &&
+    currentSubtitle.text
+  ) {
+    subtitles.push(currentSubtitle as Subtitle);
+  }
+
+  console.log(`Parsed ${subtitles.length} subtitles`);
+  if (subtitles.length > 0) {
+    console.log("First subtitle:", subtitles[0]);
+    console.log("Last subtitle:", subtitles[subtitles.length - 1]);
+  }
+
+  return subtitles;
 }
 
 export function extractMovieTitle(html: string): string | null {

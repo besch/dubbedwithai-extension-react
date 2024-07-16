@@ -229,9 +229,10 @@ export class DubbingManager {
     }
     this.lastGeneratedTime = currentTimestamp;
 
+    const currentTimeMs = currentTime * 1000; // Convert currentTime to milliseconds
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
-      currentTime,
-      60
+      currentTimeMs,
+      60000 // 60 seconds in milliseconds
     );
 
     const checkFileExistsPromises = upcomingSubtitles.map(async (subtitle) => {
@@ -322,10 +323,11 @@ export class DubbingManager {
   }
 
   private async preloadUpcomingSubtitles(currentTime: number): Promise<void> {
-    const adjustedTime = currentTime - this.subtitleOffset;
+    const currentTimeMs = currentTime * 1000; // Convert currentTime to milliseconds
+    const adjustedTimeMs = currentTimeMs - this.subtitleOffset * 1000; // Assuming subtitleOffset is in seconds
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
-      adjustedTime,
-      this.config.preloadTime
+      adjustedTimeMs,
+      this.config.preloadTime * 1000 // Convert preloadTime to milliseconds
     );
 
     for (const subtitle of upcomingSubtitles) {

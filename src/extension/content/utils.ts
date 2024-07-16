@@ -34,13 +34,14 @@ export function getAudioFileName(subtitle: {
 }
 
 export function timeStringToMilliseconds(timeString: string): number {
-  const [hours, minutes, seconds] = timeString.split(":");
-  const [secs, ms] = seconds.split(",");
+  const [time, milliseconds] = timeString.split(",");
+  const [hours, minutes, seconds] = time.split(":");
+
   return (
-    parseInt(hours) * 3600000 +
-    parseInt(minutes) * 60000 +
-    parseInt(secs) * 1000 +
-    parseInt(ms)
+    parseInt(hours, 10) * 3600000 +
+    parseInt(minutes, 10) * 60000 +
+    parseInt(seconds, 10) * 1000 +
+    parseInt(milliseconds, 10)
   );
 }
 

@@ -51,12 +51,6 @@ export function parseSrt(srtContent: string): Subtitle[] {
     subtitles.push(currentSubtitle as Subtitle);
   }
 
-  console.log(`Parsed ${subtitles.length} subtitles`);
-  if (subtitles.length > 0) {
-    console.log("First subtitle:", subtitles[0]);
-    console.log("Last subtitle:", subtitles[subtitles.length - 1]);
-  }
-
   return subtitles;
 }
 

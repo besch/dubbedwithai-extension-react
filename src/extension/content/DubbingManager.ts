@@ -229,7 +229,7 @@ export class DubbingManager {
     }
     this.lastGeneratedTime = currentTimestamp;
 
-    const currentTimeMs = currentTime * 1000; // Convert currentTime to milliseconds
+    const currentTimeMs = currentTime * 1000;
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
       currentTimeMs,
       60000 // 60 seconds in milliseconds
@@ -252,7 +252,6 @@ export class DubbingManager {
       });
     }
 
-    // Process the queue
     await this.processAudioGenerationQueue();
   }
 
@@ -262,44 +261,19 @@ export class DubbingManager {
       if (!request.inProgress) {
         request.inProgress = true;
         try {
-          await this.requestAudioGenerationWithRetry(
-            request.subtitle,
-            filePath
-          );
+          await this.requestAudioGeneration(request.subtitle);
           this.audioGenerationQueue.delete(filePath);
         } catch (error) {
           console.error(`Failed to generate audio for ${filePath}:`, error);
-          request.inProgress = false;
+          this.audioGenerationQueue.delete(filePath); // Remove failed request from queue
         }
       }
     }
   }
 
-  private async requestAudioGenerationWithRetry(
-    subtitle: Subtitle,
-    filePath: string,
-    retryCount: number = 0
-  ): Promise<void> {
-    try {
-      await this.requestAudioGeneration(subtitle);
-    } catch (error) {
-      if (retryCount < this.maxRetries) {
-        const delay = this.retryDelay * Math.pow(2, retryCount);
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        await this.requestAudioGenerationWithRetry(
-          subtitle,
-          filePath,
-          retryCount + 1
-        );
-      } else {
-        throw error; // Throw error after max retries
-      }
-    }
-  }
-
   private async requestAudioGeneration(subtitle: Subtitle): Promise<void> {
+    const filePath = this.getAudioFilePath(subtitle);
     return new Promise((resolve, reject) => {
-      const filePath = this.getAudioFilePath(subtitle);
       chrome.runtime.sendMessage(
         {
           action: "generateAudio",

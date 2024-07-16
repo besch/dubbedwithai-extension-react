@@ -88,6 +88,7 @@ export class DubbingManager {
   }
 
   async stop(): Promise<void> {
+    this.audioFileManager.stop();
     this.audioFileManager.clearCache();
     this.audioPlayer.stopAllAudio();
     this.subtitleManager.reset();

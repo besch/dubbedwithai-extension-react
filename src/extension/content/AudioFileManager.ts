@@ -6,8 +6,10 @@ export class AudioFileManager {
   private inMemoryCache: Map<string, AudioBuffer> = new Map();
   private ongoingFetchRequests: Map<string, Promise<AudioBuffer | null>> =
     new Map();
+  private ongoingCheckRequests: Map<string, Promise<boolean>> = new Map();
   private notFoundFiles: Set<string> = new Set();
   private audioGenerationQueue: Set<string> = new Set();
+  private isActive: boolean = true;
 
   constructor(private audioContext: AudioContext) {
     this.audioCache = new AudioCache();
@@ -18,6 +20,7 @@ export class AudioFileManager {
   }
 
   async checkFileExists(filePath: string): Promise<boolean> {
+    if (!this.isActive) return false;
     if (this.notFoundFiles.has(filePath)) return false;
     if (
       this.inMemoryCache.has(filePath) ||
@@ -25,17 +28,31 @@ export class AudioFileManager {
     )
       return true;
 
-    const audioData = await this.audioCache.getAudio(filePath);
-    if (audioData) return true;
-
-    const exists = await this.checkFileExistsInBackend(filePath);
-    if (!exists && !this.audioGenerationQueue.has(filePath)) {
-      this.requestAudioGeneration(filePath);
+    if (!this.ongoingCheckRequests.has(filePath)) {
+      const checkPromise = this.performFileCheck(filePath);
+      this.ongoingCheckRequests.set(filePath, checkPromise);
     }
-    return exists;
+
+    return this.ongoingCheckRequests.get(filePath)!;
+  }
+
+  private async performFileCheck(filePath: string): Promise<boolean> {
+    try {
+      const audioData = await this.audioCache.getAudio(filePath);
+      if (audioData) return true;
+
+      const exists = await this.checkFileExistsInBackend(filePath);
+      if (!exists && !this.audioGenerationQueue.has(filePath)) {
+        await this.requestAudioGeneration(filePath);
+      }
+      return exists;
+    } finally {
+      this.ongoingCheckRequests.delete(filePath);
+    }
   }
 
   async getAudioBuffer(filePath: string): Promise<AudioBuffer | null> {
+    if (!this.isActive) return null;
     if (this.notFoundFiles.has(filePath)) return null;
 
     if (this.inMemoryCache.has(filePath))
@@ -46,31 +63,20 @@ export class AudioFileManager {
       this.ongoingFetchRequests.set(filePath, request);
     }
 
-    try {
-      const buffer = await this.ongoingFetchRequests.get(filePath)!;
-      this.ongoingFetchRequests.delete(filePath);
-      if (buffer === null) {
-        this.notFoundFiles.add(filePath);
-        if (!this.audioGenerationQueue.has(filePath)) {
-          this.requestAudioGeneration(filePath);
-        }
-      }
-      return buffer;
-    } catch (error) {
-      log(LogLevel.ERROR, "Error fetching or processing audio:", error);
-      this.notFoundFiles.add(filePath);
-      if (!this.audioGenerationQueue.has(filePath)) {
-        this.requestAudioGeneration(filePath);
-      }
-      return null;
-    }
+    return this.ongoingFetchRequests.get(filePath)!;
   }
 
   clearCache(): void {
     this.inMemoryCache.clear();
     this.ongoingFetchRequests.clear();
+    this.ongoingCheckRequests.clear();
     this.notFoundFiles.clear();
     this.audioGenerationQueue.clear();
+  }
+
+  stop(): void {
+    this.isActive = false;
+    this.clearCache();
   }
 
   private async checkFileExistsInBackend(filePath: string): Promise<boolean> {
@@ -91,24 +97,27 @@ export class AudioFileManager {
       if (!audioData) {
         audioData = await this.fetchAudioFile(filePath);
         if (!audioData) {
+          if (!this.audioGenerationQueue.has(filePath)) {
+            await this.requestAudioGeneration(filePath);
+          }
           return null;
         }
         await this.audioCache.storeAudio(filePath, audioData);
       }
 
-      try {
-        const buffer = await this.audioContext.decodeAudioData(
-          audioData.slice(0)
-        );
-        this.inMemoryCache.set(filePath, buffer);
-        return buffer;
-      } catch (e) {
-        log(LogLevel.ERROR, "Error decoding audio data:", e);
-        return null;
-      }
+      const buffer = await this.audioContext.decodeAudioData(
+        audioData.slice(0)
+      );
+      this.inMemoryCache.set(filePath, buffer);
+      return buffer;
     } catch (error) {
-      log(LogLevel.ERROR, "Error fetching audio:", error);
+      log(LogLevel.ERROR, "Error fetching or processing audio:", error);
+      if (!this.audioGenerationQueue.has(filePath)) {
+        await this.requestAudioGeneration(filePath);
+      }
       return null;
+    } finally {
+      this.ongoingFetchRequests.delete(filePath);
     }
   }
 
@@ -133,7 +142,7 @@ export class AudioFileManager {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({ action: "generateAudio", filePath }, () => {
         this.audioGenerationQueue.delete(filePath);
-        this.notFoundFiles.delete(filePath); // Remove from notFoundFiles when generation is complete
+        this.notFoundFiles.delete(filePath);
         resolve();
       });
     });

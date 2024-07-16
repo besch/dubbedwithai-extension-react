@@ -31,8 +31,6 @@ export class DubbingManager {
   private lastSentSubtitle: Subtitle | null = null;
   private lastSentTime: number = 0;
   private config: DubbingConfig;
-  private lastGeneratedTime: number = 0;
-  private generationInterval: number = 30;
   private audioGenerationQueue: Map<string, AudioGenerationRequest> = new Map();
 
   private throttledGenerateUpcomingDubbings: ReturnType<typeof throttle>;
@@ -283,7 +281,7 @@ export class DubbingManager {
   }
 
   private async preloadUpcomingSubtitles(currentTime: number): Promise<void> {
-    const adjustedTime = currentTime - this.subtitleOffset;
+    const adjustedTime = currentTime - this.subtitleOffset * 1000;
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
       adjustedTime,
       this.config.preloadTime * 1000

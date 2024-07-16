@@ -1,15 +1,26 @@
+// src/components/MovieItem.tsx
+
 import React from "react";
 import { Movie } from "@/types";
 
 interface MovieItemProps {
   movie: Movie;
   onSelect: (movie: Movie) => void;
+  isSelected?: boolean;
 }
 
-const MovieItem: React.FC<MovieItemProps> = ({ movie, onSelect }) => (
+const MovieItem: React.FC<MovieItemProps> = ({
+  movie,
+  onSelect,
+  isSelected = false,
+}) => (
   <li
     onClick={() => onSelect(movie)}
-    className="cursor-pointer hover:bg-accent hover:bg-opacity-10 transition duration-200 rounded-lg shadow-sm mb-2"
+    className={`cursor-pointer transition duration-200 rounded-lg shadow-sm mb-2 ${
+      isSelected
+        ? "bg-accent bg-opacity-20"
+        : "hover:bg-accent hover:bg-opacity-10"
+    }`}
   >
     <div className="flex items-start space-x-4 p-4">
       {movie.Poster && movie.Poster !== "N/A" ? (
@@ -26,7 +37,7 @@ const MovieItem: React.FC<MovieItemProps> = ({ movie, onSelect }) => (
         </div>
       )}
       <div>
-        <h2 className="text-lg font-semibold text-primary">{movie.Title}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{movie.Title}</h2>
         <p className="text-sm text-muted-foreground">({movie.Year})</p>
       </div>
     </div>

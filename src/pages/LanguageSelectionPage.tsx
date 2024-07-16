@@ -47,14 +47,11 @@ const LanguageSelectionPage: React.FC = () => {
 
       <div className="mt-6 p-4 bg-card rounded-lg shadow-sm">
         {isLoading ? (
-          <div className="animate-fade-in">
-            <LanguageSkeleton />
-            <div className="flex justify-center items-center mt-4">
-              <LoadingSpinner />
-              <p className="ml-2 text-sm text-muted-foreground">
-                Loading languages...
-              </p>
-            </div>
+          <div className="animate-fade-in flex flex-col items-center">
+            <LoadingSpinner />
+            <p className="mt-4 text-sm text-muted-foreground">
+              Loading languages...
+            </p>
           </div>
         ) : error ? (
           <div className="p-4 text-destructive bg-destructive/10 rounded-md animate-fade-in">

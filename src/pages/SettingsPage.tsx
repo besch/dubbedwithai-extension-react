@@ -112,12 +112,12 @@ const SettingsPage: React.FC = () => {
               +0.5s
             </Button>
           </div>
-          <div className="flex justify-between text-sm text-muted-foreground">
+          <div className="flex justify-between text-sm text-white">
             <span>-100s</span>
             <span>0s</span>
             <span>+100s</span>
           </div>
-          <div className="text-center text-2xl font-bold text-primary">
+          <div className="text-center text-2xl font-bold text-white">
             {localOffset.toFixed(1)}s
           </div>
         </div>

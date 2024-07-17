@@ -42,7 +42,7 @@ export class DubbingManager {
       if (namespace === "local" && changes.movieState) {
         const newMovieState = changes.movieState.newValue;
         if (newMovieState && typeof newMovieState.subtitleOffset === "number") {
-          this.subtitleOffset = newMovieState.subtitleOffset;
+          this.subtitleOffset = newMovieState.subtitleOffset * 1000; // Convert to milliseconds
         }
       }
     });

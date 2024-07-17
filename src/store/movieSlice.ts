@@ -146,13 +146,23 @@ const movieSlice = createSlice({
   initialState,
   reducers: {
     setSelectedMovie: (state, action: PayloadAction<Movie | null>) => {
+      if (state.isDubbingActive) {
+        sendMessageToActiveTab({ action: "stopDubbing" });
+      }
       state.selectedMovie = action.payload;
       state.selectedLanguage = null;
       state.languages = [];
+      state.isDubbingActive = false;
+      state.subtitleOffset = 0;
       chrome.storage.local.set({ movieState: { ...state } });
     },
     setSelectedLanguage: (state, action: PayloadAction<Language | null>) => {
+      if (state.isDubbingActive) {
+        sendMessageToActiveTab({ action: "stopDubbing" });
+      }
       state.selectedLanguage = action.payload;
+      state.isDubbingActive = false;
+      state.subtitleOffset = 0;
       chrome.storage.local.set({ movieState: { ...state } });
     },
     setIsDubbingActive: (state, action: PayloadAction<boolean>) => {

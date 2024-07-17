@@ -8,7 +8,8 @@ import { log, LogLevel } from "./utils";
 const DEFAULT_DUBBING_CONFIG: DubbingConfig = {
   defaultVolume: 1,
   dubbingVolume: 0.3,
-  preloadTime: 5,
+  preloadTime: 5000, // 5 seconds
+  preloadAudioGenerationTime: 15000, //15 seconds
   subtitleUpdateInterval: 0.5,
 };
 
@@ -85,14 +86,57 @@ export class DubbingManager {
     this.isVideoPaused = false;
     this.lastSentSubtitle = null;
     this.lastSentTime = 0;
-    const video = document.querySelector("video");
-    if (video) video.volume = this.originalVolume;
-    this.removeVideoEventListeners();
+
+    // Remove event listeners from the main document's video element
+    this.removeVideoEventListeners(document.querySelector("video"));
+
+    // Remove event listeners from video elements in iframes
+    const iframes = document.querySelectorAll("iframe");
+    for (let i = 0; i < iframes.length; i++) {
+      const iframe = iframes[i];
+      try {
+        const iframeDocument =
+          iframe.contentDocument || iframe.contentWindow?.document;
+        if (iframeDocument) {
+          const iframeVideo = iframeDocument.querySelector("video");
+          if (iframeVideo) {
+            this.removeVideoEventListeners(iframeVideo);
+          }
+        }
+      } catch (e) {
+        console.error("Could not access iframe content:", e);
+      }
+    }
+
+    // Reset volume for all video elements
+    this.resetAllVideoVolumes();
+
     log(LogLevel.INFO, "Dubbing stopped");
   }
 
-  private removeVideoEventListeners(): void {
-    const video = document.querySelector("video");
+  private resetAllVideoVolumes(): void {
+    // Reset volume for the main document's video
+    const mainVideo = document.querySelector("video");
+    if (mainVideo) mainVideo.volume = this.originalVolume;
+
+    // Reset volume for videos in iframes
+    const iframes = document.querySelectorAll("iframe");
+    for (let i = 0; i < iframes.length; i++) {
+      const iframe = iframes[i];
+      try {
+        const iframeDocument =
+          iframe.contentDocument || iframe.contentWindow?.document;
+        if (iframeDocument) {
+          const iframeVideo = iframeDocument.querySelector("video");
+          if (iframeVideo) iframeVideo.volume = this.originalVolume;
+        }
+      } catch (e) {
+        console.error("Could not access iframe content:", e);
+      }
+    }
+  }
+
+  private removeVideoEventListeners(video: HTMLVideoElement | null): void {
     if (video) {
       video.removeEventListener("play", this.handleVideoPlay);
       video.removeEventListener("pause", this.handleVideoPause);
@@ -107,7 +151,7 @@ export class DubbingManager {
   ): Promise<void> {
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
       currentTimeMs,
-      15000 // 15 seconds in milliseconds
+      this.config.preloadAudioGenerationTime
     );
 
     for (const subtitle of upcomingSubtitles) {
@@ -246,7 +290,7 @@ export class DubbingManager {
     const adjustedTime = currentTime - this.subtitleOffset;
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
       adjustedTime,
-      this.config.preloadTime * 1000
+      this.config.preloadTime
     );
 
     for (const subtitle of upcomingSubtitles) {

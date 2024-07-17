@@ -5,7 +5,8 @@ import { log, LogLevel } from "./content/utils";
 const config: DubbingConfig = {
   defaultVolume: 1,
   dubbingVolume: 0.3,
-  preloadTime: 5,
+  preloadTime: 5000, // 5 seconds
+  preloadAudioGenerationTime: 15000, //15 seconds
   subtitleUpdateInterval: 0.5,
 };
 

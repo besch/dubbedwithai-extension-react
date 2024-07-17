@@ -2,6 +2,7 @@ import { throttle } from "lodash";
 import { AudioFileManager } from "./AudioFileManager";
 import { SubtitleManager } from "./SubtitleManager";
 import { AudioPlayer } from "./AudioPlayer";
+import { PrecisionTimer } from "./PrecisionTimer";
 import { DubbingConfig, Subtitle } from "./types";
 import { log, LogLevel } from "./utils";
 
@@ -32,11 +33,14 @@ export class DubbingManager {
   private lastSentTime: number = 0;
   private config: DubbingConfig;
   private audioGenerationQueue: Map<string, AudioGenerationRequest> = new Map();
+  private precisionTimer: PrecisionTimer;
+  private lastVideoTime: number = 0;
 
   private throttledGenerateUpcomingDubbings: ReturnType<typeof throttle>;
 
   constructor(config: Partial<DubbingConfig> = {}) {
     this.config = { ...DEFAULT_DUBBING_CONFIG, ...config };
+    this.precisionTimer = new PrecisionTimer(this.handlePreciseTime);
     this.audioContext = new window.AudioContext();
     this.audioFileManager = new AudioFileManager(this.audioContext);
     this.subtitleManager = new SubtitleManager();
@@ -165,19 +169,22 @@ export class DubbingManager {
 
   private handleVideoPlay = (event: Event): void => {
     this.isVideoPaused = false;
-    this.audioPlayer.stopAllAudio();
-    this.playCurrentSubtitles((event.target as HTMLVideoElement).currentTime);
+    const video = event.target as HTMLVideoElement;
+    this.precisionTimer.start(video.currentTime);
   };
 
   private handleVideoPause = (): void => {
     this.isVideoPaused = true;
+    this.precisionTimer.pause();
     this.audioPlayer.stopAllAudio();
   };
 
   private handleVideoSeeking = (event: Event): void => {
+    const video = event.target as HTMLVideoElement;
+    this.precisionTimer.start(video.currentTime);
     this.audioPlayer.stopAllAudio();
     if (!this.isVideoPaused) {
-      this.playCurrentSubtitles((event.target as HTMLVideoElement).currentTime);
+      this.playCurrentSubtitles(video.currentTime * 1000);
     }
   };
 
@@ -192,28 +199,40 @@ export class DubbingManager {
 
   private handleTimeUpdate = (event: Event): void => {
     const video = event.target as HTMLVideoElement;
-    const currentTime = video.currentTime * 1000; // Convert to milliseconds
-    const adjustedTime = currentTime - this.subtitleOffset;
+    const currentTime = video.currentTime;
+
+    if (Math.abs(currentTime - this.lastVideoTime) >= 1) {
+      this.lastVideoTime = currentTime;
+      this.precisionTimer.start(currentTime);
+    }
+  };
+
+  private handlePreciseTime = (time: number): void => {
+    const currentTimeMs = time * 1000;
+    const adjustedTimeMs = currentTimeMs - this.subtitleOffset;
 
     const currentSubtitles =
-      this.subtitleManager.getCurrentSubtitles(adjustedTime);
+      this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
 
-    this.adjustVolume(video, currentSubtitles);
+    this.adjustVolume(
+      document.querySelector("video") as HTMLVideoElement,
+      currentSubtitles
+    );
     if (!this.isVideoPaused) {
-      this.playCurrentSubtitles(currentTime);
+      this.playCurrentSubtitles(currentTimeMs);
     }
-    this.audioPlayer.stopExpiredAudio(adjustedTime);
-    this.preloadUpcomingSubtitles(currentTime);
+    this.audioPlayer.stopExpiredAudio(adjustedTimeMs);
+    this.preloadUpcomingSubtitles(currentTimeMs);
 
-    this.sendCurrentSubtitleInfo(adjustedTime, currentSubtitles);
+    this.sendCurrentSubtitleInfo(adjustedTimeMs, currentSubtitles);
 
     // Generate upcoming dubbings if needed
-    this.throttledGenerateUpcomingDubbings(currentTime);
+    this.throttledGenerateUpcomingDubbings(currentTimeMs);
 
     chrome.runtime.sendMessage({
       action: "updateCurrentTime",
-      currentTime: currentTime,
-      adjustedTime: adjustedTime,
+      currentTime: currentTimeMs,
+      adjustedTime: adjustedTimeMs,
     });
   };
 
@@ -337,23 +356,23 @@ export class DubbingManager {
         : this.originalVolume;
   }
 
-  private playCurrentSubtitles(currentTime: number): void {
-    const adjustedTime = currentTime - this.subtitleOffset;
+  private playCurrentSubtitles(currentTimeMs: number): void {
+    const adjustedTimeMs = currentTimeMs - this.subtitleOffset;
 
     const currentSubtitles =
-      this.subtitleManager.getCurrentSubtitles(adjustedTime);
+      this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
 
     currentSubtitles.forEach((subtitle) => {
       const audioFilePath = this.getAudioFilePath(subtitle);
-      const startTime = subtitle.start / 1000; // Convert to seconds
+      const startTimeMs = subtitle.start;
 
       if (
-        adjustedTime >= subtitle.start &&
-        adjustedTime < subtitle.end &&
+        adjustedTimeMs >= startTimeMs &&
+        adjustedTimeMs < subtitle.end &&
         !this.audioPlayer.isAudioActive(audioFilePath)
       ) {
-        const audioOffset = Math.max(0, adjustedTime / 1000 - startTime);
-        this.playAudioIfAvailable(subtitle, audioOffset);
+        const audioOffsetMs = Math.max(0, adjustedTimeMs - startTimeMs);
+        this.playAudioIfAvailable(subtitle, audioOffsetMs / 1000); // Convert to seconds for AudioContext
       }
     });
   }

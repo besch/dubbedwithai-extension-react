@@ -1,4 +1,3 @@
-import { throttle } from "lodash";
 import { AudioFileManager } from "./AudioFileManager";
 import { SubtitleManager } from "./SubtitleManager";
 import { AudioPlayer } from "./AudioPlayer";
@@ -13,12 +12,6 @@ const DEFAULT_DUBBING_CONFIG: DubbingConfig = {
   subtitleUpdateInterval: 0.5,
 };
 
-interface AudioGenerationRequest {
-  subtitle: Subtitle;
-  filePath: string;
-  inProgress: boolean;
-}
-
 export class DubbingManager {
   private subtitleOffset: number = 0;
   private audioFileManager: AudioFileManager;
@@ -32,11 +25,8 @@ export class DubbingManager {
   private lastSentSubtitle: Subtitle | null = null;
   private lastSentTime: number = 0;
   private config: DubbingConfig;
-  private audioGenerationQueue: Map<string, AudioGenerationRequest> = new Map();
   private precisionTimer: PrecisionTimer;
   private lastVideoTime: number = 0;
-
-  private throttledGenerateUpcomingDubbings: ReturnType<typeof throttle>;
 
   constructor(config: Partial<DubbingConfig> = {}) {
     this.config = { ...DEFAULT_DUBBING_CONFIG, ...config };
@@ -47,11 +37,6 @@ export class DubbingManager {
     this.audioPlayer = new AudioPlayer(this.audioContext);
     this.originalVolume = this.config.defaultVolume;
     this.setupMessageListener();
-    this.throttledGenerateUpcomingDubbings = throttle(
-      this.generateUpcomingDubbings.bind(this),
-      60000, // Allow only one call per minute
-      { leading: true, trailing: false }
-    );
     chrome.storage.onChanged.addListener((changes, namespace) => {
       if (namespace === "local" && changes.movieState) {
         const newMovieState = changes.movieState.newValue;
@@ -114,6 +99,27 @@ export class DubbingManager {
       video.removeEventListener("seeking", this.handleVideoSeeking);
       video.removeEventListener("volumechange", this.handleVolumeChange);
       video.removeEventListener("timeupdate", this.handleTimeUpdate);
+    }
+  }
+
+  private async checkAndGenerateUpcomingAudio(
+    currentTimeMs: number
+  ): Promise<void> {
+    const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
+      currentTimeMs,
+      15000 // 15 seconds in milliseconds
+    );
+
+    for (const subtitle of upcomingSubtitles) {
+      const filePath = this.getAudioFilePath(subtitle);
+      const timeUntilPlay = subtitle.start - currentTimeMs;
+
+      if (timeUntilPlay <= 15000 && timeUntilPlay > 0) {
+        const exists = await this.audioFileManager.checkFileExists(filePath);
+        if (!exists) {
+          await this.audioFileManager.generateAudio(filePath, subtitle.text);
+        }
+      }
     }
   }
 
@@ -191,7 +197,8 @@ export class DubbingManager {
   private handleVolumeChange = (event: Event): void => {
     const video = event.target as HTMLVideoElement;
     if (
-      this.subtitleManager.getCurrentSubtitles(video.currentTime).length === 0
+      this.subtitleManager.getCurrentSubtitles(video.currentTime * 1000)
+        .length === 0
     ) {
       this.originalVolume = video.volume;
     }
@@ -226,8 +233,7 @@ export class DubbingManager {
 
     this.sendCurrentSubtitleInfo(adjustedTimeMs, currentSubtitles);
 
-    // Generate upcoming dubbings if needed
-    this.throttledGenerateUpcomingDubbings(currentTimeMs);
+    this.checkAndGenerateUpcomingAudio(currentTimeMs);
 
     chrome.runtime.sendMessage({
       action: "updateCurrentTime",
@@ -236,99 +242,23 @@ export class DubbingManager {
     });
   };
 
-  private async generateUpcomingDubbings(currentTime: number): Promise<void> {
-    if (!this.currentMovieId || !this.currentSubtitleId) return;
-
-    const currentTimeMs = currentTime * 1000;
-    const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
-      currentTimeMs,
-      60000 // 60 seconds in milliseconds
-    );
-
-    for (const subtitle of upcomingSubtitles) {
-      const filePath = this.getAudioFilePath(subtitle);
-      if (
-        this.audioGenerationQueue.has(filePath) ||
-        (await this.audioFileManager.checkFileExists(filePath))
-      ) {
-        continue;
-      }
-
-      this.audioGenerationQueue.set(filePath, {
-        subtitle,
-        filePath,
-        inProgress: false,
-      });
-    }
-
-    await this.processAudioGenerationQueue();
-  }
-
-  private async processAudioGenerationQueue(): Promise<void> {
-    const entries = Array.from(this.audioGenerationQueue.entries());
-    for (const [filePath, request] of entries) {
-      if (!request.inProgress) {
-        request.inProgress = true;
-        try {
-          await this.requestAudioGeneration(request.subtitle);
-          this.audioGenerationQueue.delete(filePath);
-        } catch (error) {
-          console.error(`Failed to generate audio for ${filePath}:`, error);
-          this.audioGenerationQueue.delete(filePath); // Remove failed request from queue
-        }
-      }
-    }
-  }
-
-  private async requestAudioGeneration(subtitle: Subtitle): Promise<void> {
-    const filePath = this.getAudioFilePath(subtitle);
-    return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(
-        {
-          action: "generateAudio",
-          text: subtitle.text,
-          filePath: filePath,
-        },
-        (response) => {
-          if (response.error) {
-            reject(new Error(response.error));
-          } else {
-            resolve();
-          }
-        }
-      );
-    });
-  }
-
   private async preloadUpcomingSubtitles(currentTime: number): Promise<void> {
-    const adjustedTime = currentTime - this.subtitleOffset * 1000;
+    const adjustedTime = currentTime - this.subtitleOffset;
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
       adjustedTime,
       this.config.preloadTime * 1000
     );
 
-    const preloadPromises = upcomingSubtitles.map(async (subtitle) => {
+    for (const subtitle of upcomingSubtitles) {
       const filePath = this.getAudioFilePath(subtitle);
       try {
-        if (
-          this.audioGenerationQueue.has(filePath) ||
-          this.audioFileManager.isGenerating(filePath) // New check
-        ) {
-          return;
+        if (this.audioFileManager.isGenerating(filePath)) {
+          continue;
         }
 
         const exists = await this.audioFileManager.checkFileExists(filePath);
         if (exists) {
           await this.audioFileManager.getAudioBuffer(filePath);
-        } else {
-          console.log(
-            `Audio file not found for subtitle: ${subtitle.text}. Queueing for generation.`
-          );
-          this.audioGenerationQueue.set(filePath, {
-            subtitle,
-            filePath,
-            inProgress: false,
-          });
         }
       } catch (error) {
         console.error(
@@ -336,10 +266,7 @@ export class DubbingManager {
           error
         );
       }
-    });
-
-    await Promise.all(preloadPromises);
-    await this.processAudioGenerationQueue();
+    }
   }
 
   private getAudioFilePath(subtitle: Subtitle): string {

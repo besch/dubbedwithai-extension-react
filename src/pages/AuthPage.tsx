@@ -5,6 +5,7 @@ import { login } from "@/store/authSlice";
 import { AppDispatch, RootState } from "@/store";
 import PageLayout from "@/components/ui/PageLayout";
 import Button from "@/components/ui/Button";
+import { toast } from "react-toastify";
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,8 +16,10 @@ const AuthPage: React.FC = () => {
     try {
       await dispatch(login()).unwrap();
       navigate("/search");
+      toast.success("Logged in successfully");
     } catch (error) {
       console.error("Login failed:", error);
+      toast.error("Login failed. Please try again.");
     }
   };
 
@@ -26,7 +29,6 @@ const AuthPage: React.FC = () => {
         <p className="mb-4 text-gray-600">
           Please log in to access the movie dubbing features.
         </p>
-        {error && <p className="text-danger mb-2">{error}</p>}
         <Button onClick={handleLogin} disabled={loading}>
           {loading ? "Logging in..." : "Login with Google"}
         </Button>

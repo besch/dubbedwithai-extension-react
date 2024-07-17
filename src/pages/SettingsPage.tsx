@@ -5,12 +5,12 @@ import { setSubtitleOffset, resetSubtitleOffset } from "@/store/movieSlice";
 import PageLayout from "@/components/ui/PageLayout";
 import Button from "@/components/ui/Button";
 import { millisecondsToTimeString } from "@/extension/utils";
+import { toast } from "react-toastify";
 
 const SettingsPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { subtitleOffset } = useSelector((state: RootState) => state.movie);
   const [localOffset, setLocalOffset] = useState(subtitleOffset);
-  const [isApplied, setIsApplied] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [adjustedTime, setAdjustedTime] = useState(0);
 
@@ -36,26 +36,22 @@ const SettingsPage: React.FC = () => {
   const handleOffsetChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newOffset = parseFloat(event.target.value);
     setLocalOffset(newOffset);
-    setIsApplied(false);
   };
 
   const handleOffsetAdjust = (amount: number) => {
     const newOffset = Math.round((localOffset + amount) * 10) / 10;
     setLocalOffset(newOffset);
-    setIsApplied(false);
   };
 
   const handleOffsetApply = () => {
     dispatch(setSubtitleOffset(localOffset));
-    setIsApplied(true);
-    setTimeout(() => setIsApplied(false), 2000);
+    toast.success("Offset has been applied successfully!");
   };
 
   const handleOffsetReset = () => {
     dispatch(resetSubtitleOffset());
     setLocalOffset(0);
-    setIsApplied(true);
-    setTimeout(() => setIsApplied(false), 2000);
+    toast.success("Offset has been reset successfully!");
   };
 
   return (
@@ -122,10 +118,10 @@ const SettingsPage: React.FC = () => {
         <div className="flex space-x-4">
           <Button
             onClick={handleOffsetApply}
-            variant={isApplied ? "secondary" : "primary"}
+            variant="primary"
             className="flex-1 py-2"
           >
-            {isApplied ? "Applied!" : "Apply Offset"}
+            Apply Offset
           </Button>
           <Button
             onClick={handleOffsetReset}
@@ -135,12 +131,6 @@ const SettingsPage: React.FC = () => {
             Reset Offset
           </Button>
         </div>
-
-        {isApplied && (
-          <div className="text-center text-lg text-primary font-semibold animate-pulse bg-primary/10 p-2 rounded-md">
-            Offset has been applied successfully!
-          </div>
-        )}
       </div>
     </PageLayout>
   );

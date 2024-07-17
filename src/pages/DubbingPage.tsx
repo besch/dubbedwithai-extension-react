@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
 import DubbingControls from "@/components/DubbingControls";
@@ -7,14 +7,13 @@ import languageCodes from "@/lib/languageCodes";
 import { sendMessageToActiveTab } from "@/lib/messaging";
 import PageLayout from "@/components/ui/PageLayout";
 import MovieCard from "@/components/MovieCard";
-import { Alert, AlertDescription } from "@/components/ui/Alert";
+import { toast } from "react-toastify";
 
 const DubbingPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { selectedMovie, selectedLanguage, isDubbingActive } = useSelector(
     (state: RootState) => state.movie
   );
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (selectedMovie && selectedLanguage) {
@@ -23,7 +22,6 @@ const DubbingPage: React.FC = () => {
   }, [selectedMovie, selectedLanguage, dispatch]);
 
   const handleDubbingToggle = async (isActive: boolean) => {
-    setError(null);
     try {
       const action = isActive ? "initializeDubbing" : "stopDubbing";
       const message = isActive
@@ -48,10 +46,11 @@ const DubbingPage: React.FC = () => {
       }
 
       dispatch(setIsDubbingActive(isActive));
+      toast.success(`Dubbing ${isActive ? "started" : "stopped"} successfully`);
     } catch (error) {
       console.error("Failed to toggle dubbing:", error);
-      setError(
-        "Failed to toggle dubbing or video player not found. Please try again."
+      toast.error(
+        "Failed to toggle dubbing. Or video player not found. Please try again."
       );
       dispatch(setIsDubbingActive(false));
     }
@@ -63,9 +62,7 @@ const DubbingPage: React.FC = () => {
   if (!selectedMovie || !selectedLanguage) {
     return (
       <PageLayout title="Dubbing Controls">
-        <Alert variant="destructive">
-          <AlertDescription>No movie or language selected</AlertDescription>
-        </Alert>
+        {toast.error("No movie or language selected")}
       </PageLayout>
     );
   }
@@ -77,11 +74,6 @@ const DubbingPage: React.FC = () => {
         <p className="text-sm text-muted-foreground">
           Language: {getFullLanguageName(selectedLanguage.attributes.language)}
         </p>
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
         <DubbingControls
           isDubbingActive={isDubbingActive}
           onDubbingToggle={handleDubbingToggle}

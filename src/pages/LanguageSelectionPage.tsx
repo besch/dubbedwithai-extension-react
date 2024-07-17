@@ -8,14 +8,7 @@ import { Language } from "@/types";
 import PageLayout from "@/components/ui/PageLayout";
 import MovieCard from "@/components/MovieCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-
-const LanguageSkeleton: React.FC = () => (
-  <div className="space-y-2">
-    {[1, 2, 3].map((i) => (
-      <div key={i} className="h-10 bg-muted rounded-md animate-pulse"></div>
-    ))}
-  </div>
-);
+import { toast } from "react-toastify";
 
 const LanguageSelectionPage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,6 +28,7 @@ const LanguageSelectionPage: React.FC = () => {
   const handleLanguageSelect = (language: Language) => {
     dispatch(setSelectedLanguage(language));
     navigate("/dubbing");
+    toast.success(`Selected language: ${language.attributes.language}`);
   };
 
   return (
@@ -54,9 +48,7 @@ const LanguageSelectionPage: React.FC = () => {
             </p>
           </div>
         ) : error ? (
-          <div className="p-4 text-destructive bg-destructive/10 rounded-md animate-fade-in">
-            Error: {error}
-          </div>
+          toast.error(`Error: ${error}`)
         ) : languages.length > 0 ? (
           <div className="animate-fade-in">
             <LanguageSelector
@@ -65,9 +57,7 @@ const LanguageSelectionPage: React.FC = () => {
             />
           </div>
         ) : (
-          <p className="text-muted-foreground bg-muted p-4 rounded-md animate-fade-in">
-            No languages available for this movie.
-          </p>
+          toast.info("No languages available for this movie.")
         )}
       </div>
     </PageLayout>

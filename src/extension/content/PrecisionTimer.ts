@@ -37,6 +37,14 @@ export class PrecisionTimer {
     this.stopInterval();
   }
 
+  reset() {
+    this.stop();
+    this.startTime = 0;
+    this.pausedTime = 0;
+    this.isPaused = true;
+    this.lastUpdateTime = 0;
+  }
+
   getCurrentTime(): number {
     if (this.isPaused) {
       return this.pausedTime;

@@ -51,6 +51,7 @@ export class DubbingManager {
   initialize(movieId: string, subtitleId: string): void {
     this.currentMovieId = movieId;
     this.currentSubtitleId = subtitleId;
+    this.precisionTimer.reset();
     this.startDubbing();
   }
 
@@ -86,6 +87,7 @@ export class DubbingManager {
     this.isVideoPaused = false;
     this.lastSentSubtitle = null;
     this.lastSentTime = 0;
+    this.precisionTimer.stop();
 
     // Remove event listeners from the main document's video element
     this.removeVideoEventListeners(document.querySelector("video"));
@@ -221,6 +223,7 @@ export class DubbingManager {
     this.isVideoPaused = false;
     const video = event.target as HTMLVideoElement;
     this.precisionTimer.start(video.currentTime);
+    this.checkAndGenerateUpcomingAudio(video.currentTime * 1000);
   };
 
   private handleVideoPause = (): void => {
@@ -231,6 +234,7 @@ export class DubbingManager {
 
   private handleVideoSeeking = (event: Event): void => {
     const video = event.target as HTMLVideoElement;
+    this.precisionTimer.stop();
     this.precisionTimer.start(video.currentTime);
     this.audioPlayer.stopAllAudio();
     if (!this.isVideoPaused) {

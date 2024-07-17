@@ -66,10 +66,13 @@ class ContentScript {
       throw new Error("No video element found on the page");
     }
     if ("movieId" in message && "subtitleId" in message) {
-      await this.dubbingManager!.initialize(
-        message.movieId,
-        message.subtitleId
-      );
+      // Stop existing dubbing if active
+      if (this.isDubbingActive && this.dubbingManager) {
+        await this.dubbingManager.stop();
+      }
+      // Reinitialize the DubbingManager
+      this.dubbingManager = new DubbingManager(config);
+      await this.dubbingManager.initialize(message.movieId, message.subtitleId);
       this.updateDubbingState(true);
       await chrome.storage.local.set({
         currentMovieId: message.movieId,

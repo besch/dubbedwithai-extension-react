@@ -14,6 +14,7 @@ class BackgroundService {
   private iconCache: Record<string, ImageData> = {};
   private isPulsing = false;
   private pulseState = false;
+  private subtitlesCache: { [key: string]: string } = {};
 
   constructor() {
     this.initializeListeners();
@@ -304,6 +305,14 @@ class BackgroundService {
     movieId: string,
     subtitleId: string
   ): Promise<string | null> {
+    const cacheKey = `${movieId}_${subtitleId}`;
+
+    // Check if subtitles are in cache
+    if (this.subtitlesCache[cacheKey]) {
+      console.log("Using cached subtitles");
+      return this.subtitlesCache[cacheKey];
+    }
+
     try {
       const token = await getAuthToken();
       if (!token) throw new Error("No auth token available");
@@ -322,10 +331,24 @@ class BackgroundService {
 
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
-      return await response.text();
+
+      const subtitles = await response.text();
+
+      // Cache the fetched subtitles
+      this.subtitlesCache[cacheKey] = subtitles;
+
+      return subtitles;
     } catch (e) {
       console.error("There was a problem fetching the subtitles:", e);
       return null;
+    }
+  }
+
+  private clearOldSubtitlesCache(maxEntries: number = 3) {
+    const cacheKeys = Object.keys(this.subtitlesCache);
+    if (cacheKeys.length > maxEntries) {
+      const keysToRemove = cacheKeys.slice(0, cacheKeys.length - maxEntries);
+      keysToRemove.forEach((key) => delete this.subtitlesCache[key]);
     }
   }
 
@@ -372,6 +395,7 @@ class BackgroundService {
       message.movieId,
       message.subtitleId
     );
+    this.clearOldSubtitlesCache(); // Clear old cache entries
     sendResponse({
       action: "subtitlesData",
       data: subtitles ? parseSrt(subtitles) : null,

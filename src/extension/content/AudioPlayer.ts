@@ -1,5 +1,4 @@
 import { Subtitle } from "./types";
-import { timeStringToSeconds } from "./utils";
 
 export class AudioPlayer {
   private static instance: AudioPlayer | null = null;

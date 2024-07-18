@@ -58,13 +58,13 @@ const SettingsPage: React.FC = () => {
     <PageLayout title="Subtitle Settings">
       <div className="space-y-4">
         <div className="flex justify-between items-center bg-secondary p-3 rounded-md">
-          <div className="text-sm font-medium">
+          <div className="text-sm font-medium tracking-tighter">
             <span className="text-white">Current Time:</span>{" "}
             <span className="text-white">
               {millisecondsToTimeString(currentTime)}
             </span>
           </div>
-          <div className="text-sm font-medium">
+          <div className="text-sm font-medium tracking-tighter">
             <span className="text-white">Adjusted Time:</span>{" "}
             <span className="text-white">
               {millisecondsToTimeString(adjustedTime)}

@@ -19,7 +19,7 @@ const MovieItem: React.FC<MovieItemProps> = ({
     className={`cursor-pointer transition duration-200 rounded-lg shadow-sm mb-2 ${
       isSelected
         ? "bg-accent bg-opacity-20"
-        : "hover:bg-accent hover:bg-opacity-10"
+        : "hover:bg-accent hover:bg-opacity-60"
     }`}
   >
     <div className="flex items-start space-x-4 p-4">

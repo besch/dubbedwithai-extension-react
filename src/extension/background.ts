@@ -378,13 +378,17 @@ class BackgroundService {
     }
   }
 
-  private arrayBufferToBase64(buffer: ArrayBuffer): string {
-    return btoa(
-      String.fromCharCode.apply(
-        null,
-        new Uint8Array(buffer) as unknown as number[]
-      )
-    );
+  arrayBufferToBase64(buffer: ArrayBuffer): string {
+    const uint8Array = new Uint8Array(buffer);
+    const chunkSize = 0x8000; // 32KB chunks
+    let result = "";
+
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.subarray(i, i + chunkSize);
+      result += String.fromCharCode.apply(null, chunk as unknown as number[]);
+    }
+
+    return btoa(result);
   }
 
   private async handleSubtitlesRequest(

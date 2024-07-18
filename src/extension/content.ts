@@ -11,23 +11,18 @@ const config: DubbingConfig = {
 };
 
 class ContentScript {
-  private dubbingManager: DubbingManager | null = null;
+  private dubbingManager: DubbingManager;
   private isDubbingActive = false;
 
   constructor() {
+    this.dubbingManager = DubbingManager.getInstance(config);
     this.setupMessageListener();
     this.initializeFromStorage();
     this.setupVisibilityChangeListener();
   }
 
-  private initializeDubbingManager(): boolean {
-    if (!document.querySelector("video")) {
-      return false;
-    }
-    if (!this.dubbingManager) {
-      this.dubbingManager = new DubbingManager(config);
-    }
-    return true;
+  private checkForVideoElement(): boolean {
+    return !!document.querySelector("video");
   }
 
   private async stopDubbingOnInactiveTab() {
@@ -62,17 +57,25 @@ class ContentScript {
   }
 
   private async handleInitializeDubbing(message: DubbingMessage): Promise<any> {
-    if (!this.initializeDubbingManager()) {
+    if (!this.checkForVideoElement()) {
       throw new Error("No video element found on the page");
     }
     if ("movieId" in message && "subtitleId" in message) {
-      // Stop existing dubbing if active
-      if (this.isDubbingActive && this.dubbingManager) {
-        await this.dubbingManager.stop();
+      if (this.isDubbingActive) {
+        // If dubbing is already active for the same movie and subtitle, just resume
+        if (
+          this.dubbingManager.isCurrentDubbing(
+            message.movieId,
+            message.subtitleId
+          )
+        ) {
+          console.log("startDubbing");
+          this.dubbingManager.startDubbing();
+          return { status: "resumed" };
+        }
       }
-      // Reinitialize the DubbingManager
-      this.dubbingManager = new DubbingManager(config);
-      await this.dubbingManager.initialize(message.movieId, message.subtitleId);
+      console.log("initDubbing");
+      this.dubbingManager.initialize(message.movieId, message.subtitleId);
       this.updateDubbingState(true);
       await chrome.storage.local.set({
         currentMovieId: message.movieId,
@@ -85,17 +88,15 @@ class ContentScript {
   }
 
   private async handleStopDubbing(): Promise<any> {
-    if (this.dubbingManager) {
-      await this.dubbingManager.stop();
+    if (this.isDubbingActive) {
+      this.dubbingManager.stop();
+      this.updateDubbingState(false);
+      return { status: "stopped" };
     }
-    this.updateDubbingState(false);
-    return { status: "stopped" };
+    return { status: "already_stopped" };
   }
 
   private handleCheckDubbingStatus(): any {
-    if (!this.initializeDubbingManager()) {
-      throw new Error("No video element found on the page");
-    }
     return {
       status: "checked",
       isDubbingActive: this.isDubbingActive,
@@ -138,24 +139,43 @@ class ContentScript {
       "currentMovieId",
       "currentSubtitleId",
     ]);
+
     if (
       result.isDubbingActive &&
       result.currentMovieId &&
-      result.currentSubtitleId &&
-      this.initializeDubbingManager()
+      result.currentSubtitleId
     ) {
       try {
-        await this.dubbingManager!.initialize(
+        // Check for video element
+        if (!this.checkForVideoElement()) {
+          throw new Error("No video element found on the page");
+        }
+
+        // Initialize dubbing
+        this.dubbingManager.initialize(
           result.currentMovieId,
           result.currentSubtitleId
         );
+
+        // Update dubbing state
         this.updateDubbingState(true);
+
+        log(LogLevel.INFO, "Dubbing initialized from storage successfully");
       } catch (error) {
-        log(LogLevel.ERROR, "Failed to initialize dubbing:", error);
+        log(
+          LogLevel.ERROR,
+          "Failed to initialize dubbing from storage:",
+          error
+        );
         this.updateDubbingState(false);
       }
     } else if (result.isDubbingActive) {
+      // If isDubbingActive is true but we don't have all necessary data,
+      // update the state to false
       this.updateDubbingState(false);
+      log(LogLevel.WARN, "Dubbing was active but missing necessary data");
+    } else {
+      log(LogLevel.INFO, "No active dubbing session found in storage");
     }
   }
 

@@ -23,30 +23,45 @@ const DubbingPage: React.FC = () => {
 
   const handleDubbingToggle = async (isActive: boolean) => {
     try {
-      const action = isActive ? "initializeDubbing" : "stopDubbing";
-      const message = isActive
-        ? {
-            action,
+      if (isActive) {
+        // Check if dubbing is already initialized
+        const response = await sendMessageToActiveTab({
+          action: "checkDubbingStatus",
+        });
+
+        if (response?.isDubbingActive) {
+          // If dubbing is already initialized, just update the state
+          dispatch(setIsDubbingActive(true));
+          toast.success("Dubbing resumed successfully");
+        } else {
+          // If dubbing is not initialized, initialize it
+          const initResponse = await sendMessageToActiveTab({
+            action: "initializeDubbing",
             movieId: selectedMovie?.imdbID,
             subtitleId: selectedLanguage?.id,
+          });
+
+          if (initResponse?.status === "initialized") {
+            dispatch(setIsDubbingActive(true));
+            toast.success("Dubbing started successfully");
+          } else {
+            throw new Error("Failed to initialize dubbing");
           }
-        : { action };
+        }
+      } else {
+        // When stopping, we'll use updateDubbingState to pause the audio and timer
+        const response = await sendMessageToActiveTab({
+          action: "updateDubbingState",
+          payload: false,
+        });
 
-      const response = await sendMessageToActiveTab(message);
-
-      if (response?.status === "error") {
-        throw new Error(response.message);
-      } else if (
-        (isActive && response?.status !== "initialized") ||
-        (!isActive && response?.status !== "stopped")
-      ) {
-        throw new Error(
-          `Failed to ${isActive ? "initialize" : "stop"} dubbing`
-        );
+        if (response?.status === "updated") {
+          dispatch(setIsDubbingActive(false));
+          toast.success("Dubbing paused successfully");
+        } else {
+          throw new Error("Failed to pause dubbing");
+        }
       }
-
-      dispatch(setIsDubbingActive(isActive));
-      toast.success(`Dubbing ${isActive ? "started" : "stopped"} successfully`);
     } catch (error) {
       console.error("Failed to toggle dubbing:", error);
       toast.error(

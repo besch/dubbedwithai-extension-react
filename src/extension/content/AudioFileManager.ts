@@ -2,6 +2,7 @@ import { AudioCache } from "./AudioCache";
 import { base64ToArrayBuffer, log, LogLevel } from "./utils";
 
 export class AudioFileManager {
+  private static instance: AudioFileManager | null = null;
   private audioCache: AudioCache;
   private inMemoryCache: Map<string, AudioBuffer> = new Map();
   private ongoingFetchRequests: Map<string, Promise<AudioBuffer | null>> =
@@ -9,7 +10,6 @@ export class AudioFileManager {
   private ongoingCheckRequests: Map<string, Promise<boolean>> = new Map();
   private notFoundFiles: Set<string> = new Set();
   private audioGenerationQueue: Map<string, Promise<void>> = new Map();
-  private isActive: boolean = true;
   private existenceCache: Map<string, boolean> = new Map();
   private existenceCacheTimeout: number = 60000; // 1 minute cache timeout
   private lastExistenceCheck: Map<string, number> = new Map();
@@ -20,12 +20,18 @@ export class AudioFileManager {
     this.audioCache = new AudioCache();
   }
 
+  public static getInstance(audioContext: AudioContext): AudioFileManager {
+    if (!AudioFileManager.instance) {
+      AudioFileManager.instance = new AudioFileManager(audioContext);
+    }
+    return AudioFileManager.instance;
+  }
+
   isGenerating(filePath: string): boolean {
     return this.audioGenerationQueue.has(filePath);
   }
 
   async checkFileExists(filePath: string): Promise<boolean> {
-    if (!this.isActive) return false;
     if (this.notFoundFiles.has(filePath)) return false;
     if (
       this.inMemoryCache.has(filePath) ||
@@ -49,7 +55,6 @@ export class AudioFileManager {
   }
 
   async getAudioBuffer(filePath: string): Promise<AudioBuffer | null> {
-    if (!this.isActive) return null;
     if (this.notFoundFiles.has(filePath)) return null;
 
     if (this.inMemoryCache.has(filePath))
@@ -64,8 +69,6 @@ export class AudioFileManager {
   }
 
   async generateAudio(filePath: string, text: string): Promise<void> {
-    if (!this.isActive) return;
-
     const now = Date.now();
     const lastAttempt = this.lastGenerationAttempt.get(filePath) || 0;
 
@@ -93,8 +96,16 @@ export class AudioFileManager {
   }
 
   stop(): void {
-    this.isActive = false;
     this.clearCache();
+    this.ongoingFetchRequests.forEach((_, key) =>
+      this.ongoingFetchRequests.delete(key)
+    );
+    this.ongoingCheckRequests.forEach((_, key) =>
+      this.ongoingCheckRequests.delete(key)
+    );
+    this.audioGenerationQueue.forEach((_, key) =>
+      this.audioGenerationQueue.delete(key)
+    );
   }
 
   private async performFileCheck(filePath: string): Promise<boolean> {

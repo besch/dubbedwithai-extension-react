@@ -2,7 +2,7 @@ import { AudioFileManager } from "./AudioFileManager";
 import { SubtitleManager } from "./SubtitleManager";
 import { AudioPlayer } from "./AudioPlayer";
 import { PrecisionTimer } from "./PrecisionTimer";
-import { DubbingConfig, Subtitle } from "./types";
+import { DubbingConfig, DubbingMessage, Subtitle } from "./types";
 import { log, LogLevel } from "./utils";
 
 const DEFAULT_DUBBING_CONFIG: DubbingConfig = {
@@ -14,6 +14,7 @@ const DEFAULT_DUBBING_CONFIG: DubbingConfig = {
 };
 
 export class DubbingManager {
+  private static instance: DubbingManager | null = null;
   private subtitleOffset: number = 0;
   private audioFileManager: AudioFileManager;
   private subtitleManager: SubtitleManager;
@@ -29,7 +30,7 @@ export class DubbingManager {
   private precisionTimer: PrecisionTimer;
   private lastVideoTime: number = 0;
 
-  constructor(config: Partial<DubbingConfig> = {}) {
+  private constructor(config: Partial<DubbingConfig> = {}) {
     this.config = { ...DEFAULT_DUBBING_CONFIG, ...config };
     this.precisionTimer = new PrecisionTimer(this.handlePreciseTime);
     this.audioContext = new window.AudioContext();
@@ -48,14 +49,42 @@ export class DubbingManager {
     });
   }
 
-  initialize(movieId: string, subtitleId: string): void {
-    this.currentMovieId = movieId;
-    this.currentSubtitleId = subtitleId;
-    this.precisionTimer.reset();
-    this.startDubbing();
+  public static getInstance(
+    config: Partial<DubbingConfig> = {}
+  ): DubbingManager {
+    if (!DubbingManager.instance) {
+      DubbingManager.instance = new DubbingManager(config);
+    }
+    return DubbingManager.instance;
   }
 
-  private async startDubbing(): Promise<void> {
+  public initialize(movieId: string, subtitleId: string): void {
+    if (
+      this.currentMovieId === movieId &&
+      this.currentSubtitleId === subtitleId
+    ) {
+      // Dubbing is already initialized, just resume
+      this.isVideoPaused = false;
+      this.precisionTimer.resume();
+      this.checkAndGenerateUpcomingAudio(
+        this.precisionTimer.getCurrentTime() * 1000
+      );
+    } else {
+      // New initialization
+      this.stop(); // Reset state before new initialization
+      this.currentMovieId = movieId;
+      this.currentSubtitleId = subtitleId;
+      this.startDubbing();
+    }
+  }
+
+  public pauseDubbing(): void {
+    this.isVideoPaused = true;
+    this.precisionTimer.pause();
+    this.audioPlayer.stopAllAudio();
+  }
+
+  public async startDubbing(): Promise<void> {
     try {
       const subtitles = await this.subtitleManager.getSubtitles(
         this.currentMovieId!,
@@ -116,6 +145,12 @@ export class DubbingManager {
     log(LogLevel.INFO, "Dubbing stopped");
   }
 
+  public isCurrentDubbing(movieId: string, subtitleId: string): boolean {
+    return (
+      this.currentMovieId === movieId && this.currentSubtitleId === subtitleId
+    );
+  }
+
   private resetAllVideoVolumes(): void {
     // Reset volume for the main document's video
     const mainVideo = document.querySelector("video");
@@ -171,25 +206,39 @@ export class DubbingManager {
 
   private setupMessageListener(): void {
     chrome.runtime.onMessage.addListener(
-      (message: { action: string; movieId?: string; subtitleId?: string }) => {
+      (message: DubbingMessage, sender, sendResponse) => {
         switch (message.action) {
           case "initializeDubbing":
             if (message.movieId && message.subtitleId) {
               this.initialize(message.movieId, message.subtitleId);
+              sendResponse({ status: "initialized" });
             } else {
-              log(
-                LogLevel.ERROR,
-                "Missing movieId or subtitleId for initialization"
-              );
+              sendResponse({
+                status: "error",
+                message: "Missing movieId or subtitleId",
+              });
             }
             break;
-          case "stopDubbing":
-            this.stop();
-            break;
           case "checkDubbingStatus":
-            this.checkAndApplyDubbing();
+            sendResponse({
+              isDubbingActive:
+                !!this.currentMovieId && !!this.currentSubtitleId,
+            });
+            break;
+          case "updateDubbingState":
+            if (message.payload) {
+              this.isVideoPaused = false;
+              this.precisionTimer.resume();
+              this.checkAndGenerateUpcomingAudio(
+                this.precisionTimer.getCurrentTime() * 1000
+              );
+            } else {
+              this.pauseDubbing();
+            }
+            sendResponse({ status: "updated" });
             break;
         }
+        return true;
       }
     );
   }

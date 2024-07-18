@@ -2,12 +2,20 @@ import { Subtitle } from "./types";
 import { timeStringToSeconds } from "./utils";
 
 export class AudioPlayer {
+  private static instance: AudioPlayer | null = null;
   private activeAudio: Map<
     string,
     { source: AudioBufferSourceNode; subtitle: Subtitle }
   > = new Map();
 
   constructor(private audioContext: AudioContext) {}
+
+  public static getInstance(audioContext: AudioContext): AudioPlayer {
+    if (!AudioPlayer.instance) {
+      AudioPlayer.instance = new AudioPlayer(audioContext);
+    }
+    return AudioPlayer.instance;
+  }
 
   async playAudio(
     buffer: AudioBuffer,

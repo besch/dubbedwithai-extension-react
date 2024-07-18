@@ -14,6 +14,8 @@ export interface Subtitle {
 
 export type DubbingMessage =
   | { action: "initializeDubbing"; movieId: string; subtitleId: string }
+  | { action: "playDubbing" }
+  | { action: "pauseDubbing" }
   | { action: "stopDubbing" }
   | { action: "checkDubbingStatus" }
   | { action: "updateDubbingState"; payload: boolean };

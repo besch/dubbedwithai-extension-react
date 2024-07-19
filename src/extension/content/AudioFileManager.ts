@@ -1,4 +1,5 @@
 import { AudioCache } from "./AudioCache";
+import config from "./config";
 import { base64ToArrayBuffer, log, LogLevel } from "./utils";
 
 export class AudioFileManager {
@@ -11,9 +12,10 @@ export class AudioFileManager {
   private notFoundFiles: Set<string> = new Set();
   private audioGenerationQueue: Map<string, Promise<void>> = new Map();
   private existenceCache: Map<string, boolean> = new Map();
-  private existenceCacheTimeout: number = 60000; // 1 minute cache timeout
+  private existenceCacheTimeout: number = config.audioFileExistenceCacheTimeout;
   private lastExistenceCheck: Map<string, number> = new Map();
-  private generationCacheTimeout: number = 300000; // 5 minutes cache timeout
+  private generationCacheTimeout: number =
+    config.audioFileGenerationCacheTimeout;
   private lastGenerationAttempt: Map<string, number> = new Map();
 
   constructor(private audioContext: AudioContext) {

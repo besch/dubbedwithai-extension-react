@@ -6,12 +6,6 @@ export interface Movie {
   Poster: string;
 }
 
-export interface Subtitle {
-  start: string;
-  end: string;
-  text: string;
-}
-
 export interface Language {
   id: string;
   attributes: {

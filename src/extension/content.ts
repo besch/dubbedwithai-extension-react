@@ -1,21 +1,13 @@
 import { DubbingManager } from "./content/DubbingManager";
-import { DubbingConfig, DubbingMessage } from "./content/types";
+import { DubbingMessage } from "./content/types";
 import { log, LogLevel } from "./content/utils";
-
-const config: DubbingConfig = {
-  defaultVolume: 1,
-  dubbingVolume: 0.3,
-  preloadTime: 5000, // 5 seconds
-  preloadAudioGenerationTime: 15000, //15 seconds
-  subtitleUpdateInterval: 0.5,
-};
 
 class ContentScript {
   private dubbingManager: DubbingManager;
   private isDubbingActive = false;
 
   constructor() {
-    this.dubbingManager = DubbingManager.getInstance(config);
+    this.dubbingManager = DubbingManager.getInstance();
     this.setupMessageListener();
     this.initializeFromStorage();
     this.setupVisibilityChangeListener();

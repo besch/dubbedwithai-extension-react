@@ -3,7 +3,6 @@ import { Subtitle } from "./types";
 export class SubtitleManager {
   private static instance: SubtitleManager | null = null;
   private subtitlesCache: Map<string, Subtitle[]> = new Map();
-  private subtitleRequests: Map<string, Promise<Subtitle[] | null>> = new Map();
   private sortedSubtitles: Subtitle[] = [];
 
   public static getInstance(): SubtitleManager {

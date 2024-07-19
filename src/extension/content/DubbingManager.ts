@@ -2,16 +2,9 @@ import { AudioFileManager } from "./AudioFileManager";
 import { SubtitleManager } from "./SubtitleManager";
 import { AudioPlayer } from "./AudioPlayer";
 import { PrecisionTimer } from "./PrecisionTimer";
-import { DubbingConfig, DubbingMessage, Subtitle } from "./types";
+import { DubbingMessage, Subtitle } from "./types";
 import { log, LogLevel } from "./utils";
-
-const DEFAULT_DUBBING_CONFIG: DubbingConfig = {
-  defaultVolume: 1,
-  dubbingVolume: 0.3,
-  preloadTime: 5000, // 5 seconds
-  preloadAudioGenerationTime: 15000, //15 seconds
-  subtitleUpdateInterval: 0.5,
-};
+import config from "./config";
 
 export class DubbingManager {
   private static instance: DubbingManager | null = null;
@@ -26,18 +19,16 @@ export class DubbingManager {
   private isDubbingPaused = false;
   private lastSentSubtitle: Subtitle | null = null;
   private lastSentTime: number = 0;
-  private config: DubbingConfig;
   private precisionTimer: PrecisionTimer;
   private lastVideoTime: number = 0;
 
-  private constructor(config: Partial<DubbingConfig> = {}) {
-    this.config = { ...DEFAULT_DUBBING_CONFIG, ...config };
+  private constructor() {
     this.precisionTimer = new PrecisionTimer(this.handlePreciseTime);
     this.audioContext = new window.AudioContext();
     this.audioFileManager = new AudioFileManager(this.audioContext);
     this.subtitleManager = new SubtitleManager();
     this.audioPlayer = new AudioPlayer(this.audioContext);
-    this.originalVolume = this.config.defaultVolume;
+    this.originalVolume = config.defaultVolume;
     this.setupMessageListener();
     chrome.storage.onChanged.addListener((changes, namespace) => {
       if (namespace === "local" && changes.movieState) {
@@ -49,11 +40,9 @@ export class DubbingManager {
     });
   }
 
-  public static getInstance(
-    config: Partial<DubbingConfig> = {}
-  ): DubbingManager {
+  public static getInstance(): DubbingManager {
     if (!DubbingManager.instance) {
-      DubbingManager.instance = new DubbingManager(config);
+      DubbingManager.instance = new DubbingManager();
     }
     return DubbingManager.instance;
   }
@@ -229,14 +218,17 @@ export class DubbingManager {
   ): Promise<void> {
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
       currentTimeMs,
-      this.config.preloadAudioGenerationTime
+      config.preloadAudioGenerationTime
     );
 
     for (const subtitle of upcomingSubtitles) {
       const filePath = this.getAudioFilePath(subtitle);
       const timeUntilPlay = subtitle.start - currentTimeMs;
 
-      if (timeUntilPlay <= 15000 && timeUntilPlay > 0) {
+      if (
+        timeUntilPlay <= config.preloadAudioGenerationTime &&
+        timeUntilPlay > 0
+      ) {
         const exists = await this.audioFileManager.checkFileExists(filePath);
         if (!exists) {
           await this.audioFileManager.generateAudio(filePath, subtitle.text);
@@ -369,7 +361,7 @@ export class DubbingManager {
     const adjustedTime = currentTime - this.subtitleOffset;
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
       adjustedTime,
-      this.config.preloadTime
+      config.preloadAudioTime
     );
 
     for (const subtitle of upcomingSubtitles) {
@@ -401,9 +393,7 @@ export class DubbingManager {
     currentSubtitles: Subtitle[]
   ): void {
     video.volume =
-      currentSubtitles.length > 0
-        ? this.config.dubbingVolume
-        : this.originalVolume;
+      currentSubtitles.length > 0 ? config.dubbingVolume : this.originalVolume;
   }
 
   private playCurrentSubtitles(currentTimeMs: number): void {
@@ -459,8 +449,7 @@ export class DubbingManager {
 
       if (
         currentSubtitle !== this.lastSentSubtitle ||
-        adjustedTime - this.lastSentTime >=
-          this.config.subtitleUpdateInterval * 1000
+        adjustedTime - this.lastSentTime >= config.subtitleUpdateInterval * 1000
       ) {
         chrome.runtime.sendMessage({
           action: "currentSubtitle",

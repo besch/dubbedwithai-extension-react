@@ -1,11 +1,11 @@
+import config from "./config";
+
 export class PrecisionTimer {
   private startTime: number = 0;
   private pausedTime: number = 0;
   private isPaused: boolean = true;
   private intervalId: number | null = null;
   private lastUpdateTime: number = 0;
-  private updateInterval: number = 50; // Update every 50ms
-  private significantChangeThreshold: number = 0.1; // 100ms
 
   constructor(private callback: (time: number) => void) {}
 
@@ -53,8 +53,8 @@ export class PrecisionTimer {
     return (performance.now() - this.startTime) / 1000;
   }
 
-  setUpdateInterval(interval: number) {
-    this.updateInterval = interval;
+  setprecisionTimerUpdateInterval(interval: number) {
+    config.precisionTimerUpdateInterval = interval;
     if (!this.isPaused) {
       this.stopInterval();
       this.startInterval();
@@ -65,7 +65,7 @@ export class PrecisionTimer {
     this.stopInterval(); // Ensure no existing interval
     this.intervalId = window.setInterval(
       () => this.tick(),
-      this.updateInterval
+      config.precisionTimerUpdateInterval
     );
   }
 
@@ -88,6 +88,8 @@ export class PrecisionTimer {
 
   private shouldUpdate(currentTime: number): boolean {
     const timeSinceLastUpdate = currentTime - this.lastUpdateTime;
-    return timeSinceLastUpdate >= this.significantChangeThreshold;
+    return (
+      timeSinceLastUpdate >= config.precisionTimerSignificantChangeThreshold
+    );
   }
 }

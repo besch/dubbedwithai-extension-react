@@ -13,6 +13,7 @@ export class PrecisionTimer {
     this.startTime = performance.now() - initialTime * 1000;
     this.isPaused = false;
     this.lastUpdateTime = initialTime;
+    this.pausedTime = initialTime;
     this.startInterval();
   }
 

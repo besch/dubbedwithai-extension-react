@@ -19,27 +19,16 @@ export class SubtitleManager {
   ): Promise<Subtitle[] | null> {
     const cacheKey = `${movieId}-${subtitleId}`;
 
-    if (this.subtitlesCache.has(cacheKey)) {
-      return this.subtitlesCache.get(cacheKey)!;
+    if (!this.subtitlesCache.has(cacheKey)) {
+      const subtitles = await this.fetchSubtitles(movieId, subtitleId);
+      if (subtitles) {
+        this.subtitlesCache.set(cacheKey, subtitles);
+        this.sortSubtitles(subtitles);
+      }
+      return subtitles;
     }
 
-    if (!this.subtitleRequests.has(cacheKey)) {
-      const subtitlePromise = this.fetchSubtitles(movieId, subtitleId);
-      this.subtitleRequests.set(cacheKey, subtitlePromise);
-    }
-
-    const subtitlePromise = this.subtitleRequests.get(cacheKey);
-    this.subtitleRequests.delete(cacheKey);
-
-    const subtitles = await (subtitlePromise ?? Promise.resolve(null));
-
-    // If subtitles were successfully fetched, cache them
-    if (subtitles) {
-      this.subtitlesCache.set(cacheKey, subtitles);
-      this.sortSubtitles(subtitles);
-    }
-
-    return subtitles;
+    return this.subtitlesCache.get(cacheKey)!;
   }
 
   getUpcomingSubtitles(adjustedTime: number, preloadTime: number): Subtitle[] {
@@ -59,6 +48,7 @@ export class SubtitleManager {
 
   reset(): void {
     this.sortedSubtitles = [];
+    this.subtitlesCache.clear();
   }
 
   private async fetchSubtitles(

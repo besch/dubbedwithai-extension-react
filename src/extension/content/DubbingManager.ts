@@ -58,13 +58,14 @@ export class DubbingManager {
     return DubbingManager.instance;
   }
 
-  public initialize(movieId: string, subtitleId: string): void {
+  public async initialize(movieId: string, subtitleId: string): Promise<void> {
     if (
       this.currentMovieId === movieId &&
-      this.currentSubtitleId === subtitleId
+      this.currentSubtitleId === subtitleId &&
+      this.subtitleManager.getCurrentSubtitles(0).length > 0
     ) {
       // Dubbing is already initialized, just resume
-      this.isDubbingPaused = false; // Change this line
+      this.isDubbingPaused = false;
       const video = document.querySelector("video") as HTMLVideoElement;
       if (video) {
         const currentTime = video.currentTime;
@@ -73,11 +74,23 @@ export class DubbingManager {
       }
       this.resumeDubbing();
     } else {
-      // New initialization
+      // New initialization or subtitles not available
       this.stop(); // Reset state before new initialization
       this.currentMovieId = movieId;
       this.currentSubtitleId = subtitleId;
-      this.isDubbingPaused = false; // Add this line
+      this.isDubbingPaused = false;
+
+      // Fetch subtitles
+      const subtitles = await this.subtitleManager.getSubtitles(
+        movieId,
+        subtitleId
+      );
+      if (!subtitles || subtitles.length === 0) {
+        throw new Error(
+          `Failed to load subtitles for movie ${movieId} and subtitle ${subtitleId}`
+        );
+      }
+
       this.startDubbing();
     }
   }
@@ -142,7 +155,6 @@ export class DubbingManager {
         this.currentMovieId!,
         this.currentSubtitleId!
       );
-      console.log("Fetched subtitles:", subtitles ? subtitles.length : "none");
       if (subtitles && subtitles.length > 0) {
         this.findAndHandleVideo();
       } else {

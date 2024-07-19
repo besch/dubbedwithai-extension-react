@@ -127,7 +127,6 @@ class BackgroundService {
       );
 
       const result = await response.json();
-      console.log("Audio generation successful:", result); // Add this line for debugging
       sendResponse({ success: true, message: result.message });
     } catch (e: unknown) {
       console.error("Error generating audio:", e);

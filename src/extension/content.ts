@@ -74,7 +74,6 @@ class ContentScript {
           return { status: "resumed" };
         }
       }
-      console.log("initDubbing");
       this.dubbingManager.initialize(message.movieId, message.subtitleId);
       this.updateDubbingState(true);
       await chrome.storage.local.set({

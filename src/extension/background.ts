@@ -18,6 +18,7 @@ class BackgroundService {
 
   constructor() {
     this.initializeListeners();
+    this.setupContentScriptLoader();
   }
 
   private initializeListeners(): void {
@@ -31,6 +32,26 @@ class BackgroundService {
     chrome.windows.onFocusChanged.addListener(
       this.onWindowFocusChanged.bind(this)
     );
+  }
+
+  private setupContentScriptLoader(): void {
+    chrome.action.onClicked.addListener((tab) => {
+      if (tab.id) {
+        this.loadContentScript(tab.id);
+      }
+    });
+  }
+
+  private async loadContentScript(tabId: number): Promise<void> {
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        files: ["content.js"],
+      });
+      console.log("Content script loaded successfully");
+    } catch (error) {
+      console.error("Error loading content script:", error);
+    }
   }
 
   private async onInstalled(): Promise<void> {

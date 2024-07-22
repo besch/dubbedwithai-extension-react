@@ -36,12 +36,12 @@ class BackgroundService {
   private async onInstalled(): Promise<void> {
     await this.preloadIcons();
     await this.initializeStorage();
-    await this.checkAndUpdateAuthStatus();
+    // await this.checkAndUpdateAuthStatus();
   }
 
   private async onStartup(): Promise<void> {
     await this.preloadIcons();
-    await this.checkAndUpdateAuthStatus();
+    // await this.checkAndUpdateAuthStatus();
   }
 
   private onMessage(
@@ -55,7 +55,7 @@ class BackgroundService {
     > = {
       requestSubtitles: this.handleSubtitlesRequest.bind(this),
       requestAudioFile: this.handleAudioFileRequest.bind(this),
-      checkAuthStatus: this.handleAuthStatusCheck.bind(this),
+      // checkAuthStatus: this.handleAuthStatusCheck.bind(this),
       updateDubbingState: (msg, res) => {
         if (sender.tab?.id) this.updateDubbingState(msg.payload, sender.tab.id);
       },
@@ -78,14 +78,14 @@ class BackgroundService {
   ): Promise<void> {
     const { filePath } = message;
     try {
-      const token = await getAuthToken();
-      if (!token) throw new Error("No auth token available");
-
-      const response = await this.fetchWithAuth(
+      const response = await fetch(
         `${API_BASE_URL}/api/google-storage/check-file-exists`,
         {
           method: "POST",
           body: JSON.stringify({ filePath }),
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
 
@@ -118,11 +118,14 @@ class BackgroundService {
     }
 
     try {
-      const response = await this.fetchWithAuth(
+      const response = await fetch(
         `${API_BASE_URL}/api/openai/generate-audio`,
         {
           method: "POST",
           body: JSON.stringify({ text, filePath }),
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
 
@@ -219,18 +222,6 @@ class BackgroundService {
     chrome.storage.local.set({ movieState: movieState ?? {} });
   }
 
-  private async checkAndUpdateAuthStatus(): Promise<void> {
-    try {
-      const token = await getAuthToken();
-      token
-        ? chrome.storage.local.set({ authToken: token })
-        : chrome.storage.local.remove(["authToken"]);
-    } catch (error) {
-      console.error("Error checking auth status:", error);
-      chrome.storage.local.remove(["authToken"]);
-    }
-  }
-
   private startPulsing(): void {
     if (this.isPulsing) return;
     this.isPulsing = true;
@@ -306,15 +297,13 @@ class BackgroundService {
   ): Promise<string | null> {
     const cacheKey = `${movieId}_${subtitleId}`;
 
-    // Check if subtitles are in cache
     if (this.subtitlesCache[cacheKey]) {
-      console.log("Using cached subtitles");
       return this.subtitlesCache[cacheKey];
     }
 
     try {
-      const token = await getAuthToken();
-      if (!token) throw new Error("No auth token available");
+      // const token = await getAuthToken();
+      // if (!token) throw new Error("No auth token available");
 
       const response = await fetch(
         `${API_BASE_URL}/api/google-storage/fetch-subtitles`,
@@ -322,7 +311,7 @@ class BackgroundService {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            // Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ movieId, subtitleId }),
         }
@@ -333,7 +322,6 @@ class BackgroundService {
 
       const subtitles = await response.text();
 
-      // Cache the fetched subtitles
       this.subtitlesCache[cacheKey] = subtitles;
 
       return subtitles;
@@ -353,8 +341,8 @@ class BackgroundService {
 
   private async fetchAudioFile(filePath: string): Promise<ArrayBuffer | null> {
     try {
-      const token = await getAuthToken();
-      if (!token) throw new Error("No auth token available");
+      // const token = await getAuthToken();
+      // if (!token) throw new Error("No auth token available");
 
       const response = await fetch(
         `${API_BASE_URL}/api/google-storage/fetch-audio-file`,
@@ -362,7 +350,7 @@ class BackgroundService {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            // Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ filePath }),
         }
@@ -398,7 +386,7 @@ class BackgroundService {
       message.movieId,
       message.subtitleId
     );
-    this.clearOldSubtitlesCache(); // Clear old cache entries
+    this.clearOldSubtitlesCache();
     sendResponse({
       action: "subtitlesData",
       data: subtitles ? parseSrt(subtitles) : null,
@@ -416,12 +404,24 @@ class BackgroundService {
     });
   }
 
-  private async handleAuthStatusCheck(
-    sendResponse: (response: any) => void
-  ): Promise<void> {
-    await this.checkAndUpdateAuthStatus();
-    sendResponse({ action: "authStatusChecked" });
-  }
+  // private async handleAuthStatusCheck(
+  //   sendResponse: (response: any) => void
+  // ): Promise<void> {
+  //   await this.checkAndUpdateAuthStatus();
+  //   sendResponse({ action: "authStatusChecked" });
+  // }
+
+  // private async checkAndUpdateAuthStatus(): Promise<void> {
+  //   try {
+  //     const token = await getAuthToken();
+  //     token
+  //       ? chrome.storage.local.set({ authToken: token })
+  //       : chrome.storage.local.remove(["authToken"]);
+  //   } catch (error) {
+  //     console.error("Error checking auth status:", error);
+  //     chrome.storage.local.remove(["authToken"]);
+  //   }
+  // }
 }
 
 new BackgroundService();

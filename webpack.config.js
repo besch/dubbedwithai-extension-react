@@ -44,10 +44,11 @@ module.exports = {
             drop_console: true,
           },
           mangle: true,
-          output: {
+          format: {
             comments: false,
           },
         },
+        extractComments: false,
       }),
     ],
   },

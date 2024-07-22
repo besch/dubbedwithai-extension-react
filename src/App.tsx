@@ -31,7 +31,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const initializeApp = async () => {
-      await dispatch(checkAuthStatus());
+      // await dispatch(checkAuthStatus());
       await dispatch(loadMovieState());
       await dispatch(checkDubbingStatus());
       setIsLoading(false);
@@ -96,69 +96,69 @@ const App: React.FC = () => {
         <Navigation />
         <div className="flex-grow overflow-auto">
           <Routes>
-            <Route path="/auth" element={<AuthPage />} />
+            {/* <Route path="/auth" element={<AuthPage />} /> */}
             <Route
               path="/search"
               element={
-                isAuthenticated ? (
-                  <MovieSearchPage />
-                ) : (
-                  <Navigate to="/auth" replace />
-                )
+                // isAuthenticated ? (
+                <MovieSearchPage />
+                // ) : (
+                // <Navigate to="/auth" replace />
+                // )
               }
             />
             <Route
               path="/language"
               element={
-                isAuthenticated ? (
-                  <LanguageSelectionPage />
-                ) : (
-                  <Navigate to="/auth" replace />
-                )
+                // isAuthenticated ? (
+                <LanguageSelectionPage />
+                // ) : (
+                // <Navigate to="/auth" replace />
+                // )
               }
             />
             <Route
               path="/dubbing"
               element={
-                isAuthenticated ? (
-                  <DubbingPage />
-                ) : (
-                  <Navigate to="/auth" replace />
-                )
+                // isAuthenticated ? (
+                <DubbingPage />
+                // ) : (
+                // <Navigate to="/auth" replace />
+                // )
               }
             />
             <Route
               path="/profile"
               element={
-                isAuthenticated ? (
-                  <ProfilePage />
-                ) : (
-                  <Navigate to="/auth" replace />
-                )
+                // isAuthenticated ? (
+                <ProfilePage />
+                // ) : (
+                // <Navigate to="/auth" replace />
+                // )
               }
             />
             <Route
               path="/settings"
               element={
-                isAuthenticated ? (
-                  <SettingsPage />
-                ) : (
-                  <Navigate to="/auth" replace />
-                )
+                // isAuthenticated ? (
+                <SettingsPage />
+                // ) : (
+                // <Navigate to="/auth" replace />
+                // )
               }
             />
             <Route
               path="*"
               element={
-                isAuthenticated ? (
-                  isDubbingActive ? (
-                    <Navigate to="/dubbing" replace />
-                  ) : (
-                    <Navigate to="/search" replace />
-                  )
+                // isAuthenticated ? (
+                isDubbingActive ? (
+                  <Navigate to="/dubbing" replace />
                 ) : (
-                  <Navigate to="/auth" replace />
+                  <Navigate to="/search" replace />
                 )
+                // ) : (
+                //   <Navigate to="/auth" replace />
+                // )
               }
             />
           </Routes>

@@ -68,17 +68,17 @@ export const fetchLanguages = createAsyncThunk(
   "movie/fetchLanguages",
   async (imdbID: string, { rejectWithValue }) => {
     try {
-      const token = await getAuthToken();
-      if (!token) {
-        throw new Error("No auth token available");
-      }
+      // const token = await getAuthToken();
+      // if (!token) {
+      //   throw new Error("No auth token available");
+      // }
       const response = await fetch(
         `${process.env.REACT_APP_BASE_API_URL}/api/opensubtitles/get-subtitle-languages`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            // Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ imdbID }),
         }
@@ -98,17 +98,17 @@ export const searchMovies = createAsyncThunk(
   "movie/searchMovies",
   async (query: string, { rejectWithValue }) => {
     try {
-      const token = await getAuthToken();
-      if (!token) {
-        throw new Error("No auth token available");
-      }
+      // const token = await getAuthToken();
+      // if (!token) {
+      //   throw new Error("No auth token available");
+      // }
       const response = await fetch(
         `${process.env.REACT_APP_BASE_API_URL}/api/search-movies`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            // Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ text: query }),
         }

@@ -52,12 +52,24 @@ const App: React.FC = () => {
           return;
         }
 
-        await chrome.scripting.executeScript({
-          target: { tabId: tab.id, allFrames: true },
-          files: ["content.js"],
+        // Check if the content script is already loaded
+        const [{ result }] = await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: () => (window as any).__DUBBING_CONTENT_SCRIPT_LOADED__,
         });
+
+        if (!result) {
+          // If not loaded, inject the script
+          await chrome.scripting.executeScript({
+            target: { tabId: tab.id, allFrames: true },
+            files: ["content.js"],
+          });
+          console.log("Content script injected");
+        } else {
+          console.log("Content script already loaded");
+        }
       } catch (error) {
-        console.error("Error loading content script:", error);
+        console.error("Error handling content script:", error);
       }
     };
 

@@ -53,38 +53,42 @@ class ContentScript {
       throw new Error("No video element found on the page");
     }
     if ("movieId" in message && "subtitleId" in message) {
-      if (this.isDubbingActive) {
-        // If dubbing is already active for the same movie and subtitle, just resume
-        if (
-          this.dubbingManager.isCurrentDubbing(
-            message.movieId,
-            message.subtitleId
-          )
-        ) {
-          console.log("startDubbing");
-          this.dubbingManager.startDubbing();
-          return { status: "resumed" };
-        }
+      try {
+        await this.dubbingManager.initialize(
+          message.movieId,
+          message.subtitleId
+        );
+        this.updateDubbingState(true);
+        await chrome.storage.local.set({
+          currentMovieId: message.movieId,
+          currentSubtitleId: message.subtitleId,
+        });
+        return { status: "initialized" };
+      } catch (error) {
+        console.error("Failed to initialize dubbing:", error);
+        this.updateDubbingState(false);
+        return {
+          status: "error",
+          message: error instanceof Error ? error.message : String(error),
+        };
       }
-      this.dubbingManager.initialize(message.movieId, message.subtitleId);
-      this.updateDubbingState(true);
-      await chrome.storage.local.set({
-        currentMovieId: message.movieId,
-        currentSubtitleId: message.subtitleId,
-      });
-      return { status: "initialized" };
     } else {
       throw new Error("Missing movieId or subtitleId");
     }
   }
 
   private async handleStopDubbing(): Promise<any> {
-    if (this.isDubbingActive) {
-      this.dubbingManager.stop();
+    try {
+      await this.dubbingManager.stop();
       this.updateDubbingState(false);
       return { status: "stopped" };
+    } catch (error) {
+      console.error("Error stopping dubbing:", error);
+      return {
+        status: "error",
+        message: error instanceof Error ? error.message : String(error),
+      };
     }
-    return { status: "already_stopped" };
   }
 
   private handleCheckDubbingStatus(): any {
@@ -171,11 +175,41 @@ class ContentScript {
   }
 
   private setupVisibilityChangeListener() {
-    document.addEventListener("visibilitychange", () => {
+    document.addEventListener("visibilitychange", async () => {
       if (document.hidden) {
-        this.stopDubbingOnInactiveTab();
+        console.log("Tab became hidden. Stopping dubbing.");
+        await this.stopDubbingOnInactiveTab();
+      } else {
+        console.log("Tab became visible. Checking dubbing state.");
+        await this.checkAndResumeDubbing();
       }
     });
+  }
+
+  private async checkAndResumeDubbing() {
+    const result = await chrome.storage.local.get([
+      "isDubbingActive",
+      "currentMovieId",
+      "currentSubtitleId",
+    ]);
+
+    if (
+      result.isDubbingActive &&
+      result.currentMovieId &&
+      result.currentSubtitleId
+    ) {
+      console.log("Attempting to resume dubbing");
+      try {
+        await this.dubbingManager.initialize(
+          result.currentMovieId,
+          result.currentSubtitleId
+        );
+        this.updateDubbingState(true);
+      } catch (error) {
+        console.error("Failed to resume dubbing:", error);
+        this.updateDubbingState(false);
+      }
+    }
   }
 }
 
@@ -183,3 +217,5 @@ const contentScript = new ContentScript();
 (window as any).dubbingManager = contentScript;
 
 log(LogLevel.INFO, "Content script loaded");
+
+(window as any).__DUBBING_CONTENT_SCRIPT_LOADED__ = true;

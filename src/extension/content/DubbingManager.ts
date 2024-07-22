@@ -23,6 +23,7 @@ export class DubbingManager {
   private lastVideoTime: number = 0;
   private isDubbingAudioPlaying: boolean = false;
   private videoElement: HTMLVideoElement | null = null;
+  private isInitialized: boolean = false;
 
   private constructor() {
     this.precisionTimer = new PrecisionTimer(this.handlePreciseTime);
@@ -50,26 +51,16 @@ export class DubbingManager {
   }
 
   public async initialize(movieId: string, subtitleId: string): Promise<void> {
-    if (
-      this.currentMovieId === movieId &&
-      this.currentSubtitleId === subtitleId &&
-      this.subtitleManager.getCurrentSubtitles(0).length > 0
-    ) {
-      // Dubbing is already initialized, just resume
-      this.isDubbingPaused = false;
-      if (this.videoElement) {
-        const currentTime = this.videoElement.currentTime;
-        this.precisionTimer.start(currentTime);
-      }
-      this.resumeDubbing();
-    } else {
-      // New initialization or subtitles not available
-      await this.stop(); // Reset state before new initialization
-      this.currentMovieId = movieId;
-      this.currentSubtitleId = subtitleId;
-      this.isDubbingPaused = false;
+    if (this.isInitialized) {
+      console.log("DubbingManager is already initialized. Reinitializing...");
+      await this.stop();
+    }
 
-      // Fetch subtitles
+    this.currentMovieId = movieId;
+    this.currentSubtitleId = subtitleId;
+    this.isDubbingPaused = false;
+
+    try {
       const subtitles = await this.subtitleManager.getSubtitles(
         movieId,
         subtitleId
@@ -80,27 +71,21 @@ export class DubbingManager {
         );
       }
 
-      // Find and store the video element
       this.findAndStoreVideoElement();
 
-      // If video element is found, start dubbing
       if (this.videoElement) {
-        this.startDubbing();
+        await this.startDubbing();
+        this.isInitialized = true;
+        console.log("DubbingManager initialized successfully");
       } else {
-        // If no video element is found, set up an observer to wait for it
+        console.warn("No video element found. Setting up observer.");
         this.setupVideoObserver();
       }
+    } catch (error) {
+      console.error("Error during initialization:", error);
+      this.isInitialized = false;
+      throw error;
     }
-
-    // Retrieve subtitle offset from storage
-    chrome.storage.local.get(["movieState"], (result) => {
-      if (
-        result.movieState &&
-        typeof result.movieState.subtitleOffset === "number"
-      ) {
-        this.subtitleOffset = result.movieState.subtitleOffset * 1000; // Convert to milliseconds
-      }
-    });
   }
 
   public resumeDubbing(): void {
@@ -135,18 +120,19 @@ export class DubbingManager {
     this.audioPlayer.stopAllAudio();
   }
 
-  public async startDubbing(): Promise<void> {
+  private async startDubbing(): Promise<void> {
     try {
       const subtitles = await this.subtitleManager.getSubtitles(
         this.currentMovieId!,
         this.currentSubtitleId!
       );
       if (subtitles && subtitles.length > 0) {
-        this.findAndHandleVideo();
+        // Start the actual dubbing process
+        this.precisionTimer.start(this.videoElement!.currentTime);
+        this.playCurrentSubtitles(this.videoElement!.currentTime * 1000);
+        console.log("Dubbing started successfully");
       } else {
-        throw new Error(
-          `Failed to load subtitles for movie ${this.currentMovieId} and subtitle ${this.currentSubtitleId}`
-        );
+        throw new Error("No subtitles available for dubbing");
       }
     } catch (error) {
       console.error("Error starting dubbing:", error);
@@ -156,6 +142,7 @@ export class DubbingManager {
           error instanceof Error ? error.message : String(error)
         }`
       );
+      throw error;
     }
   }
 
@@ -191,6 +178,9 @@ export class DubbingManager {
         console.error("Could not access iframe content:", e);
       }
     }
+
+    this.isInitialized = false;
+    console.log("DubbingManager stopped and reset");
   }
 
   private resetVideoVolume(): void {

@@ -21,6 +21,7 @@ export class DubbingManager {
   private lastSentTime: number = 0;
   private precisionTimer: PrecisionTimer;
   private lastVideoTime: number = 0;
+  private isDubbingAudioPlaying: boolean = false;
 
   private constructor() {
     this.precisionTimer = new PrecisionTimer(this.handlePreciseTime);
@@ -288,12 +289,22 @@ export class DubbingManager {
     if (this.isDubbingPaused) {
       this.resumeDubbing();
     }
+    // Reset volume to original when playing if no dubbing audio is active
+    if (!this.isDubbingAudioPlaying) {
+      const video = event.target as HTMLVideoElement;
+      video.volume = this.originalVolume;
+    }
   };
 
   private handleVideoPause = (): void => {
     // Only pause dubbing if it's not already paused
     if (!this.isDubbingPaused) {
       this.pauseDubbing();
+    }
+    // Reset volume to original when pausing
+    const video = document.querySelector("video") as HTMLVideoElement;
+    if (video) {
+      video.volume = this.originalVolume;
     }
   };
 
@@ -392,21 +403,34 @@ export class DubbingManager {
     video: HTMLVideoElement,
     currentSubtitles: Subtitle[]
   ): void {
-    video.volume =
-      currentSubtitles.length > 0 ? config.dubbingVolume : this.originalVolume;
+    this.isDubbingAudioPlaying = currentSubtitles.length > 0;
+    video.volume = this.isDubbingAudioPlaying
+      ? config.dubbingVolume
+      : this.originalVolume;
   }
 
-  private playCurrentSubtitles(currentTimeMs: number): void {
+  private async playCurrentSubtitles(currentTimeMs: number): Promise<void> {
     const adjustedTimeMs = currentTimeMs - this.subtitleOffset;
 
     const currentSubtitles =
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
 
     if (currentSubtitles.length === 0) {
+      this.isDubbingAudioPlaying = false;
+      const video = document.querySelector("video") as HTMLVideoElement;
+      if (video && !this.isDubbingPaused) {
+        video.volume = this.originalVolume;
+      }
       return;
     }
 
-    currentSubtitles.forEach((subtitle) => {
+    this.isDubbingAudioPlaying = true;
+    const video = document.querySelector("video") as HTMLVideoElement;
+    if (video && !this.isDubbingPaused) {
+      video.volume = config.dubbingVolume;
+    }
+
+    for (const subtitle of currentSubtitles) {
       const audioFilePath = this.getAudioFilePath(subtitle);
       const startTimeMs = subtitle.start;
 
@@ -416,9 +440,17 @@ export class DubbingManager {
         !this.audioPlayer.isAudioActive(audioFilePath)
       ) {
         const audioOffsetMs = Math.max(0, adjustedTimeMs - startTimeMs);
-        this.playAudioIfAvailable(subtitle, audioOffsetMs / 1000);
+        await this.playAudioIfAvailable(subtitle, audioOffsetMs / 1000);
       }
-    });
+    }
+
+    // Check if any audio is actually playing
+    if (this.audioPlayer.getCurrentlyPlayingSubtitles().length === 0) {
+      this.isDubbingAudioPlaying = false;
+      if (video && !this.isDubbingPaused) {
+        video.volume = this.originalVolume;
+      }
+    }
   }
 
   private async playAudioIfAvailable(

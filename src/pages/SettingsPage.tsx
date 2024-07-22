@@ -55,7 +55,7 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <PageLayout title="Subtitle Settings">
+    <PageLayout title="Subtitle Offset Settings">
       <div className="space-y-4">
         <div className="flex justify-between items-center bg-secondary p-3 rounded-md">
           <div className="text-sm font-medium tracking-tighter">
@@ -73,20 +73,23 @@ const SettingsPage: React.FC = () => {
         </div>
 
         <div className="space-y-4">
-          <label
-            htmlFor="subtitleOffset"
-            className="block text-lg font-semibold text-foreground"
-          >
-            Subtitle Offset
-          </label>
           <div className="flex items-center space-x-4">
-            <Button
-              onClick={() => handleOffsetAdjust(-0.5)}
-              variant="outline"
-              size="sm"
-            >
-              -0.5s
-            </Button>
+            <div className="flex flex-col space-y-2">
+              <Button
+                onClick={() => handleOffsetAdjust(-0.1)}
+                variant="outline"
+                size="sm"
+              >
+                -0.1s
+              </Button>
+              <Button
+                onClick={() => handleOffsetAdjust(-0.5)}
+                variant="outline"
+                size="sm"
+              >
+                -0.5s
+              </Button>
+            </div>
             <input
               type="range"
               id="subtitleOffset"
@@ -97,13 +100,22 @@ const SettingsPage: React.FC = () => {
               onChange={handleOffsetChange}
               className="flex-grow h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
             />
-            <Button
-              onClick={() => handleOffsetAdjust(0.5)}
-              variant="outline"
-              size="sm"
-            >
-              +0.5s
-            </Button>
+            <div className="flex flex-col space-y-2">
+              <Button
+                onClick={() => handleOffsetAdjust(0.1)}
+                variant="outline"
+                size="sm"
+              >
+                +0.1s
+              </Button>
+              <Button
+                onClick={() => handleOffsetAdjust(0.5)}
+                variant="outline"
+                size="sm"
+              >
+                +0.5s
+              </Button>
+            </div>
           </div>
           <div className="flex justify-between text-sm text-white">
             <span>-100s</span>

@@ -67,11 +67,11 @@ const Navigation: React.FC = () => {
           onClick={() => handleNavigate("/settings")}
           size={24}
         />
-        <User
+        {/* <User
           className={getIconClass("/profile")}
           onClick={() => handleNavigate("/profile")}
           size={24}
-        />
+        /> */}
       </div>
     </nav>
   );

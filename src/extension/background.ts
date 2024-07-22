@@ -58,7 +58,7 @@ class BackgroundService {
       requestSubtitles: this.handleSubtitlesRequest.bind(this),
       requestAudioFile: this.handleAudioFileRequest.bind(this),
       // checkAuthStatus: this.handleAuthStatusCheck.bind(this),
-      updateDubbingState: (msg, res) => {
+      updateDubbingState: (msg) => {
         if (sender.tab?.id) this.updateDubbingState(msg.payload, sender.tab.id);
       },
       updateCurrentTime: (msg) => chrome.runtime.sendMessage(msg),
@@ -238,8 +238,19 @@ class BackgroundService {
     this.updateIcon(false);
   }
 
-  private updateDubbingState(isActive: boolean, tabId: number): void {
-    isActive ? this.startPulsing() : this.stopPulsing();
+  private async updateDubbingState(
+    isActive: boolean,
+    tabId: number
+  ): Promise<void> {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs[0]?.id === tabId) {
+      if (isActive) {
+        this.startPulsing();
+      } else {
+        this.stopPulsing();
+      }
+      this.updateIcon(isActive);
+    }
   }
 
   private async updateIcon(

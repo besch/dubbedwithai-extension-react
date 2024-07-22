@@ -21,6 +21,10 @@ class ContentScript {
     if (this.isDubbingActive && this.dubbingManager) {
       await this.dubbingManager.stop();
       this.updateDubbingState(false);
+      chrome.runtime.sendMessage({
+        action: "updateDubbingState",
+        payload: false,
+      });
     }
   }
 
@@ -62,6 +66,10 @@ class ContentScript {
         await chrome.storage.local.set({
           currentMovieId: message.movieId,
           currentSubtitleId: message.subtitleId,
+        });
+        chrome.runtime.sendMessage({
+          action: "updateDubbingState",
+          payload: true,
         });
         return { status: "initialized" };
       } catch (error) {
@@ -205,9 +213,18 @@ class ContentScript {
           result.currentSubtitleId
         );
         this.updateDubbingState(true);
+        chrome.runtime.sendMessage({
+          action: "updateDubbingState",
+          payload: true,
+        });
       } catch (error) {
         console.error("Failed to resume dubbing:", error);
         this.updateDubbingState(false);
+        // Notify the background script
+        chrome.runtime.sendMessage({
+          action: "updateDubbingState",
+          payload: false,
+        });
       }
     }
   }

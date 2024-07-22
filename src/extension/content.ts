@@ -187,46 +187,8 @@ class ContentScript {
       if (document.hidden) {
         console.log("Tab became hidden. Stopping dubbing.");
         await this.stopDubbingOnInactiveTab();
-      } else {
-        console.log("Tab became visible. Checking dubbing state.");
-        await this.checkAndResumeDubbing();
       }
     });
-  }
-
-  private async checkAndResumeDubbing() {
-    const result = await chrome.storage.local.get([
-      "isDubbingActive",
-      "currentMovieId",
-      "currentSubtitleId",
-    ]);
-
-    if (
-      result.isDubbingActive &&
-      result.currentMovieId &&
-      result.currentSubtitleId
-    ) {
-      console.log("Attempting to resume dubbing");
-      try {
-        await this.dubbingManager.initialize(
-          result.currentMovieId,
-          result.currentSubtitleId
-        );
-        this.updateDubbingState(true);
-        chrome.runtime.sendMessage({
-          action: "updateDubbingState",
-          payload: true,
-        });
-      } catch (error) {
-        console.error("Failed to resume dubbing:", error);
-        this.updateDubbingState(false);
-        // Notify the background script
-        chrome.runtime.sendMessage({
-          action: "updateDubbingState",
-          payload: false,
-        });
-      }
-    }
   }
 }
 

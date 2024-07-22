@@ -41,6 +41,30 @@ const App: React.FC = () => {
   }, [dispatch]);
 
   useEffect(() => {
+    const loadContentScript = async () => {
+      try {
+        const [tab] = await chrome.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+        if (!tab.id) {
+          console.error("No active tab found");
+          return;
+        }
+
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id, allFrames: true },
+          files: ["content.js"],
+        });
+      } catch (error) {
+        console.error("Error loading content script:", error);
+      }
+    };
+
+    loadContentScript();
+  }, []);
+
+  useEffect(() => {
     const messageListener = (message: any) => {
       if (message.action === "updateDubbingState") {
         dispatch(updateDubbingState(message.payload));

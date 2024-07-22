@@ -15,6 +15,8 @@ class BackgroundService {
   private isPulsing = false;
   private pulseState = false;
   private subtitlesCache: { [key: string]: string } = {};
+  private pendingSubtitleRequests: { [key: string]: Promise<string | null> } =
+    {};
 
   constructor() {
     this.initializeListeners();
@@ -295,36 +297,23 @@ class BackgroundService {
     movieId: string,
     subtitleId: string
   ): Promise<string | null> {
-    const cacheKey = `${movieId}_${subtitleId}`;
-
-    if (this.subtitlesCache[cacheKey]) {
-      return this.subtitlesCache[cacheKey];
-    }
-
     try {
-      // const token = await getAuthToken();
-      // if (!token) throw new Error("No auth token available");
-
       const response = await fetch(
         `${API_BASE_URL}/api/google-storage/fetch-subtitles`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            // Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ movieId, subtitleId }),
         }
       );
 
-      if (!response.ok)
+      if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      const subtitles = await response.text();
-
-      this.subtitlesCache[cacheKey] = subtitles;
-
-      return subtitles;
+      return await response.text();
     } catch (e) {
       console.error("There was a problem fetching the subtitles:", e);
       return null;
@@ -382,15 +371,44 @@ class BackgroundService {
     message: any,
     sendResponse: (response: any) => void
   ): Promise<void> {
-    const subtitles = await this.fetchSubtitles(
-      message.movieId,
-      message.subtitleId
-    );
-    this.clearOldSubtitlesCache();
-    sendResponse({
-      action: "subtitlesData",
-      data: subtitles ? parseSrt(subtitles) : null,
-    });
+    const { movieId, subtitleId } = message;
+    const cacheKey = `${movieId}_${subtitleId}`;
+
+    try {
+      let subtitles: string | null;
+
+      if (this.subtitlesCache[cacheKey]) {
+        subtitles = this.subtitlesCache[cacheKey];
+      } else {
+        if (!this.pendingSubtitleRequests[cacheKey]) {
+          this.pendingSubtitleRequests[cacheKey] = this.fetchSubtitles(
+            movieId,
+            subtitleId
+          );
+        }
+
+        subtitles = await this.pendingSubtitleRequests[cacheKey];
+
+        if (subtitles) {
+          this.subtitlesCache[cacheKey] = subtitles;
+          this.clearOldSubtitlesCache();
+        }
+      }
+
+      sendResponse({
+        action: "subtitlesData",
+        data: subtitles ? parseSrt(subtitles) : null,
+      });
+    } catch (error) {
+      console.error("Error fetching subtitles:", error);
+      sendResponse({
+        action: "subtitlesData",
+        data: null,
+        error: "Failed to fetch subtitles",
+      });
+    } finally {
+      delete this.pendingSubtitleRequests[cacheKey];
+    }
   }
 
   private async handleAudioFileRequest(

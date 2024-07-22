@@ -4,6 +4,7 @@ export class SubtitleManager {
   private static instance: SubtitleManager | null = null;
   private subtitlesCache: Map<string, Subtitle[]> = new Map();
   private sortedSubtitles: Subtitle[] = [];
+  private pendingRequests: Map<string, Promise<Subtitle[] | null>> = new Map();
 
   public static getInstance(): SubtitleManager {
     if (!SubtitleManager.instance) {
@@ -18,16 +19,27 @@ export class SubtitleManager {
   ): Promise<Subtitle[] | null> {
     const cacheKey = `${movieId}-${subtitleId}`;
 
-    if (!this.subtitlesCache.has(cacheKey)) {
-      const subtitles = await this.fetchSubtitles(movieId, subtitleId);
+    if (this.subtitlesCache.has(cacheKey)) {
+      return this.subtitlesCache.get(cacheKey)!;
+    }
+
+    if (this.pendingRequests.has(cacheKey)) {
+      return this.pendingRequests.get(cacheKey)!;
+    }
+
+    const subtitlesPromise = this.fetchSubtitles(movieId, subtitleId);
+    this.pendingRequests.set(cacheKey, subtitlesPromise);
+
+    try {
+      const subtitles = await subtitlesPromise;
       if (subtitles) {
         this.subtitlesCache.set(cacheKey, subtitles);
         this.sortSubtitles(subtitles);
       }
       return subtitles;
+    } finally {
+      this.pendingRequests.delete(cacheKey);
     }
-
-    return this.subtitlesCache.get(cacheKey)!;
   }
 
   getUpcomingSubtitles(adjustedTime: number, preloadTime: number): Subtitle[] {
@@ -59,8 +71,6 @@ export class SubtitleManager {
         { action: "requestSubtitles", movieId, subtitleId },
         (response: any) => {
           if (response?.action === "subtitlesData") {
-            this.subtitlesCache.set(`${movieId}-${subtitleId}`, response.data);
-            this.sortSubtitles(response.data);
             resolve(response.data);
           } else {
             resolve(null);

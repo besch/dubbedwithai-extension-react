@@ -22,6 +22,7 @@ export class DubbingManager {
   private precisionTimer: PrecisionTimer;
   private lastVideoTime: number = 0;
   private isDubbingAudioPlaying: boolean = false;
+  private videoElement: HTMLVideoElement | null = null;
 
   private constructor() {
     this.precisionTimer = new PrecisionTimer(this.handlePreciseTime);
@@ -56,15 +57,14 @@ export class DubbingManager {
     ) {
       // Dubbing is already initialized, just resume
       this.isDubbingPaused = false;
-      const video = document.querySelector("video") as HTMLVideoElement;
-      if (video) {
-        const currentTime = video.currentTime;
+      if (this.videoElement) {
+        const currentTime = this.videoElement.currentTime;
         this.precisionTimer.start(currentTime);
       }
       this.resumeDubbing();
     } else {
       // New initialization or subtitles not available
-      this.stop(); // Reset state before new initialization
+      await this.stop(); // Reset state before new initialization
       this.currentMovieId = movieId;
       this.currentSubtitleId = subtitleId;
       this.isDubbingPaused = false;
@@ -80,8 +80,27 @@ export class DubbingManager {
         );
       }
 
-      this.startDubbing();
+      // Find and store the video element
+      this.findAndStoreVideoElement();
+
+      // If video element is found, start dubbing
+      if (this.videoElement) {
+        this.startDubbing();
+      } else {
+        // If no video element is found, set up an observer to wait for it
+        this.setupVideoObserver();
+      }
     }
+
+    // Retrieve subtitle offset from storage
+    chrome.storage.local.get(["movieState"], (result) => {
+      if (
+        result.movieState &&
+        typeof result.movieState.subtitleOffset === "number"
+      ) {
+        this.subtitleOffset = result.movieState.subtitleOffset * 1000; // Convert to milliseconds
+      }
+    });
   }
 
   public resumeDubbing(): void {
@@ -140,21 +159,21 @@ export class DubbingManager {
     }
   }
 
-  async stop(): Promise<void> {
+  public async stop(): Promise<void> {
     this.audioFileManager.stop();
     this.audioFileManager.clearCache();
     this.audioPlayer.stopAllAudio();
     this.subtitleManager.reset();
     this.currentMovieId = this.currentSubtitleId = null;
-    this.isDubbingPaused = true; // Change this line
+    this.isDubbingPaused = true;
     this.lastSentSubtitle = null;
     this.lastSentTime = 0;
     this.precisionTimer.stop();
 
-    // Remove event listeners from the main document's video element
-    this.removeVideoEventListeners(document.querySelector("video"));
+    this.removeVideoEventListeners();
+    this.resetVideoVolume();
+    this.videoElement = null;
 
-    // Remove event listeners from video elements in iframes
     const iframes = document.querySelectorAll("iframe");
     for (let i = 0; i < iframes.length; i++) {
       const iframe = iframes[i];
@@ -164,16 +183,20 @@ export class DubbingManager {
         if (iframeDocument) {
           const iframeVideo = iframeDocument.querySelector("video");
           if (iframeVideo) {
-            this.removeVideoEventListeners(iframeVideo);
+            this.removeVideoEventListeners();
+            (iframeVideo as HTMLVideoElement).volume = this.originalVolume;
           }
         }
       } catch (e) {
         console.error("Could not access iframe content:", e);
       }
     }
+  }
 
-    // Reset volume for all video elements
-    this.resetAllVideoVolumes();
+  private resetVideoVolume(): void {
+    if (this.videoElement) {
+      this.videoElement.volume = this.originalVolume;
+    }
   }
 
   public isCurrentDubbing(movieId: string, subtitleId: string): boolean {
@@ -204,13 +227,51 @@ export class DubbingManager {
     }
   }
 
-  private removeVideoEventListeners(video: HTMLVideoElement | null): void {
-    if (video) {
-      video.removeEventListener("play", this.handleVideoPlay);
-      video.removeEventListener("pause", this.handleVideoPause);
-      video.removeEventListener("seeking", this.handleVideoSeeking);
-      video.removeEventListener("volumechange", this.handleVolumeChange);
-      video.removeEventListener("timeupdate", this.handleTimeUpdate);
+  private findAndStoreVideoElement(): void {
+    // Check in the main document
+    this.videoElement = document.querySelector("video");
+
+    if (this.videoElement) {
+      this.handleVideo(this.videoElement);
+      return;
+    }
+
+    // Check in iframes
+    const iframes = document.querySelectorAll("iframe");
+    for (let i = 0; i < iframes.length; i++) {
+      const iframe = iframes[i];
+      try {
+        const iframeDocument =
+          iframe.contentDocument || iframe.contentWindow?.document;
+        if (iframeDocument) {
+          this.videoElement = iframeDocument.querySelector("video");
+          if (this.videoElement) {
+            this.handleVideo(this.videoElement);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("Could not access iframe content:", e);
+      }
+    }
+
+    // If no video found, set up an observer
+    this.setupVideoObserver();
+  }
+
+  private removeVideoEventListeners(): void {
+    if (this.videoElement) {
+      this.videoElement.removeEventListener("play", this.handleVideoPlay);
+      this.videoElement.removeEventListener("pause", this.handleVideoPause);
+      this.videoElement.removeEventListener("seeking", this.handleVideoSeeking);
+      this.videoElement.removeEventListener(
+        "volumechange",
+        this.handleVolumeChange
+      );
+      this.videoElement.removeEventListener(
+        "timeupdate",
+        this.handleTimeUpdate
+      );
     }
   }
 
@@ -277,6 +338,7 @@ export class DubbingManager {
   }
 
   private handleVideo(video: HTMLVideoElement): void {
+    this.videoElement = video;
     this.originalVolume = video.volume;
     video.addEventListener("play", this.handleVideoPlay);
     video.addEventListener("pause", this.handleVideoPause);
@@ -285,26 +347,21 @@ export class DubbingManager {
     video.addEventListener("timeupdate", this.handleTimeUpdate);
   }
 
-  private handleVideoPlay = (event: Event): void => {
+  private handleVideoPlay = (): void => {
     if (this.isDubbingPaused) {
       this.resumeDubbing();
     }
-    // Reset volume to original when playing if no dubbing audio is active
-    if (!this.isDubbingAudioPlaying) {
-      const video = event.target as HTMLVideoElement;
-      video.volume = this.originalVolume;
+    if (!this.isDubbingAudioPlaying && this.videoElement) {
+      this.videoElement.volume = this.originalVolume;
     }
   };
 
   private handleVideoPause = (): void => {
-    // Only pause dubbing if it's not already paused
     if (!this.isDubbingPaused) {
       this.pauseDubbing();
     }
-    // Reset volume to original when pausing
-    const video = document.querySelector("video") as HTMLVideoElement;
-    if (video) {
-      video.volume = this.originalVolume;
+    if (this.videoElement) {
+      this.videoElement.volume = this.originalVolume;
     }
   };
 
@@ -535,9 +592,9 @@ export class DubbingManager {
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (mutation.type === "childList") {
-          const video = document.querySelector("video");
-          if (video) {
-            this.handleVideo(video);
+          this.videoElement = document.querySelector("video");
+          if (this.videoElement) {
+            this.handleVideo(this.videoElement);
             observer.disconnect();
             return;
           }

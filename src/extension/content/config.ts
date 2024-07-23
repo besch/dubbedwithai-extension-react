@@ -1,6 +1,7 @@
 // Define the interface for the config object
 export interface Config {
   videoVolumeWhilePlayingDubbing: number;
+  maxDubbingVolumeMultiplier: number;
   preloadAudioTime: number; // in milliseconds
   preloadAudioGenerationTime: number; // in milliseconds
   subtitleUpdateInterval: number; // in seconds
@@ -13,6 +14,7 @@ export interface Config {
 // Create the config object that adheres to the Config interface
 const config: Config = {
   videoVolumeWhilePlayingDubbing: 0.3,
+  maxDubbingVolumeMultiplier: 2.0, // Allow up to 200% volume
   preloadAudioTime: 5000, // 5 seconds
   preloadAudioGenerationTime: 15000, // 15 seconds
   subtitleUpdateInterval: 0.5,

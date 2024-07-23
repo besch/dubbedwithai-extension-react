@@ -308,6 +308,10 @@ export class DubbingManager {
             }
             sendResponse({ status: "updated" });
             break;
+          case "setDubbingVolumeMultiplier":
+            this.setDubbingVolumeMultiplier(message.payload);
+            sendResponse({ status: "updated" });
+            break;
         }
         return true;
       }
@@ -434,6 +438,10 @@ export class DubbingManager {
 
   private getAudioFilePath(subtitle: Subtitle): string {
     return `${this.currentMovieId}/${this.currentSubtitleId}/${subtitle.start}-${subtitle.end}.mp3`;
+  }
+
+  setDubbingVolumeMultiplier(multiplier: number): void {
+    this.audioPlayer.setDubbingVolumeMultiplier(multiplier);
   }
 
   private adjustVolume(video: HTMLVideoElement | null): void {

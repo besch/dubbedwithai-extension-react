@@ -15,6 +15,7 @@ interface MovieState {
   subtitleOffset: number;
   currentVideoTime: number;
   adjustedVideoTime: number;
+  dubbingVolumeMultiplier: number;
 }
 
 const initialState: MovieState = {
@@ -28,6 +29,7 @@ const initialState: MovieState = {
   subtitleOffset: 0,
   currentVideoTime: 0,
   adjustedVideoTime: 0,
+  dubbingVolumeMultiplier: 1.0,
 };
 
 export const loadMovieState = createAsyncThunk("movie/loadState", async () => {
@@ -145,6 +147,10 @@ const movieSlice = createSlice({
   name: "movie",
   initialState,
   reducers: {
+    setDubbingVolumeMultiplier: (state, action: PayloadAction<number>) => {
+      state.dubbingVolumeMultiplier = action.payload;
+      chrome.storage.local.set({ movieState: { ...state } });
+    },
     setSelectedMovie: (state, action: PayloadAction<Movie | null>) => {
       if (state.isDubbingActive) {
         sendMessageToActiveTab({ action: "stopDubbing" });
@@ -240,6 +246,7 @@ export const {
   setSubtitleOffset,
   resetSubtitleOffset,
   updateCurrentTime,
+  setDubbingVolumeMultiplier,
 } = movieSlice.actions;
 
 export default movieSlice.reducer;

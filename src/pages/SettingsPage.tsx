@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import { setSubtitleOffset, resetSubtitleOffset } from "@/store/movieSlice";
+import {
+  setSubtitleOffset,
+  resetSubtitleOffset,
+  setDubbingVolumeMultiplier,
+} from "@/store/movieSlice";
+import config from "@/extension/content/config";
+
 import PageLayout from "@/components/ui/PageLayout";
 import Button from "@/components/ui/Button";
 import { millisecondsToTimeString } from "@/extension/utils";
@@ -9,10 +15,35 @@ import { toast } from "react-toastify";
 
 const SettingsPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { subtitleOffset } = useSelector((state: RootState) => state.movie);
+  const { subtitleOffset, dubbingVolumeMultiplier } = useSelector(
+    (state: RootState) => state.movie
+  );
   const [localOffset, setLocalOffset] = useState(subtitleOffset);
   const [currentTime, setCurrentTime] = useState(0);
   const [adjustedTime, setAdjustedTime] = useState(0);
+  const [localDubbingVolume, setLocalDubbingVolume] = useState(
+    dubbingVolumeMultiplier
+  );
+
+  const handleDubbingVolumeChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const newVolume = parseFloat(event.target.value);
+    setLocalDubbingVolume(newVolume);
+  };
+
+  const handleDubbingVolumeApply = () => {
+    dispatch(setDubbingVolumeMultiplier(localDubbingVolume));
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: "setDubbingVolumeMultiplier",
+          payload: localDubbingVolume,
+        });
+      }
+    });
+    toast.success("Dubbing volume has been applied successfully!");
+  };
 
   useEffect(() => {
     setLocalOffset(subtitleOffset);
@@ -143,6 +174,28 @@ const SettingsPage: React.FC = () => {
             Reset Offset
           </Button>
         </div>
+      </div>
+      <div className="space-y-4 mt-8">
+        <h3 className="text-lg font-semibold">Dubbing Volume</h3>
+        <input
+          type="range"
+          min="0"
+          max={config.maxDubbingVolumeMultiplier}
+          step="0.1"
+          value={localDubbingVolume}
+          onChange={handleDubbingVolumeChange}
+          className="w-full"
+        />
+        <div className="text-center text-2xl font-bold">
+          {(localDubbingVolume * 100).toFixed(0)}%
+        </div>
+        <Button
+          onClick={handleDubbingVolumeApply}
+          variant="primary"
+          className="w-full"
+        >
+          Apply Dubbing Volume
+        </Button>
       </div>
     </PageLayout>
   );

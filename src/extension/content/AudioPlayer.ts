@@ -1,6 +1,7 @@
 import { Subtitle } from "./types";
 
 export class AudioPlayer {
+  private dubbingVolumeMultiplier: number = 1.0;
   private static instance: AudioPlayer | null = null;
   private activeAudio: Map<
     string,
@@ -16,6 +17,20 @@ export class AudioPlayer {
     return AudioPlayer.instance;
   }
 
+  setDubbingVolumeMultiplier(multiplier: number): void {
+    this.dubbingVolumeMultiplier = multiplier;
+    this.updateAllAudioVolumes();
+  }
+
+  private updateAllAudioVolumes(): void {
+    this.activeAudio.forEach((audioInfo) => {
+      audioInfo.gainNode.gain.setValueAtTime(
+        this.dubbingVolumeMultiplier,
+        this.audioContext.currentTime
+      );
+    });
+  }
+
   async playAudio(
     buffer: AudioBuffer,
     filePath: string,
@@ -26,7 +41,10 @@ export class AudioPlayer {
     source.buffer = buffer;
 
     const gainNode = this.audioContext.createGain();
-    gainNode.gain.setValueAtTime(1, this.audioContext.currentTime);
+    gainNode.gain.setValueAtTime(
+      this.dubbingVolumeMultiplier,
+      this.audioContext.currentTime
+    );
 
     source.connect(gainNode);
     gainNode.connect(this.audioContext.destination);

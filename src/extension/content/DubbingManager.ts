@@ -20,7 +20,6 @@ export class DubbingManager {
   private lastSentTime: number = 0;
   private precisionTimer: PrecisionTimer;
   private lastVideoTime: number = 0;
-  private isDubbingAudioPlaying: boolean = false;
   private videoElement: HTMLVideoElement | null = null;
   private isInitialized: boolean = false;
   private currentVideoPlayerVolume: number = 1;
@@ -81,7 +80,6 @@ export class DubbingManager {
         this.lastSentSubtitle = null;
         this.lastSentTime = 0;
         this.lastVideoTime = 0;
-        this.isDubbingAudioPlaying = false;
 
         this.audioContext = new window.AudioContext();
         this.audioFileManager = new AudioFileManager(this.audioContext);
@@ -442,14 +440,17 @@ export class DubbingManager {
     if (!video) return;
 
     this.isAdjustingVolume = true;
-    const shouldLowerVolume = this.isAnyDubbingAudioPlaying();
+    const isDubbingPlaying = this.isAnyDubbingAudioPlaying();
 
-    video.volume = shouldLowerVolume
-      ? this.currentVideoPlayerVolume * 0.3 // 30% of VPV when dubbing is playing
-      : this.currentVideoPlayerVolume; // 100% of VPV when no dubbing
+    if (isDubbingPlaying) {
+      video.volume =
+        this.currentVideoPlayerVolume * config.videoVolumeWhilePlayingDubbing;
+    } else {
+      video.volume = this.currentVideoPlayerVolume;
+    }
 
     console.log(
-      `Adjusting volume: ${video.volume}, isDubbingAudioPlaying: ${shouldLowerVolume}, VPV: ${this.currentVideoPlayerVolume}`
+      `Adjusting volume: Video ${video.volume}, isDubbingPlaying: ${isDubbingPlaying}, VPV: ${this.currentVideoPlayerVolume}`
     );
 
     // Use setTimeout to reset the flag after the browser has processed the volume change

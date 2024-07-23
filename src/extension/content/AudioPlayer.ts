@@ -4,7 +4,7 @@ export class AudioPlayer {
   private static instance: AudioPlayer | null = null;
   private activeAudio: Map<
     string,
-    { source: AudioBufferSourceNode; subtitle: Subtitle }
+    { source: AudioBufferSourceNode; subtitle: Subtitle; gainNode: GainNode }
   > = new Map();
 
   constructor(private audioContext: AudioContext) {}
@@ -24,12 +24,17 @@ export class AudioPlayer {
   ): Promise<void> {
     const source = this.audioContext.createBufferSource();
     source.buffer = buffer;
-    source.connect(this.audioContext.destination);
+
+    const gainNode = this.audioContext.createGain();
+    gainNode.gain.setValueAtTime(1, this.audioContext.currentTime);
+
+    source.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
 
     const startOffset = Math.max(0, Math.min(offset, buffer.duration));
     source.start(0, startOffset);
 
-    this.activeAudio.set(filePath, { source, subtitle });
+    this.activeAudio.set(filePath, { source, subtitle, gainNode });
     source.onended = () => this.activeAudio.delete(filePath);
   }
 
@@ -45,12 +50,17 @@ export class AudioPlayer {
     const audioInfo = this.activeAudio.get(filePath);
     if (audioInfo) {
       audioInfo.source.stop();
+      audioInfo.gainNode.disconnect();
       this.activeAudio.delete(filePath);
     }
   }
 
   stopAllAudio(): void {
-    this.activeAudio.forEach((_, filePath) => this.stopAudio(filePath));
+    this.activeAudio.forEach((audioInfo, filePath) => {
+      audioInfo.source.stop();
+      audioInfo.gainNode.disconnect();
+      this.activeAudio.delete(filePath);
+    });
   }
 
   isAudioActive(filePath: string): boolean {
@@ -59,11 +69,7 @@ export class AudioPlayer {
 
   setVolume(volume: number): void {
     this.activeAudio.forEach((audioInfo) => {
-      const gainNode = this.audioContext.createGain();
-      gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime);
-      audioInfo.source.disconnect();
-      audioInfo.source.connect(gainNode);
-      gainNode.connect(this.audioContext.destination);
+      audioInfo.gainNode.gain.setValueAtTime(1, this.audioContext.currentTime);
     });
   }
 

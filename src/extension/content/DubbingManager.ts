@@ -491,7 +491,6 @@ export class DubbingManager {
       }
     }
 
-    // Always adjust volume after playing subtitles
     if (this.videoElement) {
       this.adjustVolume(this.videoElement);
     }
@@ -503,6 +502,14 @@ export class DubbingManager {
   ): Promise<void> {
     const filePath = this.getAudioFilePath(subtitle);
     try {
+      // First, check if the audio file exists or is being generated
+      const exists = await this.audioFileManager.checkFileExists(filePath);
+      if (!exists) {
+        // If not, trigger generation
+        await this.audioFileManager.generateAudio(filePath, subtitle.text);
+      }
+
+      // Now try to get the audio buffer
       const buffer = await this.audioFileManager.getAudioBuffer(filePath);
       if (buffer) {
         await this.audioPlayer.playAudio(buffer, filePath, subtitle, offset);

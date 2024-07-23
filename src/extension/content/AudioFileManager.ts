@@ -144,11 +144,21 @@ export class AudioFileManager {
       let audioData = await this.audioCache.getAudio(filePath);
 
       if (!audioData) {
-        audioData = await this.fetchAudioFile(filePath);
-        if (!audioData) {
-          return null;
+        // Check if the audio is being generated
+        if (this.audioGenerationQueue.has(filePath)) {
+          await this.audioGenerationQueue.get(filePath);
+          audioData = await this.audioCache.getAudio(filePath);
         }
-        await this.audioCache.storeAudio(filePath, audioData);
+
+        // If still no audio data, attempt to fetch
+        if (!audioData) {
+          audioData = await this.fetchAudioFile(filePath);
+          if (!audioData) {
+            this.notFoundFiles.add(filePath);
+            return null;
+          }
+          await this.audioCache.storeAudio(filePath, audioData);
+        }
       }
 
       const buffer = await this.audioContext.decodeAudioData(

@@ -7,6 +7,8 @@ export class AudioPlayer {
     string,
     { source: AudioBufferSourceNode; subtitle: Subtitle; gainNode: GainNode }
   > = new Map();
+  private recentlyPlayedAudio: Map<string, number> = new Map();
+  private readonly REPLAY_THRESHOLD_MS: number = 500; // Minimum time between replays
 
   constructor(private audioContext: AudioContext) {}
 
@@ -37,6 +39,16 @@ export class AudioPlayer {
     subtitle: Subtitle,
     offset: number = 0
   ): Promise<void> {
+    const now = this.audioContext.currentTime;
+    const lastPlayedTime = this.recentlyPlayedAudio.get(filePath) || 0;
+
+    if (now - lastPlayedTime < this.REPLAY_THRESHOLD_MS / 1000) {
+      console.log(`Skipping playback of ${filePath}: Too soon since last play`);
+      return;
+    }
+
+    this.stopAudio(filePath);
+
     const source = this.audioContext.createBufferSource();
     source.buffer = buffer;
 
@@ -53,7 +65,11 @@ export class AudioPlayer {
     source.start(0, startOffset);
 
     this.activeAudio.set(filePath, { source, subtitle, gainNode });
-    source.onended = () => this.activeAudio.delete(filePath);
+    this.recentlyPlayedAudio.set(filePath, now);
+
+    source.onended = () => {
+      this.activeAudio.delete(filePath);
+    };
   }
 
   stopExpiredAudio(adjustedTime: number): void {
@@ -79,6 +95,7 @@ export class AudioPlayer {
       audioInfo.gainNode.disconnect();
       this.activeAudio.delete(filePath);
     });
+    this.recentlyPlayedAudio.clear();
   }
 
   isAudioActive(filePath: string): boolean {
@@ -87,7 +104,10 @@ export class AudioPlayer {
 
   setVolume(volume: number): void {
     this.activeAudio.forEach((audioInfo) => {
-      audioInfo.gainNode.gain.setValueAtTime(1, this.audioContext.currentTime);
+      audioInfo.gainNode.gain.setValueAtTime(
+        volume,
+        this.audioContext.currentTime
+      );
     });
   }
 
@@ -95,5 +115,20 @@ export class AudioPlayer {
     return Array.from(this.activeAudio.values()).map(
       (audioInfo) => audioInfo.subtitle
     );
+  }
+
+  clearRecentlyPlayedAudio(): void {
+    const now = this.audioContext.currentTime;
+    const entriesToDelete: string[] = [];
+
+    this.recentlyPlayedAudio.forEach((lastPlayedTime, filePath) => {
+      if (now - lastPlayedTime >= this.REPLAY_THRESHOLD_MS / 1000) {
+        entriesToDelete.push(filePath);
+      }
+    });
+
+    entriesToDelete.forEach((filePath) => {
+      this.recentlyPlayedAudio.delete(filePath);
+    });
   }
 }

@@ -44,6 +44,7 @@ export class DubbingManager {
         }
       }
     });
+    this.setupPeriodicCleanup();
   }
 
   public static getInstance(): DubbingManager {
@@ -98,6 +99,12 @@ export class DubbingManager {
       this.isInitialized = false;
       throw error;
     }
+  }
+
+  private setupPeriodicCleanup(): void {
+    setInterval(() => {
+      this.audioPlayer.clearRecentlyPlayedAudio();
+    }, 5000); // Clean up every 5 seconds
   }
 
   public resumeDubbing(): void {

@@ -28,7 +28,6 @@ const LanguageSelectionPage: React.FC = () => {
   const handleLanguageSelect = (language: Language) => {
     dispatch(setSelectedLanguage(language));
     navigate("/dubbing");
-    toast.success(`Selected language: ${language.attributes.language}`);
   };
 
   return (
@@ -48,7 +47,7 @@ const LanguageSelectionPage: React.FC = () => {
             </p>
           </div>
         ) : error ? (
-          toast.error(`Error: ${error}`)
+          <div className="text-red-500">{`Error: ${error}`}</div>
         ) : languages.length > 0 ? (
           <div className="animate-fade-in">
             <LanguageSelector
@@ -57,7 +56,9 @@ const LanguageSelectionPage: React.FC = () => {
             />
           </div>
         ) : (
-          toast.info("No languages available for this movie.")
+          <div className="text-yellow-500">
+            No languages available for this movie.
+          </div>
         )}
       </div>
     </PageLayout>

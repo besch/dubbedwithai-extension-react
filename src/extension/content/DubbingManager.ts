@@ -33,6 +33,7 @@ export class DubbingManager {
     this.audioPlayer = new AudioPlayer(this.audioContext);
     this.originalVolume = config.defaultVolume;
     this.setupMessageListener();
+    this.setupVolumeCheck();
     chrome.storage.onChanged.addListener((changes, namespace) => {
       if (namespace === "local" && changes.movieState) {
         const newMovieState = changes.movieState.newValue;
@@ -114,6 +115,9 @@ export class DubbingManager {
 
     this.precisionTimer.start(currentVideoTime);
 
+    // Reset volume to original when resuming
+    this.videoElement.volume = this.originalVolume;
+
     this.playCurrentSubtitles(currentVideoTime * 1000);
 
     this.checkAndGenerateUpcomingAudio(currentVideoTime * 1000);
@@ -123,6 +127,22 @@ export class DubbingManager {
     this.isDubbingPaused = true;
     this.precisionTimer.pause();
     this.audioPlayer.stopAllAudio();
+
+    if (this.videoElement) {
+      this.videoElement.volume = this.originalVolume;
+    }
+  }
+
+  private setupVolumeCheck(): void {
+    setInterval(() => {
+      if (
+        this.videoElement &&
+        !this.isAnyDubbingAudioPlaying() &&
+        !this.isDubbingPaused
+      ) {
+        this.videoElement.volume = this.originalVolume;
+      }
+    }, 1000); // Check every second
   }
 
   private async startDubbing(): Promise<void> {
@@ -163,6 +183,9 @@ export class DubbingManager {
     this.precisionTimer.stop();
     this.removeVideoEventListeners();
     this.resetVideoVolume();
+    if (this.videoElement) {
+      this.videoElement.volume = this.originalVolume;
+    }
     this.videoElement = null;
     this.isInitialized = false;
     console.log("DubbingManager stopped and reset");
@@ -355,18 +378,18 @@ export class DubbingManager {
     const currentTimeMs = time * 1000;
     const adjustedTimeMs = currentTimeMs - this.subtitleOffset;
 
-    const currentSubtitles =
-      this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
-
     if (this.videoElement) {
-      this.adjustVolume(this.videoElement, currentSubtitles);
+      this.adjustVolume(this.videoElement);
     }
 
     this.playCurrentSubtitles(currentTimeMs);
     this.audioPlayer.stopExpiredAudio(adjustedTimeMs);
     this.preloadUpcomingSubtitles(currentTimeMs);
 
-    this.sendCurrentSubtitleInfo(adjustedTimeMs, currentSubtitles);
+    this.sendCurrentSubtitleInfo(
+      adjustedTimeMs,
+      this.subtitleManager.getCurrentSubtitles(adjustedTimeMs)
+    );
 
     this.checkAndGenerateUpcomingAudio(currentTimeMs);
 
@@ -408,34 +431,28 @@ export class DubbingManager {
     return `${this.currentMovieId}/${this.currentSubtitleId}/${subtitle.start}-${subtitle.end}.mp3`;
   }
 
-  private adjustVolume(
-    video: HTMLVideoElement,
-    currentSubtitles: Subtitle[]
-  ): void {
-    this.isDubbingAudioPlaying = currentSubtitles.length > 0;
-    video.volume = this.isDubbingAudioPlaying
+  private adjustVolume(video: HTMLVideoElement | null): void {
+    if (!video) return;
+
+    const shouldLowerVolume = this.isAnyDubbingAudioPlaying();
+
+    video.volume = shouldLowerVolume
       ? config.dubbingVolume
       : this.originalVolume;
+
+    console.log(
+      `Adjusting volume: ${video.volume}, isDubbingAudioPlaying: ${shouldLowerVolume}`
+    );
+  }
+
+  private isAnyDubbingAudioPlaying(): boolean {
+    return this.audioPlayer.getCurrentlyPlayingSubtitles().length > 0;
   }
 
   private async playCurrentSubtitles(currentTimeMs: number): Promise<void> {
     const adjustedTimeMs = currentTimeMs - this.subtitleOffset;
-
     const currentSubtitles =
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
-
-    if (currentSubtitles.length === 0) {
-      this.isDubbingAudioPlaying = false;
-      if (this.videoElement && !this.isDubbingPaused) {
-        this.videoElement.volume = this.originalVolume;
-      }
-      return;
-    }
-
-    this.isDubbingAudioPlaying = true;
-    if (this.videoElement && !this.isDubbingPaused) {
-      this.videoElement.volume = config.dubbingVolume;
-    }
 
     for (const subtitle of currentSubtitles) {
       const audioFilePath = this.getAudioFilePath(subtitle);
@@ -451,12 +468,9 @@ export class DubbingManager {
       }
     }
 
-    // Check if any audio is actually playing
-    if (this.audioPlayer.getCurrentlyPlayingSubtitles().length === 0) {
-      this.isDubbingAudioPlaying = false;
-      if (this.videoElement && !this.isDubbingPaused) {
-        this.videoElement.volume = this.originalVolume;
-      }
+    // Always adjust volume after playing subtitles
+    if (this.videoElement) {
+      this.adjustVolume(this.videoElement);
     }
   }
 

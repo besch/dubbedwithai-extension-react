@@ -87,6 +87,7 @@ export class DubbingManager {
 
         await this.startDubbing();
         this.isInitialized = true;
+        this.isDubbingPaused = false; // Ensure dubbing is not paused
         console.log("DubbingManager initialized successfully");
       } else {
         console.warn("No video element found. Setting up observer.");

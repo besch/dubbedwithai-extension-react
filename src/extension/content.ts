@@ -31,6 +31,17 @@ class ContentScript {
       return true;
     }
 
+    if (message.action === "initializeDubbing") {
+      await this.dubbingManager.initialize(
+        message.movieId!,
+        message.subtitleId!
+      );
+      this.isDubbingActive = true;
+      this.updateDubbingState(true);
+      sendResponse({ status: "initialized" });
+      return true;
+    }
+
     try {
       const response = await this.handleDubbingAction(message);
       sendResponse(response);

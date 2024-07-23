@@ -8,7 +8,6 @@ import { Language } from "@/types";
 import PageLayout from "@/components/ui/PageLayout";
 import MovieCard from "@/components/MovieCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { toast } from "react-toastify";
 
 const LanguageSelectionPage: React.FC = () => {
   const navigate = useNavigate();

@@ -33,6 +33,7 @@ class BackgroundService {
     chrome.windows.onFocusChanged.addListener(
       this.onWindowFocusChanged.bind(this)
     );
+    chrome.tabs.onRemoved.addListener(this.onTabRemoved.bind(this));
   }
 
   private async onInstalled(): Promise<void> {
@@ -250,7 +251,18 @@ class BackgroundService {
         this.stopPulsing();
       }
       this.updateIcon(isActive);
+    } else {
+      // The tab that was active when the check started is no longer active
+      this.stopPulsing();
+      this.updateIcon(false);
     }
+  }
+
+  private onTabRemoved(
+    tabId: number,
+    removeInfo: chrome.tabs.TabRemoveInfo
+  ): void {
+    this.checkDubbingStatusOnActiveTab();
   }
 
   private async updateIcon(
@@ -295,11 +307,23 @@ class BackgroundService {
           tabs[0].id,
           { action: "checkDubbingStatus" } as DubbingMessage,
           (response) => {
-            if (response?.isDubbingActive !== undefined) {
+            if (chrome.runtime.lastError) {
+              // No content script found, or other error occurred
+              this.stopPulsing();
+              this.updateIcon(false);
+            } else if (response?.isDubbingActive !== undefined) {
               this.updateDubbingState(response.isDubbingActive, tabs[0].id!);
+            } else {
+              // Response received but no isDubbingActive property
+              this.stopPulsing();
+              this.updateIcon(false);
             }
           }
         );
+      } else {
+        // No active tab found
+        this.stopPulsing();
+        this.updateIcon(false);
       }
     });
   }

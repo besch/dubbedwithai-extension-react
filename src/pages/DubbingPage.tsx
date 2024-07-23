@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
 import DubbingControls from "@/components/DubbingControls";
-import { setIsDubbingActive, checkDubbingStatus } from "@/store/movieSlice";
+import { updateDubbingState, checkDubbingStatus } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
 import { sendMessageToActiveTab } from "@/lib/messaging";
 import PageLayout from "@/components/ui/PageLayout";
@@ -31,7 +31,7 @@ const DubbingPage: React.FC = () => {
 
         if (response?.isDubbingActive) {
           // If dubbing is already initialized, just update the state
-          dispatch(setIsDubbingActive(true));
+          dispatch(updateDubbingState(true));
           toast.success("Dubbing resumed successfully");
         } else {
           // If dubbing is not initialized, initialize it
@@ -42,7 +42,7 @@ const DubbingPage: React.FC = () => {
           });
 
           if (initResponse?.status === "initialized") {
-            dispatch(setIsDubbingActive(true));
+            dispatch(updateDubbingState(true));
             toast.success("Dubbing started successfully");
           } else {
             throw new Error("Failed to initialize dubbing");
@@ -56,7 +56,7 @@ const DubbingPage: React.FC = () => {
         });
 
         if (response?.status === "updated") {
-          dispatch(setIsDubbingActive(false));
+          dispatch(updateDubbingState(false));
           toast.success("Dubbing paused successfully");
         } else {
           throw new Error("Failed to pause dubbing");
@@ -67,7 +67,7 @@ const DubbingPage: React.FC = () => {
       toast.error(
         "Failed to toggle dubbing. Or video player not found. Please try again."
       );
-      dispatch(setIsDubbingActive(false));
+      dispatch(updateDubbingState(false));
     }
   };
 

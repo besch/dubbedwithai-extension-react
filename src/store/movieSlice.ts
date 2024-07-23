@@ -132,11 +132,11 @@ export const checkDubbingStatus = createAsyncThunk(
         action: "checkDubbingStatus",
       });
       if (response && response.status === "checked") {
-        dispatch(setIsDubbingActive(response.isDubbingActive));
+        dispatch(updateDubbingState(response.isDubbingActive));
       }
     } catch (error) {
       console.error("Failed to check dubbing status:", error);
-      dispatch(setIsDubbingActive(false));
+      dispatch(updateDubbingState(false));
     }
   }
 );
@@ -164,9 +164,6 @@ const movieSlice = createSlice({
       state.isDubbingActive = false;
       state.subtitleOffset = 0;
       chrome.storage.local.set({ movieState: { ...state } });
-    },
-    setIsDubbingActive: (state, action: PayloadAction<boolean>) => {
-      state.isDubbingActive = action.payload;
     },
     setSearchResults: (state, action: PayloadAction<Movie[]>) => {
       state.searchResults = action.payload;
@@ -238,7 +235,6 @@ const movieSlice = createSlice({
 export const {
   setSelectedMovie,
   setSelectedLanguage,
-  setIsDubbingActive,
   setSearchResults,
   updateDubbingState,
   setSubtitleOffset,

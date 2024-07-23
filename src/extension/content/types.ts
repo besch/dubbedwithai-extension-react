@@ -19,3 +19,9 @@ export type DubbingMessage =
   | { action: "stopDubbing" }
   | { action: "checkDubbingStatus" }
   | { action: "updateDubbingState"; payload: boolean };
+
+export interface StorageData {
+  isDubbingActive?: boolean;
+  currentMovieId?: string;
+  currentSubtitleId?: string;
+}

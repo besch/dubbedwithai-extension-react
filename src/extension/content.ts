@@ -1,5 +1,5 @@
 import { DubbingManager } from "./content/DubbingManager";
-import { DubbingMessage } from "./content/types";
+import { DubbingMessage, StorageData } from "./content/types";
 import { log, LogLevel } from "./content/utils";
 
 class ContentScript {
@@ -8,161 +8,120 @@ class ContentScript {
 
   constructor() {
     this.dubbingManager = DubbingManager.getInstance();
+    this.initialize();
+  }
+
+  private initialize(): void {
     this.setupMessageListener();
     this.initializeFromStorage();
     this.setupVisibilityChangeListener();
   }
 
-  private checkForVideoElement(): boolean {
-    return !!document.querySelector("video");
+  private setupMessageListener(): void {
+    chrome.runtime.onMessage.addListener(this.handleMessage.bind(this));
   }
 
-  private async stopDubbingOnInactiveTab() {
-    if (this.isDubbingActive && this.dubbingManager) {
-      await this.dubbingManager.stop();
-      this.updateDubbingState(false);
-      chrome.runtime.sendMessage({
-        action: "updateDubbingState",
-        payload: false,
-      });
+  private async handleMessage(
+    message: DubbingMessage,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response?: any) => void
+  ): Promise<boolean> {
+    if (message.action === "checkDubbingStatus") {
+      sendResponse({ isDubbingActive: this.isDubbingActive });
+      return true;
     }
-  }
 
-  private updateDubbingState(isActive: boolean) {
-    this.isDubbingActive = isActive;
-    chrome.storage.local.set({ isDubbingActive: isActive });
-    chrome.runtime.sendMessage({
-      action: "updateDubbingState",
-      payload: isActive,
-    });
+    try {
+      const response = await this.handleDubbingAction(message);
+      sendResponse(response);
+    } catch (error) {
+      log(LogLevel.ERROR, "Error in dubbing action:", error);
+      sendResponse({ status: "error", message: error.message });
+    }
+
+    return true;
   }
 
   private async handleDubbingAction(message: DubbingMessage): Promise<any> {
     switch (message.action) {
       case "initializeDubbing":
-        return this.handleInitializeDubbing(message);
+        return this.initializeDubbing(message.movieId, message.subtitleId);
       case "stopDubbing":
-        return this.handleStopDubbing();
-      case "checkDubbingStatus":
-        return this.handleCheckDubbingStatus();
+        return this.stopDubbing();
       case "updateDubbingState":
-        return this.handleUpdateDubbingState(message);
+        return this.updateDubbingState(message.payload as boolean);
       default:
-        throw new Error(`Unknown action: ${(message as any).action}`);
+        throw new Error(`Unknown action: ${message.action}`);
     }
   }
 
-  private async handleInitializeDubbing(message: DubbingMessage): Promise<any> {
+  private async initializeDubbing(
+    movieId?: string,
+    subtitleId?: string
+  ): Promise<any> {
     if (!this.checkForVideoElement()) {
       throw new Error("No video element found on the page");
     }
-    if ("movieId" in message && "subtitleId" in message) {
-      try {
-        await this.dubbingManager.initialize(
-          message.movieId,
-          message.subtitleId
-        );
-        this.updateDubbingState(true);
-        await chrome.storage.local.set({
-          currentMovieId: message.movieId,
-          currentSubtitleId: message.subtitleId,
-        });
-        chrome.runtime.sendMessage({
-          action: "updateDubbingState",
-          payload: true,
-        });
-        return { status: "initialized" };
-      } catch (error) {
-        console.error("Failed to initialize dubbing:", error);
-        this.updateDubbingState(false);
-        return {
-          status: "error",
-          message: error instanceof Error ? error.message : String(error),
-        };
-      }
-    } else {
+
+    if (!movieId || !subtitleId) {
       throw new Error("Missing movieId or subtitleId");
+    }
+
+    try {
+      await this.dubbingManager.initialize(movieId, subtitleId);
+      await this.updateDubbingState(true);
+      await this.updateStorage({ movieId, subtitleId });
+      return { status: "initialized" };
+    } catch (error) {
+      console.error("Failed to initialize dubbing:", error);
+      await this.updateDubbingState(false);
+      return this.formatError(error);
     }
   }
 
-  private async handleStopDubbing(): Promise<any> {
+  private async stopDubbing(): Promise<any> {
     try {
       await this.dubbingManager.stop();
-      this.updateDubbingState(false);
+      await this.updateDubbingState(false);
       return { status: "stopped" };
     } catch (error) {
       console.error("Error stopping dubbing:", error);
-      return {
-        status: "error",
-        message: error instanceof Error ? error.message : String(error),
-      };
+      return this.formatError(error);
     }
   }
 
-  private handleCheckDubbingStatus(): any {
-    return {
-      status: "checked",
-      isDubbingActive: this.isDubbingActive,
-    };
+  private async updateDubbingState(isActive: boolean): Promise<any> {
+    this.isDubbingActive = isActive;
+    await chrome.storage.local.set({ isDubbingActive: isActive });
+    chrome.runtime.sendMessage({
+      action: "updateDubbingState",
+      payload: isActive,
+    });
+    return { status: "updated" };
   }
 
-  private handleUpdateDubbingState(message: DubbingMessage): any {
-    if ("payload" in message && typeof message.payload === "boolean") {
-      this.updateDubbingState(message.payload);
-      return { status: "updated" };
-    } else {
-      throw new Error("Invalid payload for updateDubbingState");
-    }
-  }
-
-  private setupMessageListener() {
-    chrome.runtime.onMessage.addListener(
-      (message: DubbingMessage, sender, sendResponse) => {
-        if (message.action === "checkDubbingStatus") {
-          sendResponse({ isDubbingActive: this.isDubbingActive });
-          return true;
-        }
-
-        this.handleDubbingAction(message)
-          .then((response) => {
-            sendResponse(response);
-          })
-          .catch((error) => {
-            log(LogLevel.ERROR, "Error in dubbing action:", error);
-            sendResponse({ status: "error", message: error.message });
-          });
-        return true;
-      }
-    );
-  }
-
-  private async initializeFromStorage() {
-    const result = await chrome.storage.local.get([
+  private async initializeFromStorage(): Promise<void> {
+    const storage = (await chrome.storage.local.get([
       "isDubbingActive",
       "currentMovieId",
       "currentSubtitleId",
-    ]);
+    ])) as StorageData;
 
     if (
-      result.isDubbingActive &&
-      result.currentMovieId &&
-      result.currentSubtitleId
+      storage.isDubbingActive &&
+      storage.currentMovieId &&
+      storage.currentSubtitleId
     ) {
       try {
-        // Check for video element
         if (!this.checkForVideoElement()) {
           throw new Error("No video element found on the page");
         }
 
-        // Initialize dubbing
-        this.dubbingManager.initialize(
-          result.currentMovieId,
-          result.currentSubtitleId
+        await this.dubbingManager.initialize(
+          storage.currentMovieId,
+          storage.currentSubtitleId
         );
-
-        // Update dubbing state
-        this.updateDubbingState(true);
-
+        await this.updateDubbingState(true);
         log(LogLevel.INFO, "Dubbing initialized from storage successfully");
       } catch (error) {
         log(
@@ -170,25 +129,50 @@ class ContentScript {
           "Failed to initialize dubbing from storage:",
           error
         );
-        this.updateDubbingState(false);
+        await this.updateDubbingState(false);
       }
-    } else if (result.isDubbingActive) {
-      // If isDubbingActive is true but we don't have all necessary data,
-      // update the state to false
-      this.updateDubbingState(false);
+    } else if (storage.isDubbingActive) {
+      await this.updateDubbingState(false);
       log(LogLevel.WARN, "Dubbing was active but missing necessary data");
     } else {
       log(LogLevel.INFO, "No active dubbing session found in storage");
     }
   }
 
-  private setupVisibilityChangeListener() {
-    document.addEventListener("visibilitychange", async () => {
-      if (document.hidden) {
-        console.log("Tab became hidden. Stopping dubbing.");
-        await this.stopDubbingOnInactiveTab();
-      }
-    });
+  private setupVisibilityChangeListener(): void {
+    document.addEventListener(
+      "visibilitychange",
+      this.handleVisibilityChange.bind(this)
+    );
+  }
+
+  private async handleVisibilityChange(): Promise<void> {
+    if (document.hidden && this.isDubbingActive) {
+      console.log("Tab became hidden. Stopping dubbing.");
+      await this.stopDubbing();
+      await this.updateDubbingState(false);
+    }
+  }
+
+  private checkForVideoElement(): boolean {
+    return !!document.querySelector("video");
+  }
+
+  private async updateStorage(data: {
+    movieId?: string;
+    subtitleId?: string;
+  }): Promise<void> {
+    const storageData: Partial<StorageData> = {};
+    if (data.movieId) storageData.currentMovieId = data.movieId;
+    if (data.subtitleId) storageData.currentSubtitleId = data.subtitleId;
+    await chrome.storage.local.set(storageData);
+  }
+
+  private formatError(error: unknown): { status: string; message: string } {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 

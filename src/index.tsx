@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { store } from "@/store";
 import App from "@/App";
@@ -7,7 +7,11 @@ import "./index.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-ReactDOM.render(
+const container = document.getElementById("root");
+if (!container) throw new Error("Failed to find the root element");
+const root = createRoot(container);
+
+root.render(
   <React.StrictMode>
     <Provider store={store}>
       <App />
@@ -24,6 +28,5 @@ ReactDOM.render(
       pauseOnHover
       theme="dark"
     />
-  </React.StrictMode>,
-  document.getElementById("root")
+  </React.StrictMode>
 );

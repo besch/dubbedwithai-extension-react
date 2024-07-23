@@ -1,6 +1,5 @@
 // Define the interface for the config object
 export interface Config {
-  defaultVolume: number;
   dubbingVolume: number;
   preloadAudioTime: number; // in milliseconds
   preloadAudioGenerationTime: number; // in milliseconds
@@ -13,7 +12,6 @@ export interface Config {
 
 // Create the config object that adheres to the Config interface
 const config: Config = {
-  defaultVolume: 1,
   dubbingVolume: 0.3,
   preloadAudioTime: 5000, // 5 seconds
   preloadAudioGenerationTime: 15000, // 15 seconds

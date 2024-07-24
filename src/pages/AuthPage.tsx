@@ -24,7 +24,7 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <PageLayout title="Welcome to Dubabase">
+    <PageLayout title="Welcome to OneDub">
       <div className="text-center">
         <p className="mb-4 text-gray-600">
           Please log in to access the movie dubbing features.

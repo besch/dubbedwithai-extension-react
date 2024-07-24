@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Dubabase",
+  "name": "OneDub",
   "version": "1.3.2",
   "description": "Play movie on your favourite website with ai dubbing applied to it",
   "permissions": [

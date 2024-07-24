@@ -49,7 +49,7 @@ const Navigation: React.FC = () => {
   return (
     <nav className="flex justify-between items-center p-4 bg-background border-b border-border">
       <div className="flex items-center space-x-4">
-        <h1 className="text-2xl font-bold text-foreground">Dubabase</h1>
+        <img src="/icons/logo-onedub.png" className="w-[125px]" />
       </div>
       <div className="flex space-x-6 items-center">
         <Search

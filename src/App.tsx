@@ -100,79 +100,83 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="w-[350px] h-[450px] bg-background text-foreground flex flex-col overflow-hidden">
-        <Navigation />
-        <div className="flex-grow overflow-hidden">
-          <Routes>
-            {/* <Route path="/auth" element={<AuthPage />} /> */}
-            <Route
-              path="/search"
-              element={
-                // isAuthenticated ? (
-                <MovieSearchPage />
-                // ) : (
-                // <Navigate to="/auth" replace />
-                // )
-              }
-            />
-            <Route
-              path="/language"
-              element={
-                // isAuthenticated ? (
-                <LanguageSelectionPage />
-                // ) : (
-                // <Navigate to="/auth" replace />
-                // )
-              }
-            />
-            <Route
-              path="/dubbing"
-              element={
-                // isAuthenticated ? (
-                <DubbingPage />
-                // ) : (
-                // <Navigate to="/auth" replace />
-                // )
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                // isAuthenticated ? (
-                <ProfilePage />
-                // ) : (
-                // <Navigate to="/auth" replace />
-                // )
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                // isAuthenticated ? (
-                <SettingsPage />
-                // ) : (
-                // <Navigate to="/auth" replace />
-                // )
-              }
-            />
-            <Route
-              path="*"
-              element={
-                // isAuthenticated ? (
-                isDubbingActive ? (
-                  <Navigate to="/dubbing" replace />
-                ) : (
-                  <Navigate to="/search" replace />
-                )
-                // ) : (
-                //   <Navigate to="/auth" replace />
-                // )
-              }
-            />
-          </Routes>
+      <div className="w-[350px] h-[550px] flex flex-col overflow-hidden">
+        <div className="flex-grow h-[450px] bg-background text-foreground flex flex-col overflow-hidden">
+          <Navigation />
+          <div className="flex-grow overflow-auto">
+            <Routes>
+              {/* <Route path="/auth" element={<AuthPage />} /> */}
+              <Route
+                path="/search"
+                element={
+                  // isAuthenticated ? (
+                  <MovieSearchPage />
+                  // ) : (
+                  // <Navigate to="/auth" replace />
+                  // )
+                }
+              />
+              <Route
+                path="/language"
+                element={
+                  // isAuthenticated ? (
+                  <LanguageSelectionPage />
+                  // ) : (
+                  // <Navigate to="/auth" replace />
+                  // )
+                }
+              />
+              <Route
+                path="/dubbing"
+                element={
+                  // isAuthenticated ? (
+                  <DubbingPage />
+                  // ) : (
+                  // <Navigate to="/auth" replace />
+                  // )
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  // isAuthenticated ? (
+                  <ProfilePage />
+                  // ) : (
+                  // <Navigate to="/auth" replace />
+                  // )
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  // isAuthenticated ? (
+                  <SettingsPage />
+                  // ) : (
+                  // <Navigate to="/auth" replace />
+                  // )
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  // isAuthenticated ? (
+                  isDubbingActive ? (
+                    <Navigate to="/dubbing" replace />
+                  ) : (
+                    <Navigate to="/search" replace />
+                  )
+                  // ) : (
+                  //   <Navigate to="/auth" replace />
+                  // )
+                }
+              />
+            </Routes>
+          </div>
+        </div>
+        <div className="h-[100px] bg-transparent relative">
+          <CurrentSubtitle />
         </div>
       </div>
-      <CurrentSubtitle />
     </Router>
   );
 };

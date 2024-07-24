@@ -61,3 +61,16 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground));
 }
+
+body {
+  width: 350px;
+  height: 550px;
+  margin: 0;
+  overflow: hidden;
+}
+
+.toast-container {
+  position: absolute !important;
+  bottom: 100px !important;
+  right: 0 !important;
+}

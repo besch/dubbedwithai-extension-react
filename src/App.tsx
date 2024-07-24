@@ -92,9 +92,7 @@ const App: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div
-        className={`w-[350px] h-[450px] flex items-center justify-center bg-background`}
-      >
+      <div className="w-[350px] h-[450px] flex items-center justify-center bg-background">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -102,11 +100,9 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div
-        className={`w-[350px] h-[430px] bg-background text-foreground flex flex-col`}
-      >
+      <div className="w-[350px] h-[450px] bg-background text-foreground flex flex-col overflow-hidden">
         <Navigation />
-        <div className="flex-grow overflow-auto">
+        <div className="flex-grow overflow-hidden">
           <Routes>
             {/* <Route path="/auth" element={<AuthPage />} /> */}
             <Route
@@ -175,8 +171,8 @@ const App: React.FC = () => {
             />
           </Routes>
         </div>
-        <CurrentSubtitle />
       </div>
+      <CurrentSubtitle />
     </Router>
   );
 };

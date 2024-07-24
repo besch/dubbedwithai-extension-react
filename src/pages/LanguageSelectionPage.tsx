@@ -31,34 +31,36 @@ const LanguageSelectionPage: React.FC = () => {
 
   return (
     <PageLayout title="Select Language">
-      {selectedMovie && (
-        <div className="mb-6 animate-fade-in">
-          <MovieCard movie={selectedMovie} />
-        </div>
-      )}
-
-      <div className="mt-6 p-4 bg-card rounded-lg shadow-sm">
-        {isLoading ? (
-          <div className="animate-fade-in flex flex-col items-center">
-            <LoadingSpinner />
-            <p className="mt-4 text-sm text-muted-foreground">
-              Loading languages...
-            </p>
-          </div>
-        ) : error ? (
-          <div className="text-red-500">{`Error: ${error}`}</div>
-        ) : languages.length > 0 ? (
-          <div className="animate-fade-in">
-            <LanguageSelector
-              onSelectLanguage={handleLanguageSelect}
-              languages={languages}
-            />
-          </div>
-        ) : (
-          <div className="text-yellow-500">
-            No languages available for this movie.
+      <div className="h-full overflow-visible">
+        {selectedMovie && (
+          <div className="mb-6 animate-fade-in">
+            <MovieCard movie={selectedMovie} />
           </div>
         )}
+
+        <div className="mt-6 p-4 bg-card rounded-lg shadow-sm">
+          {isLoading ? (
+            <div className="animate-fade-in flex flex-col items-center">
+              <LoadingSpinner />
+              <p className="mt-4 text-sm text-muted-foreground">
+                Loading languages...
+              </p>
+            </div>
+          ) : error ? (
+            <div className="text-red-500">{`Error: ${error}`}</div>
+          ) : languages.length > 0 ? (
+            <div className="animate-fade-in">
+              <LanguageSelector
+                onSelectLanguage={handleLanguageSelect}
+                languages={languages}
+              />
+            </div>
+          ) : (
+            <div className="text-yellow-500">
+              No languages available for this movie.
+            </div>
+          )}
+        </div>
       </div>
     </PageLayout>
   );

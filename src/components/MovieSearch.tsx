@@ -100,7 +100,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
       )}
       {error && <p className="text-destructive mt-2">{error}</p>}
       {searchResults && searchResults.length > 0 ? (
-        <ul className="mt-2 max-h-60 overflow-y-auto">
+        <ul className="mt-2">
           {searchResults.map((movie, index) => (
             <MovieItem
               key={movie.imdbID}

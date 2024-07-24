@@ -18,7 +18,9 @@ const MovieSearchPage: React.FC = () => {
 
   return (
     <PageLayout title="Search for a Movie">
-      <MovieSearch onSelectMovie={handleMovieSelect} />
+      <div className="h-full overflow-visible">
+        <MovieSearch onSelectMovie={handleMovieSelect} />
+      </div>
     </PageLayout>
   );
 };

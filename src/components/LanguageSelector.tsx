@@ -33,7 +33,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <ChevronDown className="w-4 h-4" />
       </button>
       {isOpen && (
-        <ul className="absolute z-10 w-full mt-1 bg-background border border-border rounded shadow-lg max-h-60 overflow-auto">
+        <ul className="absolute z-10 w-full mt-1 bg-background border border-border rounded shadow-lg">
           {languages.map((lang: Language) => (
             <li
               key={lang.id}

@@ -61,9 +61,18 @@ class ContentScript {
         return this.stopDubbing();
       case "updateDubbingState":
         return this.updateDubbingState(message.payload as boolean);
+      case "setVideoVolumeWhilePlayingDubbing":
+        return this.setVideoVolumeWhilePlayingDubbing(message.payload);
       default:
         throw new Error(`Unknown action: ${message.action}`);
     }
+  }
+
+  private async setVideoVolumeWhilePlayingDubbing(
+    volume: number
+  ): Promise<any> {
+    this.dubbingManager.setVideoVolumeWhilePlayingDubbing(volume);
+    return { status: "updated" };
   }
 
   private async initializeDubbing(

@@ -3,6 +3,7 @@ import { Language, Movie } from "@/types";
 import { getAuthToken } from "@/extension/auth";
 import { RootState } from "@/store/index";
 import { sendMessageToActiveTab } from "@/lib/messaging";
+import config from "@/extension/content/config";
 
 interface MovieState {
   selectedMovie: Movie | null;
@@ -16,6 +17,7 @@ interface MovieState {
   currentVideoTime: number;
   adjustedVideoTime: number;
   dubbingVolumeMultiplier: number;
+  videoVolumeWhilePlayingDubbing: number;
 }
 
 const initialState: MovieState = {
@@ -30,7 +32,17 @@ const initialState: MovieState = {
   currentVideoTime: 0,
   adjustedVideoTime: 0,
   dubbingVolumeMultiplier: 1.0,
+  videoVolumeWhilePlayingDubbing: config.videoVolumeWhilePlayingDubbing,
 };
+
+export const setVideoVolumeWhilePlayingDubbing = createAsyncThunk(
+  "movie/setVideoVolumeWhilePlayingDubbing",
+  async (volume: number, { dispatch }) => {
+    await chrome.storage.local.set({ videoVolumeWhilePlayingDubbing: volume });
+    dispatch(updateVideoVolumeWhilePlayingDubbing(volume));
+    return volume;
+  }
+);
 
 export const loadMovieState = createAsyncThunk("movie/loadState", async () => {
   return new Promise<Partial<MovieState>>((resolve) => {
@@ -155,6 +167,12 @@ const movieSlice = createSlice({
   name: "movie",
   initialState,
   reducers: {
+    updateVideoVolumeWhilePlayingDubbing: (
+      state,
+      action: PayloadAction<number>
+    ) => {
+      state.videoVolumeWhilePlayingDubbing = action.payload;
+    },
     setDubbingVolumeMultiplier: (state, action: PayloadAction<number>) => {
       state.dubbingVolumeMultiplier = action.payload;
       chrome.storage.local.set({ movieState: { ...state } });
@@ -255,6 +273,7 @@ export const {
   resetSubtitleOffset,
   updateCurrentTime,
   setDubbingVolumeMultiplier,
+  updateVideoVolumeWhilePlayingDubbing,
 } = movieSlice.actions;
 
 export default movieSlice.reducer;

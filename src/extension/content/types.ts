@@ -19,7 +19,8 @@ export type DubbingMessage =
   | { action: "stopDubbing" }
   | { action: "checkDubbingStatus" }
   | { action: "updateDubbingState"; payload: boolean }
-  | { action: "setDubbingVolumeMultiplier"; payload: number };
+  | { action: "setDubbingVolumeMultiplier"; payload: number }
+  | { action: "setVideoVolumeWhilePlayingDubbing"; payload: number };
 
 export interface StorageData {
   isDubbingActive?: boolean;

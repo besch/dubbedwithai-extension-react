@@ -24,6 +24,8 @@ export class DubbingManager {
   private isInitialized: boolean = false;
   private currentVideoPlayerVolume: number = 1;
   private isAdjustingVolume: boolean = false;
+  private videoVolumeWhilePlayingDubbing: number =
+    config.videoVolumeWhilePlayingDubbing;
 
   private constructor() {
     this.precisionTimer = new PrecisionTimer(this.handlePreciseTime);
@@ -452,6 +454,11 @@ export class DubbingManager {
     this.audioPlayer.setDubbingVolumeMultiplier(multiplier);
   }
 
+  public setVideoVolumeWhilePlayingDubbing(volume: number): void {
+    this.videoVolumeWhilePlayingDubbing = volume;
+    this.adjustVolume(this.videoElement);
+  }
+
   private adjustVolume(video: HTMLVideoElement | null): void {
     if (!video) return;
 
@@ -460,16 +467,15 @@ export class DubbingManager {
 
     if (isDubbingPlaying) {
       video.volume =
-        this.currentVideoPlayerVolume * config.videoVolumeWhilePlayingDubbing;
+        this.currentVideoPlayerVolume * this.videoVolumeWhilePlayingDubbing;
     } else {
       video.volume = this.currentVideoPlayerVolume;
     }
 
     console.log(
-      `Adjusting volume: Video ${video.volume}, isDubbingPlaying: ${isDubbingPlaying}, VPV: ${this.currentVideoPlayerVolume}`
+      `Adjusting volume: Video ${video.volume}, isDubbingPlaying: ${isDubbingPlaying}, VPV: ${this.currentVideoPlayerVolume}, VVWPD: ${this.videoVolumeWhilePlayingDubbing}`
     );
 
-    // Use setTimeout to reset the flag after the browser has processed the volume change
     setTimeout(() => {
       this.isAdjustingVolume = false;
     }, 50);

@@ -92,7 +92,7 @@ const App: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="w-[350px] h-[450px] flex items-center justify-center bg-background">
+      <div className="w-[350px] h-[600px] flex items-center justify-center bg-background">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -100,7 +100,7 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="w-[350px] h-[550px] flex flex-col overflow-hidden">
+      <div className="w-[350px] h-[600px] flex flex-col overflow-hidden">
         <div className="flex-grow h-[450px] bg-background text-foreground flex flex-col overflow-hidden">
           <Navigation />
           <div className="flex-grow overflow-auto">
@@ -173,9 +173,7 @@ const App: React.FC = () => {
             </Routes>
           </div>
         </div>
-        <div className="h-[100px] bg-transparent relative">
-          <CurrentSubtitle />
-        </div>
+        <CurrentSubtitle />
       </div>
     </Router>
   );

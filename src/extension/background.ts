@@ -15,8 +15,6 @@ class BackgroundService {
   private isPulsing = false;
   private pulseState = false;
   private subtitlesCache: { [key: string]: string } = {};
-  private pendingSubtitleRequests: { [key: string]: Promise<string | null> } =
-    {};
 
   constructor() {
     this.initializeListeners();

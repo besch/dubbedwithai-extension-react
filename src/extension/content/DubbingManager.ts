@@ -57,6 +57,7 @@ export class DubbingManager {
   }
 
   public async initialize(movieId: string, subtitleId: string): Promise<void> {
+    console.log("Initializing DubbingManager:", { movieId, subtitleId });
     if (this.isInitialized) {
       console.log("DubbingManager is already initialized. Reinitializing...");
       await this.stop();
@@ -71,6 +72,7 @@ export class DubbingManager {
         movieId,
         subtitleId
       );
+      console.log("Subtitles loaded:", subtitles ? subtitles.length : "none");
       if (!subtitles || subtitles.length === 0) {
         throw new Error(
           `Failed to load subtitles for movie ${movieId} and subtitle ${subtitleId}`
@@ -78,6 +80,7 @@ export class DubbingManager {
       }
 
       this.findAndStoreVideoElement();
+      console.log("Video element found:", !!this.videoElement);
 
       if (this.videoElement) {
         this.lastSentSubtitle = null;
@@ -90,7 +93,7 @@ export class DubbingManager {
 
         await this.startDubbing();
         this.isInitialized = true;
-        this.isDubbingPaused = false; // Ensure dubbing is not paused
+        this.isDubbingPaused = false;
         console.log("DubbingManager initialized successfully");
       } else {
         console.warn("No video element found. Setting up observer.");
@@ -157,14 +160,17 @@ export class DubbingManager {
   }
 
   private async startDubbing(): Promise<void> {
+    console.log("Starting dubbing process");
     try {
       const subtitles = await this.subtitleManager.getSubtitles(
         this.currentMovieId!,
         this.currentSubtitleId!
       );
+      console.log("Subtitles loaded:", subtitles ? subtitles.length : "none");
       if (subtitles && subtitles.length > 0) {
-        // Start the actual dubbing process
+        console.log("Starting precision timer");
         this.precisionTimer.start(this.videoElement!.currentTime);
+        console.log("Playing current subtitles");
         this.playCurrentSubtitles(this.videoElement!.currentTime * 1000);
         console.log("Dubbing started successfully");
       } else {
@@ -172,12 +178,6 @@ export class DubbingManager {
       }
     } catch (error) {
       console.error("Error starting dubbing:", error);
-      log(
-        LogLevel.ERROR,
-        `Error starting dubbing: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
       throw error;
     }
   }
@@ -390,7 +390,9 @@ export class DubbingManager {
   };
 
   private handlePreciseTime = (time: number): void => {
+    console.log("Precise time update:", time);
     if (this.isDubbingPaused) {
+      console.log("Dubbing is paused, skipping update");
       return;
     }
 
@@ -401,6 +403,7 @@ export class DubbingManager {
       this.adjustVolume(this.videoElement);
     }
 
+    console.log("Playing current subtitles");
     this.playCurrentSubtitles(currentTimeMs);
     this.audioPlayer.stopExpiredAudio(adjustedTimeMs);
     this.preloadUpcomingSubtitles(currentTimeMs);
@@ -486,9 +489,11 @@ export class DubbingManager {
   }
 
   private async playCurrentSubtitles(currentTimeMs: number): Promise<void> {
+    console.log("Playing current subtitles at time:", currentTimeMs);
     const adjustedTimeMs = currentTimeMs - this.subtitleOffset;
     const currentSubtitles =
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
+    console.log("Current subtitles:", currentSubtitles);
 
     for (const subtitle of currentSubtitles) {
       const audioFilePath = this.getAudioFilePath(subtitle);
@@ -499,6 +504,7 @@ export class DubbingManager {
         adjustedTimeMs < subtitle.end &&
         !this.audioPlayer.isAudioActive(audioFilePath)
       ) {
+        console.log("Playing audio for subtitle:", subtitle.text);
         const audioOffsetMs = Math.max(0, adjustedTimeMs - startTimeMs);
         await this.playAudioIfAvailable(subtitle, audioOffsetMs / 1000);
       }

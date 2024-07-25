@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from "react";
-import { ChevronDown, Star, Download, Search } from "lucide-react";
-import languageCodes from "@/lib/languageCodes";
+import { ChevronDown, Search } from "lucide-react";
 import { Language } from "@/types";
 
 interface LanguageSelectorProps {
-  onSelectLanguage: (language: Language) => void;
+  onSelectLanguage: (languageCode: string) => void;
   languages: Language[];
 }
 
@@ -15,22 +14,22 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleSelectLanguage = (language: Language) => {
-    onSelectLanguage(language);
+  const handleSelectLanguage = (languageCode: string) => {
+    onSelectLanguage(languageCode);
     setIsOpen(false);
   };
 
   const filteredLanguages = useMemo(() => {
+    if (!Array.isArray(languages)) {
+      console.error("Languages is not an array:", languages);
+      return [];
+    }
     return languages.filter((lang) =>
-      languageCodes[lang.attributes.language]
-        ?.toLowerCase()
+      lang.attributes.language_name
+        .toLowerCase()
         .includes(searchQuery.toLowerCase())
     );
   }, [languages, searchQuery]);
-
-  if (languages.length === 0) {
-    return null;
-  }
 
   return (
     <div className="relative mt-4">
@@ -56,26 +55,13 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             </div>
           </div>
           <ul className="max-h-60 overflow-y-auto">
-            {filteredLanguages.map((lang: Language) => (
+            {filteredLanguages.map((lang) => (
               <li
                 key={lang.id}
-                onClick={() => handleSelectLanguage(lang)}
+                onClick={() => handleSelectLanguage(lang.id)}
                 className="p-2 hover:bg-accent hover:bg-opacity-10 cursor-pointer flex items-center justify-between text-foreground"
               >
-                <span>
-                  {languageCodes[lang.attributes.language] ||
-                    lang.attributes.language}
-                </span>
-                <div className="flex items-center space-x-2 text-sm">
-                  <span className="flex items-center">
-                    <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                    {lang.attributes.ratings.toFixed(1)}
-                  </span>
-                  <span className="flex items-center">
-                    <Download className="w-4 h-4 text-primary mr-1" />
-                    {lang.attributes.download_count.toLocaleString()}
-                  </span>
-                </div>
+                <span>{lang.attributes.language_name}</span>
               </li>
             ))}
           </ul>

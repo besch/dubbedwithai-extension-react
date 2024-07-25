@@ -52,19 +52,20 @@ class BackgroundService {
     sender: chrome.runtime.MessageSender,
     sendResponse: (response?: any) => void
   ): boolean {
+    console.log("Background script received message:", message);
     const handlers: Record<
       string,
       (msg: any, res: (response?: any) => void) => void
     > = {
       requestSubtitles: this.handleSubtitlesRequest.bind(this),
       requestAudioFile: this.handleAudioFileRequest.bind(this),
-      // checkAuthStatus: this.handleAuthStatusCheck.bind(this),
       updateDubbingState: (msg) => {
         if (sender.tab?.id) this.updateDubbingState(msg.payload, sender.tab.id);
       },
       updateCurrentTime: (msg) => chrome.runtime.sendMessage(msg),
       checkAudioFileExists: this.handleCheckAudioFileExists.bind(this),
       generateAudio: this.handleGenerateAudio.bind(this),
+      setSubtitles: this.handleSetSubtitles.bind(this), // Add this line
     };
 
     const handler = handlers[message.action];
@@ -72,7 +73,28 @@ class BackgroundService {
       handler(message, sendResponse);
       return true;
     }
+    console.warn("No handler found for message:", message);
     return false;
+  }
+
+  private handleSetSubtitles(
+    message: { movieId: string; subtitleId: string; subtitles: string },
+    sendResponse: (response?: any) => void
+  ): void {
+    const { movieId, subtitleId, subtitles } = message;
+    const cacheKey = `${movieId}_${subtitleId}`;
+    this.subtitlesCache[cacheKey] = subtitles;
+    this.clearOldSubtitlesCache();
+    console.log("Subtitles set in background script:", { movieId, subtitleId });
+    sendResponse({ status: "success" });
+  }
+
+  private clearOldSubtitlesCache(maxEntries: number = 3) {
+    const cacheKeys = Object.keys(this.subtitlesCache);
+    if (cacheKeys.length > maxEntries) {
+      const keysToRemove = cacheKeys.slice(0, cacheKeys.length - maxEntries);
+      keysToRemove.forEach((key) => delete this.subtitlesCache[key]);
+    }
   }
 
   private async handleCheckAudioFileExists(
@@ -355,14 +377,6 @@ class BackgroundService {
     }
   }
 
-  private clearOldSubtitlesCache(maxEntries: number = 3) {
-    const cacheKeys = Object.keys(this.subtitlesCache);
-    if (cacheKeys.length > maxEntries) {
-      const keysToRemove = cacheKeys.slice(0, cacheKeys.length - maxEntries);
-      keysToRemove.forEach((key) => delete this.subtitlesCache[key]);
-    }
-  }
-
   private async fetchAudioFile(filePath: string): Promise<ArrayBuffer | null> {
     try {
       // const token = await getAuthToken();
@@ -409,20 +423,27 @@ class BackgroundService {
     const { movieId, subtitleId } = message;
     const cacheKey = `${movieId}_${subtitleId}`;
 
+    console.log("Handling subtitles request:", { movieId, subtitleId });
     try {
       let subtitles: string | null;
 
       if (this.subtitlesCache[cacheKey]) {
         subtitles = this.subtitlesCache[cacheKey];
       } else {
-        if (!this.pendingSubtitleRequests[cacheKey]) {
-          this.pendingSubtitleRequests[cacheKey] = this.fetchSubtitles(
-            movieId,
-            subtitleId
-          );
-        }
-
-        subtitles = await this.pendingSubtitleRequests[cacheKey];
+        // Instead of fetching, wait for subtitles to be set
+        subtitles = await new Promise((resolve) => {
+          const listener = (request: any) => {
+            if (
+              request.action === "setSubtitles" &&
+              request.movieId === movieId &&
+              request.subtitleId === subtitleId
+            ) {
+              chrome.runtime.onMessage.removeListener(listener);
+              resolve(request.subtitles);
+            }
+          };
+          chrome.runtime.onMessage.addListener(listener);
+        });
 
         if (subtitles) {
           this.subtitlesCache[cacheKey] = subtitles;
@@ -435,14 +456,12 @@ class BackgroundService {
         data: subtitles ? parseSrt(subtitles) : null,
       });
     } catch (error) {
-      console.error("Error fetching subtitles:", error);
+      console.error("Error handling subtitles request:", error);
       sendResponse({
         action: "subtitlesData",
         data: null,
-        error: "Failed to fetch subtitles",
+        error: "Failed to handle subtitles request",
       });
-    } finally {
-      delete this.pendingSubtitleRequests[cacheKey];
     }
   }
 

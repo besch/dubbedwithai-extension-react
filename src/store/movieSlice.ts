@@ -4,6 +4,7 @@ import { getAuthToken } from "@/extension/auth";
 import { RootState } from "@/store/index";
 import { sendMessageToActiveTab } from "@/lib/messaging";
 import config from "@/extension/content/config";
+import languageCodes from "@/lib/languageCodes";
 
 interface MovieState {
   selectedMovie: Movie | null;
@@ -23,7 +24,13 @@ interface MovieState {
 const initialState: MovieState = {
   selectedMovie: null,
   selectedLanguage: null,
-  languages: [],
+  languages: Object.entries(languageCodes).map(([code, name]) => ({
+    id: code,
+    attributes: {
+      language: code,
+      language_name: name,
+    },
+  })),
   isDubbingActive: false,
   isLoading: false,
   error: null,
@@ -34,6 +41,61 @@ const initialState: MovieState = {
   dubbingVolumeMultiplier: 1.0,
   videoVolumeWhilePlayingDubbing: config.videoVolumeWhilePlayingDubbing,
 };
+
+export const selectSubtitle = createAsyncThunk(
+  "movie/selectSubtitle",
+  async (
+    { imdbID, languageCode }: { imdbID: string; languageCode: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_API_URL}/api/opensubtitles/fetch-subtitles`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ imdbID, languageCode }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch subtitle");
+      }
+      const data = await response.json();
+
+      // Send subtitles to background script
+      await new Promise<void>((resolve, reject) => {
+        chrome.runtime.sendMessage(
+          {
+            action: "setSubtitles",
+            movieId: imdbID,
+            subtitleId: languageCode,
+            subtitles: data.srtContent,
+          },
+          (response) => {
+            if (response && response.status === "success") {
+              resolve();
+            } else {
+              reject(new Error("Failed to set subtitles in background script"));
+            }
+          }
+        );
+      });
+
+      return {
+        id: languageCode,
+        attributes: {
+          language: languageCode,
+          language_name: data.subtitleInfo.attributes.language,
+        },
+        srtContent: data.srtContent,
+      };
+    } catch (error) {
+      return rejectWithValue((error as Error).message);
+    }
+  }
+);
 
 export const setVideoVolumeWhilePlayingDubbing = createAsyncThunk(
   "movie/setVideoVolumeWhilePlayingDubbing",
@@ -66,53 +128,30 @@ export const startDubbingProcess = createAsyncThunk(
       throw new Error("No movie or language selected");
     }
 
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      if (tabs[0]?.id) {
-        chrome.tabs.sendMessage(
-          tabs[0].id,
-          {
-            action: "initializeDubbing",
-            movieId: selectedMovie.imdbID,
-            subtitleId: selectedLanguage.id,
-          },
-          (response) => {
-            if (response && response.status === "initialized") {
-              dispatch(updateDubbingState(true));
+    return new Promise<void>((resolve, reject) => {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        if (tabs[0]?.id) {
+          chrome.tabs.sendMessage(
+            tabs[0].id,
+            {
+              action: "initializeDubbing",
+              movieId: selectedMovie.imdbID,
+              subtitleId: selectedLanguage.id,
+            },
+            (response) => {
+              if (response && response.status === "initialized") {
+                dispatch(updateDubbingState(true));
+                resolve();
+              } else {
+                reject(new Error("Failed to initialize dubbing"));
+              }
             }
-          }
-        );
-      }
-    });
-  }
-);
-
-export const fetchLanguages = createAsyncThunk(
-  "movie/fetchLanguages",
-  async (imdbID: string, { rejectWithValue }) => {
-    try {
-      // const token = await getAuthToken();
-      // if (!token) {
-      //   throw new Error("No auth token available");
-      // }
-      const response = await fetch(
-        `${process.env.REACT_APP_BASE_API_URL}/api/opensubtitles/get-subtitle-languages`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            // Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ imdbID }),
+          );
+        } else {
+          reject(new Error("No active tab found"));
         }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch languages");
-      }
-      const data = await response.json();
-      return data.data as Language[];
-    } catch (error) {
-      return rejectWithValue((error as Error).message);
-    }
+      });
+    });
   }
 );
 
@@ -163,6 +202,9 @@ export const checkDubbingStatus = createAsyncThunk(
   }
 );
 
+export const selectLanguages = (state: RootState) =>
+  Array.isArray(state.movie.languages) ? state.movie.languages : [];
+
 const movieSlice = createSlice({
   name: "movie",
   initialState,
@@ -178,12 +220,20 @@ const movieSlice = createSlice({
       chrome.storage.local.set({ movieState: { ...state } });
     },
     setSelectedMovie: (state, action: PayloadAction<Movie | null>) => {
+      if (!Array.isArray(state.languages)) {
+        state.languages = Object.entries(languageCodes).map(([code, name]) => ({
+          id: code,
+          attributes: {
+            language: code,
+            language_name: name,
+          },
+        }));
+      }
       if (state.isDubbingActive) {
         sendMessageToActiveTab({ action: "stopDubbing" });
       }
       state.selectedMovie = action.payload;
       state.selectedLanguage = null;
-      state.languages = [];
       state.isDubbingActive = false;
       state.subtitleOffset = 0;
       chrome.storage.local.set({ movieState: { ...state } });
@@ -225,21 +275,6 @@ const movieSlice = createSlice({
       .addCase(loadMovieState.fulfilled, (state, action) => {
         return { ...state, ...action.payload };
       })
-      .addCase(fetchLanguages.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(
-        fetchLanguages.fulfilled,
-        (state, action: PayloadAction<Language[]>) => {
-          state.isLoading = false;
-          state.languages = action.payload;
-        }
-      )
-      .addCase(fetchLanguages.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      })
       .addCase(searchMovies.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -260,6 +295,18 @@ const movieSlice = createSlice({
       })
       .addCase(checkDubbingStatus.rejected, (state) => {
         state.isDubbingActive = false;
+      })
+      .addCase(selectSubtitle.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(selectSubtitle.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.selectedLanguage = action.payload;
+      })
+      .addCase(selectSubtitle.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   },
 });

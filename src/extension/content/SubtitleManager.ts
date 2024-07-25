@@ -27,7 +27,19 @@ export class SubtitleManager {
       return this.pendingRequests.get(cacheKey)!;
     }
 
-    const subtitlesPromise = this.fetchSubtitles(movieId, subtitleId);
+    const subtitlesPromise = new Promise<Subtitle[] | null>((resolve) => {
+      chrome.runtime.sendMessage(
+        { action: "requestSubtitles", movieId, subtitleId },
+        (response: any) => {
+          if (response?.action === "subtitlesData") {
+            resolve(response.data);
+          } else {
+            resolve(null);
+          }
+        }
+      );
+    });
+
     this.pendingRequests.set(cacheKey, subtitlesPromise);
 
     try {

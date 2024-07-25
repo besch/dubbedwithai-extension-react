@@ -1,3 +1,4 @@
+import { toast } from "react-toastify";
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Language, Movie } from "@/types";
 import { getAuthToken } from "@/extension/auth";
@@ -59,10 +60,19 @@ export const selectSubtitle = createAsyncThunk(
           body: JSON.stringify({ imdbID, languageCode }),
         }
       );
+
       if (!response.ok) {
-        throw new Error("Failed to fetch subtitle");
+        // Instead of throwing an error, show a toast and return null
+        toast.error("No subtitles found for the selected language.");
+        return null;
       }
+
       const data = await response.json();
+
+      if (!data.srtContent) {
+        toast.error("No subtitles found for the selected language.");
+        return null;
+      }
 
       // Send subtitles to background script
       await new Promise<void>((resolve, reject) => {
@@ -92,7 +102,9 @@ export const selectSubtitle = createAsyncThunk(
         srtContent: data.srtContent,
       };
     } catch (error) {
-      return rejectWithValue((error as Error).message);
+      // Show a generic error toast
+      toast.error("An error occurred while fetching subtitles.");
+      return null;
     }
   }
 );

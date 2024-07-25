@@ -20,9 +20,14 @@ const LanguageSelectionPage: React.FC = () => {
       console.log("Selecting subtitle for language:", languageCode);
       dispatch(selectSubtitle({ imdbID: selectedMovie.imdbID, languageCode }))
         .unwrap()
-        .then(() => {
-          console.log("Subtitle selected successfully");
-          navigate("/dubbing");
+        .then((result) => {
+          if (result) {
+            console.log("Subtitle selected successfully");
+            navigate("/dubbing");
+          } else {
+            // The toast is already shown in the thunk, so we don't need to show it here
+            console.log("No subtitles found or an error occurred");
+          }
         })
         .catch((error) => {
           console.error("Failed to select subtitle:", error);

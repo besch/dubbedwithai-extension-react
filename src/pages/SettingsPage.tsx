@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import {
@@ -13,6 +13,8 @@ import { millisecondsToTimeString } from "@/extension/utils";
 import { toast } from "react-toastify";
 import config from "@/extension/content/config";
 import { DubbingMessage } from "@/extension/content/types";
+import { createPopper, Instance as PopperInstance } from "@popperjs/core";
+import { Info } from "lucide-react";
 
 const SettingsPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -30,6 +32,10 @@ const SettingsPage: React.FC = () => {
   );
   const [currentTime, setCurrentTime] = useState(0);
   const [adjustedTime, setAdjustedTime] = useState(0);
+
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const popperInstanceRef = useRef<PopperInstance | null>(null);
 
   useEffect(() => {
     setLocalOffset(subtitleOffset);
@@ -49,6 +55,44 @@ const SettingsPage: React.FC = () => {
     return () => chrome.runtime.onMessage.removeListener(messageListener);
   }, []);
 
+  useEffect(() => {
+    if (activeTooltip && tooltipRef.current) {
+      const targetElement = document.getElementById(activeTooltip);
+      if (targetElement) {
+        popperInstanceRef.current = createPopper(
+          targetElement,
+          tooltipRef.current,
+          {
+            placement: "bottom",
+            modifiers: [
+              {
+                name: "offset",
+                options: {
+                  offset: [0, 8],
+                },
+              },
+            ],
+          }
+        );
+      }
+    }
+
+    return () => {
+      if (popperInstanceRef.current) {
+        popperInstanceRef.current.destroy();
+        popperInstanceRef.current = null;
+      }
+    };
+  }, [activeTooltip]);
+
+  const handleInfoMouseEnter = (id: string) => {
+    setActiveTooltip(id);
+  };
+
+  const handleInfoMouseLeave = () => {
+    setActiveTooltip(null);
+  };
+
   const handleOffsetChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLocalOffset(parseFloat(event.target.value));
   };
@@ -64,8 +108,6 @@ const SettingsPage: React.FC = () => {
   ) => {
     setLocalVideoVolume(parseFloat(event.target.value));
   };
-
-  // SettingsPage.tsx
 
   const handleApplyChanges = () => {
     dispatch(setSubtitleOffset(localOffset));
@@ -110,7 +152,19 @@ const SettingsPage: React.FC = () => {
 
         <div className="space-y-6">
           <div className="bg-secondary p-4 rounded-lg shadow-inner">
-            <h3 className="text-lg font-semibold mb-2">Subtitle Offset</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-semibold">Subtitle Offset</h3>
+              <div
+                id="subtitle-offset-info"
+                className="cursor-help"
+                onMouseEnter={() =>
+                  handleInfoMouseEnter("subtitle-offset-info")
+                }
+                onMouseLeave={handleInfoMouseLeave}
+              >
+                <Info size={20} />
+              </div>
+            </div>
             <div className="flex items-center space-x-4">
               <input
                 type="range"
@@ -123,13 +177,20 @@ const SettingsPage: React.FC = () => {
               />
               <span className="w-16 text-right">{localOffset.toFixed(1)}s</span>
             </div>
-            <p className="text-sm mt-2">
-              Adjust the timing of subtitles relative to the audio.
-            </p>
           </div>
 
           <div className="bg-secondary p-4 rounded-lg shadow-inner">
-            <h3 className="text-lg font-semibold mb-2">Dubbing Volume</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-semibold">Dubbing Volume</h3>
+              <div
+                id="dubbing-volume-info"
+                className="cursor-help"
+                onMouseEnter={() => handleInfoMouseEnter("dubbing-volume-info")}
+                onMouseLeave={handleInfoMouseLeave}
+              >
+                <Info size={20} />
+              </div>
+            </div>
             <div className="flex items-center space-x-4">
               <input
                 type="range"
@@ -144,15 +205,22 @@ const SettingsPage: React.FC = () => {
                 {(localDubbingVolume * 100).toFixed(0)}%
               </span>
             </div>
-            <p className="text-sm mt-2">
-              Adjust the volume of the dubbed audio.
-            </p>
           </div>
 
           <div className="bg-secondary p-4 rounded-lg shadow-inner">
-            <h3 className="text-lg font-semibold mb-2">
-              Video Volume During Dubbing
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-semibold">
+                Video Volume During Dubbing
+              </h3>
+              <div
+                id="video-volume-info"
+                className="cursor-help"
+                onMouseEnter={() => handleInfoMouseEnter("video-volume-info")}
+                onMouseLeave={handleInfoMouseLeave}
+              >
+                <Info size={20} />
+              </div>
+            </div>
             <div className="flex items-center space-x-4">
               <input
                 type="range"
@@ -167,9 +235,6 @@ const SettingsPage: React.FC = () => {
                 {(localVideoVolume * 100).toFixed(0)}%
               </span>
             </div>
-            <p className="text-sm mt-2">
-              Adjust the volume of the original video while dubbing is active.
-            </p>
           </div>
         </div>
 
@@ -186,6 +251,20 @@ const SettingsPage: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {activeTooltip && (
+        <div
+          ref={tooltipRef}
+          className="bg-gray-800 text-white p-2 rounded-md text-sm z-10"
+        >
+          {activeTooltip === "subtitle-offset-info" &&
+            "Adjust the timing of subtitles relative to the audio."}
+          {activeTooltip === "dubbing-volume-info" &&
+            "Adjust the volume of the dubbed audio."}
+          {activeTooltip === "video-volume-info" &&
+            "Adjust the volume of the original video while dubbing is active."}
+        </div>
+      )}
     </PageLayout>
   );
 };

@@ -153,7 +153,7 @@ const SettingsPage: React.FC = () => {
         <div className="space-y-6">
           <div className="bg-secondary p-4 rounded-lg shadow-inner">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold">Subtitle Offset</h3>
+              <h3 className="text-sm font-semibold">Subtitle Offset</h3>
               <div
                 id="subtitle-offset-info"
                 className="cursor-help"
@@ -173,7 +173,7 @@ const SettingsPage: React.FC = () => {
                 step="0.1"
                 value={localOffset}
                 onChange={handleOffsetChange}
-                className="flex-grow h-2 bg-primary rounded-lg appearance-none cursor-pointer"
+                className="flex-grow h-2 rounded-lg appearance-none cursor-pointer"
               />
               <span className="w-16 text-right">{localOffset.toFixed(1)}s</span>
             </div>
@@ -181,7 +181,7 @@ const SettingsPage: React.FC = () => {
 
           <div className="bg-secondary p-4 rounded-lg shadow-inner">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold">Dubbing Volume</h3>
+              <h3 className="text-sm font-semibold">Dubbing Volume</h3>
               <div
                 id="dubbing-volume-info"
                 className="cursor-help"
@@ -199,7 +199,7 @@ const SettingsPage: React.FC = () => {
                 step="0.1"
                 value={localDubbingVolume}
                 onChange={handleDubbingVolumeChange}
-                className="flex-grow h-2 bg-primary rounded-lg appearance-none cursor-pointer"
+                className="flex-grow h-2 rounded-lg appearance-none cursor-pointer"
               />
               <span className="w-16 text-right">
                 {(localDubbingVolume * 100).toFixed(0)}%
@@ -209,7 +209,7 @@ const SettingsPage: React.FC = () => {
 
           <div className="bg-secondary p-4 rounded-lg shadow-inner">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold">
+              <h3 className="text-sm font-semibold">
                 Video Volume During Dubbing
               </h3>
               <div
@@ -229,7 +229,7 @@ const SettingsPage: React.FC = () => {
                 step="0.01"
                 value={localVideoVolume}
                 onChange={handleVideoVolumeChange}
-                className="flex-grow h-2 bg-primary rounded-lg appearance-none cursor-pointer"
+                className="flex-grow h-2 rounded-lg appearance-none cursor-pointer"
               />
               <span className="w-16 text-right">
                 {(localVideoVolume * 100).toFixed(0)}%

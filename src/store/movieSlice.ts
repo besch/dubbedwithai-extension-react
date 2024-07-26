@@ -83,7 +83,6 @@ export const selectSubtitle = createAsyncThunk(
       );
 
       if (!response.ok) {
-        // Instead of throwing an error, show a toast and return null
         toast.error("No subtitles found for the selected language.");
         return null;
       }
@@ -101,7 +100,7 @@ export const selectSubtitle = createAsyncThunk(
           {
             action: "setSubtitles",
             movieId: imdbID,
-            subtitleId: languageCode,
+            subtitleId: data.subtitleInfo.id,
             subtitles: data.srtContent,
           },
           (response) => {
@@ -115,7 +114,7 @@ export const selectSubtitle = createAsyncThunk(
       });
 
       return {
-        id: languageCode,
+        id: data.subtitleInfo.id,
         attributes: {
           language: languageCode,
           language_name: data.subtitleInfo.attributes.language,
@@ -123,7 +122,6 @@ export const selectSubtitle = createAsyncThunk(
         srtContent: data.srtContent,
       };
     } catch (error) {
-      // Show a generic error toast
       toast.error("An error occurred while fetching subtitles.");
       return null;
     }

@@ -348,33 +348,6 @@ class BackgroundService {
     });
   }
 
-  private async fetchSubtitles(
-    movieId: string,
-    subtitleId: string
-  ): Promise<string | null> {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/google-storage/fetch-subtitles`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ movieId, subtitleId }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.text();
-    } catch (e) {
-      console.error("There was a problem fetching the subtitles:", e);
-      return null;
-    }
-  }
-
   private async fetchAudioFile(filePath: string): Promise<ArrayBuffer | null> {
     try {
       // const token = await getAuthToken();

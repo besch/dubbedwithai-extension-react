@@ -20,6 +20,7 @@ interface MovieState {
   adjustedVideoTime: number;
   dubbingVolumeMultiplier: number;
   videoVolumeWhilePlayingDubbing: number;
+  subtitlesLoaded: boolean;
 }
 
 const initialState: MovieState = {
@@ -41,7 +42,27 @@ const initialState: MovieState = {
   adjustedVideoTime: 0,
   dubbingVolumeMultiplier: 1.0,
   videoVolumeWhilePlayingDubbing: config.videoVolumeWhilePlayingDubbing,
+  subtitlesLoaded: false,
 };
+
+export const loadSubtitles = createAsyncThunk(
+  "movie/loadSubtitles",
+  async (_, { getState, dispatch }) => {
+    const state = getState() as RootState;
+    const { selectedMovie, selectedLanguage } = state.movie;
+
+    if (!selectedMovie || !selectedLanguage) {
+      throw new Error("No movie or language selected");
+    }
+
+    return dispatch(
+      selectSubtitle({
+        imdbID: selectedMovie.imdbID,
+        languageCode: selectedLanguage.id,
+      })
+    ).unwrap();
+  }
+);
 
 export const selectSubtitle = createAsyncThunk(
   "movie/selectSubtitle",
@@ -249,6 +270,7 @@ const movieSlice = createSlice({
       state.isDubbingActive = false;
       state.subtitleOffset = 0;
       chrome.storage.local.set({ movieState: { ...state } });
+      state.subtitlesLoaded = false;
     },
     setSelectedLanguage: (state, action: PayloadAction<Language | null>) => {
       if (state.isDubbingActive) {
@@ -315,6 +337,7 @@ const movieSlice = createSlice({
       .addCase(selectSubtitle.fulfilled, (state, action) => {
         state.isLoading = false;
         state.selectedLanguage = action.payload;
+        state.subtitlesLoaded = true;
       })
       .addCase(selectSubtitle.rejected, (state, action) => {
         state.isLoading = false;

@@ -2,7 +2,11 @@ import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
 import DubbingControls from "@/components/DubbingControls";
-import { updateDubbingState, checkDubbingStatus } from "@/store/movieSlice";
+import {
+  updateDubbingState,
+  checkDubbingStatus,
+  loadSubtitles,
+} from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
 import { sendMessageToActiveTab } from "@/lib/messaging";
 import PageLayout from "@/components/ui/PageLayout";
@@ -11,30 +15,38 @@ import { toast } from "react-toastify";
 
 const DubbingPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { selectedMovie, selectedLanguage, isDubbingActive } = useSelector(
-    (state: RootState) => state.movie
-  );
+  const { selectedMovie, selectedLanguage, isDubbingActive, subtitlesLoaded } =
+    useSelector((state: RootState) => state.movie);
 
   useEffect(() => {
     if (selectedMovie && selectedLanguage) {
       dispatch(checkDubbingStatus());
+      if (!subtitlesLoaded) {
+        dispatch(loadSubtitles())
+          .unwrap()
+          .catch((error) => {
+            console.error("Failed to load subtitles:", error);
+            toast.error("Failed to load subtitles. Please try again.");
+          });
+      }
     }
-  }, [selectedMovie, selectedLanguage, dispatch]);
+  }, [selectedMovie, selectedLanguage, subtitlesLoaded, dispatch]);
 
   const handleDubbingToggle = async (isActive: boolean) => {
     try {
       if (isActive) {
-        // Check if dubbing is already initialized
+        if (!subtitlesLoaded) {
+          throw new Error("Subtitles not loaded yet");
+        }
+
         const response = await sendMessageToActiveTab({
           action: "checkDubbingStatus",
         });
 
         if (response?.isDubbingActive) {
-          // If dubbing is already initialized, just update the state
           dispatch(updateDubbingState(true));
           toast.success("Dubbing resumed successfully");
         } else {
-          // If dubbing is not initialized, initialize it
           const initResponse = await sendMessageToActiveTab({
             action: "initializeDubbing",
             movieId: selectedMovie?.imdbID,
@@ -49,7 +61,6 @@ const DubbingPage: React.FC = () => {
           }
         }
       } else {
-        // When stopping, we'll use updateDubbingState to pause the audio and timer
         const response = await sendMessageToActiveTab({
           action: "updateDubbingState",
           payload: false,
@@ -65,7 +76,7 @@ const DubbingPage: React.FC = () => {
     } catch (error) {
       console.error("Failed to toggle dubbing:", error);
       toast.error(
-        "Failed to toggle dubbing. Or video player not found. Please try again."
+        "Failed to toggle dubbing. Please make sure subtitles are loaded and try again."
       );
       dispatch(updateDubbingState(false));
     }

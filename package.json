@@ -40,7 +40,8 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "build-extension": "craco build && webpack --config webpack.config.js && npm run update-manifest && npm run replace-env-vars",
+    "build-extension:dev": "craco build && webpack --config webpack.config.dev.js && npm run update-manifest && npm run replace-env-vars",
+    "build-extension:prod": "craco build && webpack --config webpack.config.prod.js && npm run update-manifest && npm run replace-env-vars",
     "update-manifest": "node scripts/update-manifest.js",
     "replace-env-vars": "node build-extension.mjs",
     "test": "craco test",

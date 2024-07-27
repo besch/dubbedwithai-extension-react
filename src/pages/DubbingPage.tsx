@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
 import DubbingControls from "@/components/DubbingControls";
@@ -12,33 +12,48 @@ import { sendMessageToActiveTab } from "@/lib/messaging";
 import PageLayout from "@/components/ui/PageLayout";
 import MovieCard from "@/components/MovieCard";
 import { toast } from "react-toastify";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const DubbingPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { selectedMovie, selectedLanguage, isDubbingActive, subtitlesLoaded } =
     useSelector((state: RootState) => state.movie);
+  const [isLoadingSubtitles, setIsLoadingSubtitles] = useState(false);
 
   useEffect(() => {
     if (selectedMovie && selectedLanguage) {
       dispatch(checkDubbingStatus());
       if (!subtitlesLoaded) {
+        setIsLoadingSubtitles(true);
         dispatch(loadSubtitles())
           .unwrap()
+          .then(() => {
+            setIsLoadingSubtitles(false);
+          })
           .catch((error) => {
             console.error("Failed to load subtitles:", error);
             toast.error("Failed to load subtitles. Please try again.");
+            setIsLoadingSubtitles(false);
           });
       }
     }
   }, [selectedMovie, selectedLanguage, subtitlesLoaded, dispatch]);
 
   const handleDubbingToggle = async (isActive: boolean) => {
+    if (isLoadingSubtitles) {
+      toast.warning(
+        "Please wait for subtitles to load before toggling dubbing."
+      );
+      return;
+    }
+
+    if (!subtitlesLoaded) {
+      toast.error("Subtitles are not loaded. Please try reloading the page.");
+      return;
+    }
+
     try {
       if (isActive) {
-        if (!subtitlesLoaded) {
-          throw new Error("Subtitles not loaded yet");
-        }
-
         const response = await sendMessageToActiveTab({
           action: "checkDubbingStatus",
         });
@@ -75,9 +90,7 @@ const DubbingPage: React.FC = () => {
       }
     } catch (error) {
       console.error("Failed to toggle dubbing:", error);
-      toast.error(
-        "Failed to toggle dubbing. Please make sure subtitles are loaded and try again."
-      );
+      toast.error("Failed to toggle dubbing. Please try again.");
       dispatch(updateDubbingState(false));
     }
   };
@@ -100,10 +113,15 @@ const DubbingPage: React.FC = () => {
         <p className="text-sm text-muted-foreground">
           Language: {getFullLanguageName(selectedLanguage.attributes.language)}
         </p>
-        <DubbingControls
-          isDubbingActive={isDubbingActive}
-          onDubbingToggle={handleDubbingToggle}
-        />
+        {isLoadingSubtitles ? (
+          <LoadingSpinner size="lg" />
+        ) : (
+          <DubbingControls
+            isDubbingActive={isDubbingActive}
+            onDubbingToggle={handleDubbingToggle}
+            disabled={isLoadingSubtitles}
+          />
+        )}
       </div>
     </PageLayout>
   );

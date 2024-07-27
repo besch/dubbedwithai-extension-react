@@ -5,15 +5,18 @@ import { Play, Pause } from "lucide-react";
 interface DubbingControlsProps {
   isDubbingActive: boolean;
   onDubbingToggle: (isActive: boolean) => void;
+  disabled?: boolean;
 }
 
 const DubbingControls: React.FC<DubbingControlsProps> = ({
   isDubbingActive,
   onDubbingToggle,
+  disabled,
 }) => (
   <Button
     onClick={() => onDubbingToggle(!isDubbingActive)}
     variant={isDubbingActive ? "outline" : "primary"}
+    disabled={disabled}
   >
     {isDubbingActive ? (
       <>

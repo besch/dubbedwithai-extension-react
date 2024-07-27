@@ -21,6 +21,7 @@ interface MovieState {
   dubbingVolumeMultiplier: number;
   videoVolumeWhilePlayingDubbing: number;
   subtitlesLoaded: boolean;
+  srtContent: string | null;
 }
 
 const initialState: MovieState = {
@@ -43,6 +44,7 @@ const initialState: MovieState = {
   dubbingVolumeMultiplier: 1.0,
   videoVolumeWhilePlayingDubbing: config.videoVolumeWhilePlayingDubbing,
   subtitlesLoaded: false,
+  srtContent: null,
 };
 
 export const loadSubtitles = createAsyncThunk(
@@ -68,7 +70,7 @@ export const selectSubtitle = createAsyncThunk(
   "movie/selectSubtitle",
   async (
     { imdbID, languageCode }: { imdbID: string; languageCode: string },
-    { rejectWithValue }
+    { dispatch }
   ) => {
     try {
       const response = await fetch(
@@ -113,13 +115,16 @@ export const selectSubtitle = createAsyncThunk(
         );
       });
 
+      if (data.srtContent) {
+        dispatch(setSrtContent(data.srtContent));
+      }
+
       return {
         id: data.subtitleInfo.id,
         attributes: {
           language: languageCode,
           language_name: data.subtitleInfo.attributes.language,
         },
-        srtContent: data.srtContent,
       };
     } catch (error) {
       toast.error("An error occurred while fetching subtitles.");
@@ -153,7 +158,7 @@ export const startDubbingProcess = createAsyncThunk(
   "movie/startDubbingProcess",
   async (_, { getState, dispatch }) => {
     const state = getState() as RootState;
-    const { selectedMovie, selectedLanguage } = state.movie;
+    const { selectedMovie, selectedLanguage, srtContent } = state.movie;
 
     if (!selectedMovie || !selectedLanguage) {
       throw new Error("No movie or language selected");
@@ -168,6 +173,7 @@ export const startDubbingProcess = createAsyncThunk(
               action: "initializeDubbing",
               movieId: selectedMovie.imdbID,
               subtitleId: selectedLanguage.id,
+              srtContent: srtContent, // Pass srtContent if available
             },
             (response) => {
               if (response && response.status === "initialized") {
@@ -240,6 +246,9 @@ const movieSlice = createSlice({
   name: "movie",
   initialState,
   reducers: {
+    setSrtContent: (state, action: PayloadAction<string>) => {
+      state.srtContent = action.payload;
+    },
     updateVideoVolumeWhilePlayingDubbing: (
       state,
       action: PayloadAction<number>
@@ -269,6 +278,7 @@ const movieSlice = createSlice({
       state.subtitleOffset = 0;
       chrome.storage.local.set({ movieState: { ...state } });
       state.subtitlesLoaded = false;
+      state.srtContent = null;
     },
     setSelectedLanguage: (state, action: PayloadAction<Language | null>) => {
       if (state.isDubbingActive) {
@@ -278,6 +288,7 @@ const movieSlice = createSlice({
       state.isDubbingActive = false;
       state.subtitleOffset = 0;
       chrome.storage.local.set({ movieState: { ...state } });
+      state.srtContent = null;
     },
     setSearchResults: (state, action: PayloadAction<Movie[]>) => {
       state.searchResults = action.payload;
@@ -354,6 +365,7 @@ export const {
   updateCurrentTime,
   setDubbingVolumeMultiplier,
   updateVideoVolumeWhilePlayingDubbing,
+  setSrtContent,
 } = movieSlice.actions;
 
 export default movieSlice.reducer;

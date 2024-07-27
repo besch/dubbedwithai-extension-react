@@ -6,6 +6,7 @@ import {
   updateDubbingState,
   checkDubbingStatus,
   loadSubtitles,
+  startDubbingProcess,
 } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
 import { sendMessageToActiveTab } from "@/lib/messaging";
@@ -54,27 +55,8 @@ const DubbingPage: React.FC = () => {
 
     try {
       if (isActive) {
-        const response = await sendMessageToActiveTab({
-          action: "checkDubbingStatus",
-        });
-
-        if (response?.isDubbingActive) {
-          dispatch(updateDubbingState(true));
-          toast.success("Dubbing resumed successfully");
-        } else {
-          const initResponse = await sendMessageToActiveTab({
-            action: "initializeDubbing",
-            movieId: selectedMovie?.imdbID,
-            subtitleId: selectedLanguage?.id,
-          });
-
-          if (initResponse?.status === "initialized") {
-            dispatch(updateDubbingState(true));
-            toast.success("Dubbing started successfully");
-          } else {
-            throw new Error("Failed to initialize dubbing");
-          }
-        }
+        await dispatch(startDubbingProcess()).unwrap();
+        toast.success("Dubbing started successfully");
       } else {
         const response = await sendMessageToActiveTab({
           action: "updateDubbingState",

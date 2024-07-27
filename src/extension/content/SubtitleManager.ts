@@ -116,4 +116,14 @@ export class SubtitleManager {
   private sortSubtitles(subtitles: Subtitle[]): void {
     this.sortedSubtitles = [...subtitles].sort((a, b) => a.start - b.start);
   }
+
+  public cacheSubtitles(
+    movieId: string,
+    subtitleId: string,
+    subtitles: Subtitle[]
+  ): void {
+    const cacheKey = `${movieId}-${subtitleId}`;
+    this.subtitlesCache.set(cacheKey, subtitles);
+    this.sortSubtitles(subtitles);
+  }
 }

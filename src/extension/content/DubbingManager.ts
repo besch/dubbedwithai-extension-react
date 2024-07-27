@@ -5,6 +5,7 @@ import { PrecisionTimer } from "./PrecisionTimer";
 import { DubbingMessage, Subtitle } from "./types";
 import { log, LogLevel } from "./utils";
 import config from "./config";
+import { parseSrt } from "../utils";
 
 export class DubbingManager {
   private static instance: DubbingManager | null = null;
@@ -56,8 +57,18 @@ export class DubbingManager {
     return DubbingManager.instance;
   }
 
-  public async initialize(movieId: string, subtitleId: string): Promise<void> {
-    console.log("Initializing DubbingManager:", { movieId, subtitleId });
+  public async initialize(
+    movieId: string,
+    subtitleId: string,
+    srtContent?: string
+  ): Promise<void> {
+    console.log("Initializing DubbingManager:", {
+      movieId,
+      subtitleId,
+      isInitialized: this.isInitialized,
+      hasSrtContent: !!srtContent,
+    });
+
     if (this.isInitialized) {
       console.log("DubbingManager is already initialized. Reinitializing...");
       await this.stop();
@@ -68,14 +79,30 @@ export class DubbingManager {
     this.isDubbingPaused = false;
 
     try {
-      const subtitles = await this.subtitleManager.getSubtitles(
-        movieId,
-        subtitleId
-      );
-      console.log("Subtitles loaded:", subtitles ? subtitles.length : "none");
-      if (!subtitles || subtitles.length === 0) {
+      let subtitles: Subtitle[];
+      if (srtContent) {
+        // If srtContent is provided, parse it directly
+        subtitles = parseSrt(srtContent);
+        // Cache the parsed subtitles
+        this.subtitleManager.cacheSubtitles(movieId, subtitleId, subtitles);
+      } else {
+        // Otherwise, fetch subtitles as before
+        const fetchedSubtitles = await this.subtitleManager.getSubtitles(
+          movieId,
+          subtitleId
+        );
+        if (!fetchedSubtitles) {
+          throw new Error(
+            `Failed to fetch subtitles for movie ${movieId} and subtitle ${subtitleId}`
+          );
+        }
+        subtitles = fetchedSubtitles;
+      }
+
+      console.log("Subtitles loaded:", subtitles.length);
+      if (subtitles.length === 0) {
         throw new Error(
-          `Failed to load subtitles for movie ${movieId} and subtitle ${subtitleId}`
+          `No subtitles found for movie ${movieId} and subtitle ${subtitleId}`
         );
       }
 
@@ -100,7 +127,7 @@ export class DubbingManager {
         this.setupVideoObserver();
       }
     } catch (error) {
-      console.error("Error during initialization:", error);
+      console.warn("Error during initialization:", error);
       this.isInitialized = false;
       throw error;
     }

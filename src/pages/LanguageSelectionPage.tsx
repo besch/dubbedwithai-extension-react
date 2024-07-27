@@ -25,7 +25,6 @@ const LanguageSelectionPage: React.FC = () => {
             console.log("Subtitle selected successfully");
             navigate("/dubbing");
           } else {
-            // The toast is already shown in the thunk, so we don't need to show it here
             console.log("No subtitles found or an error occurred");
           }
         })

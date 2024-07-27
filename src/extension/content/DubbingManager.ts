@@ -31,7 +31,7 @@ export class DubbingManager {
     this.precisionTimer = new PrecisionTimer(this.handlePreciseTime);
     this.audioContext = new window.AudioContext();
     this.audioFileManager = new AudioFileManager(this.audioContext);
-    this.subtitleManager = new SubtitleManager();
+    this.subtitleManager = SubtitleManager.getInstance();
     this.audioPlayer = new AudioPlayer(this.audioContext);
     this.setupMessageListener();
     this.setupVolumeCheck();

@@ -6,6 +6,8 @@ export class SubtitleManager {
   private sortedSubtitles: Subtitle[] = [];
   private pendingRequests: Map<string, Promise<Subtitle[] | null>> = new Map();
 
+  private constructor() {}
+
   public static getInstance(): SubtitleManager {
     if (!SubtitleManager.instance) {
       SubtitleManager.instance = new SubtitleManager();
@@ -27,19 +29,7 @@ export class SubtitleManager {
       return this.pendingRequests.get(cacheKey)!;
     }
 
-    const subtitlesPromise = new Promise<Subtitle[] | null>((resolve) => {
-      chrome.runtime.sendMessage(
-        { action: "requestSubtitles", movieId, subtitleId },
-        (response: any) => {
-          if (response?.action === "subtitlesData") {
-            resolve(response.data);
-          } else {
-            resolve(null);
-          }
-        }
-      );
-    });
-
+    const subtitlesPromise = this.fetchSubtitles(movieId, subtitleId);
     this.pendingRequests.set(cacheKey, subtitlesPromise);
 
     try {
@@ -81,9 +71,40 @@ export class SubtitleManager {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage(
         { action: "requestSubtitles", movieId, subtitleId },
-        (response: any) => {
-          if (response?.action === "subtitlesData") {
+        async (response: any) => {
+          if (response?.action === "subtitlesData" && response.data) {
             resolve(response.data);
+          } else {
+            // If subtitles are not available, try fetching from Google Storage
+            const googleStorageSubtitles = await this.fetchFromGoogleStorage(
+              movieId,
+              subtitleId
+            );
+            if (googleStorageSubtitles) {
+              resolve(googleStorageSubtitles);
+            } else {
+              resolve(null);
+            }
+          }
+        }
+      );
+    });
+  }
+
+  private async fetchFromGoogleStorage(
+    movieId: string,
+    subtitleId: string
+  ): Promise<Subtitle[] | null> {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        {
+          action: "fetchSubtitlesFromGoogleStorage",
+          movieId,
+          subtitleId,
+        },
+        (response: any) => {
+          if (response && response.subtitles) {
+            resolve(response.subtitles);
           } else {
             resolve(null);
           }

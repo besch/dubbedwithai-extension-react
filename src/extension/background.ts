@@ -1,6 +1,6 @@
 import { parseSrt } from "./utils";
 import { getAuthToken } from "./auth";
-import { DubbingMessage } from "./content/types";
+import { DubbingMessage, Subtitle } from "./content/types";
 
 const API_BASE_URL = process.env.REACT_APP_BASE_API_URL;
 const ICON_BASE_PATH = chrome.runtime.getURL("icons/");
@@ -63,7 +63,9 @@ class BackgroundService {
       updateCurrentTime: (msg) => chrome.runtime.sendMessage(msg),
       checkAudioFileExists: this.handleCheckAudioFileExists.bind(this),
       generateAudio: this.handleGenerateAudio.bind(this),
-      setSubtitles: this.handleSetSubtitles.bind(this), // Add this line
+      setSubtitles: this.handleSetSubtitles.bind(this),
+      fetchSubtitlesFromGoogleStorage:
+        this.handleFetchSubtitlesFromGoogleStorage.bind(this), // Add this line
     };
 
     const handler = handlers[message.action];
@@ -445,6 +447,53 @@ class BackgroundService {
       action: "audioFileData",
       data: audioData ? this.arrayBufferToBase64(audioData) : null,
     });
+  }
+
+  private async fetchSubtitlesFromGoogleStorage(
+    movieId: string,
+    subtitleId: string
+  ): Promise<Subtitle[] | null> {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/google-storage/fetch-subtitles`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ movieId, subtitleId }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch subtitles from Google Storage");
+      }
+
+      const data = await response.json();
+      return data.subtitles;
+    } catch (error) {
+      console.error("Error fetching subtitles from Google Storage:", error);
+      return null;
+    }
+  }
+
+  private async handleFetchSubtitlesFromGoogleStorage(
+    message: { movieId: string; subtitleId: string },
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    const { movieId, subtitleId } = message;
+    try {
+      const subtitles = await this.fetchSubtitlesFromGoogleStorage(
+        movieId,
+        subtitleId
+      );
+      sendResponse({ subtitles });
+    } catch (error) {
+      console.error("Error in handleFetchSubtitlesFromGoogleStorage:", error);
+      sendResponse({
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   }
 
   // private async handleAuthStatusCheck(

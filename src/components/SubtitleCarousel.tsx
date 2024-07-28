@@ -62,28 +62,38 @@ const SubtitleCarousel: React.FC = () => {
   return (
     <div
       className="h-full flex flex-col justify-center items-center p-2 overflow-hidden relative"
-      style={{ minHeight: "300px" }}
+      style={{ minHeight: "400px", width: "100%" }}
     >
       <AnimatePresence initial={false}>
         {visibleSubtitles.map((subtitle, index) => (
           <motion.div
             key={`${subtitle.start}-${subtitle.end}`}
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 80 }}
             animate={{
               opacity: index === 2 ? 1 : 0.5,
-              y: (index - 2) * 60,
+              y: (index - 2) * 100,
               scale: index === 2 ? 1 : 0.9,
             }}
-            exit={{ opacity: 0, y: -50 }}
+            exit={{ opacity: 0, y: -80 }}
             transition={{ duration: 0.3 }}
-            className={`absolute w-full text-center px-2 ${
+            className={`absolute w-full text-center px-4 ${
               index === 2 ? "text-white text-lg" : "text-gray-300 text-base"
             }`}
+            style={{ maxWidth: "90%", width: "100%" }}
           >
-            <div className="mb-1 text-xs opacity-75">
+            <div className="mb-2 text-xs opacity-75">
               {formatTime(subtitle.start)} - {formatTime(subtitle.end)}
             </div>
-            <div className="break-words">{subtitle.text}</div>
+            <div
+              className="break-words"
+              style={{
+                maxWidth: "100%",
+                whiteSpace: "normal",
+                wordWrap: "break-word",
+              }}
+            >
+              {subtitle.text}
+            </div>
           </motion.div>
         ))}
       </AnimatePresence>

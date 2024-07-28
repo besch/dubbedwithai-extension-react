@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
 import DubbingControls from "@/components/DubbingControls";
@@ -16,29 +17,33 @@ import { toast } from "react-toastify";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const DubbingPage: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { selectedMovie, selectedLanguage, isDubbingActive, subtitlesLoaded } =
     useSelector((state: RootState) => state.movie);
   const [isLoadingSubtitles, setIsLoadingSubtitles] = useState(false);
 
   useEffect(() => {
-    if (selectedMovie && selectedLanguage) {
-      dispatch(checkDubbingStatus());
-      if (!subtitlesLoaded) {
-        setIsLoadingSubtitles(true);
-        dispatch(loadSubtitles())
-          .unwrap()
-          .then(() => {
-            setIsLoadingSubtitles(false);
-          })
-          .catch((error) => {
-            console.error("Failed to load subtitles:", error);
-            toast.error("Failed to load subtitles. Please try again.");
-            setIsLoadingSubtitles(false);
-          });
-      }
+    if (!selectedMovie || !selectedLanguage) {
+      navigate("/search");
+      return;
     }
-  }, [selectedMovie, selectedLanguage, subtitlesLoaded, dispatch]);
+
+    dispatch(checkDubbingStatus());
+    if (!subtitlesLoaded) {
+      setIsLoadingSubtitles(true);
+      dispatch(loadSubtitles())
+        .unwrap()
+        .then(() => {
+          setIsLoadingSubtitles(false);
+        })
+        .catch((error) => {
+          console.error("Failed to load subtitles:", error);
+          toast.error("Failed to load subtitles. Please try again.");
+          setIsLoadingSubtitles(false);
+        });
+    }
+  }, [selectedMovie, selectedLanguage, subtitlesLoaded, dispatch, navigate]);
 
   const handleDubbingToggle = async (isActive: boolean) => {
     if (isLoadingSubtitles) {

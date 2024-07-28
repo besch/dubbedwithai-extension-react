@@ -68,23 +68,47 @@ const SubtitleCarousel: React.FC = () => {
         {visibleSubtitles.map((subtitle, index) => (
           <motion.div
             key={`${subtitle.start}-${subtitle.end}`}
-            initial={{ opacity: 0, y: 80 }}
+            initial={{ opacity: 0, y: 100 }}
             animate={{
               opacity: index === 2 ? 1 : 0.5,
-              y: (index - 2) * 100,
+              y: (index - 2) * 80,
               scale: index === 2 ? 1 : 0.9,
             }}
-            exit={{ opacity: 0, y: -80 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, y: -100 }}
+            transition={{
+              duration: 0.5,
+              type: "spring",
+              stiffness: 120,
+              damping: 20,
+            }}
             className={`absolute w-full text-center px-4 ${
-              index === 2 ? "text-white text-lg" : "text-gray-300 text-base"
+              index === 2
+                ? "text-white text-lg font-semibold"
+                : "text-gray-300 text-base"
             }`}
-            style={{ maxWidth: "90%", width: "100%" }}
+            style={{
+              maxWidth: "90%",
+              width: "100%",
+              filter:
+                index === 2
+                  ? "drop-shadow(0 0 8px rgba(255,255,255,0.5))"
+                  : "none",
+            }}
           >
-            <div className="mb-2 text-xs opacity-75">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mb-2 text-xs opacity-75"
+            >
               {formatTime(subtitle.start)} - {formatTime(subtitle.end)}
-            </div>
-            <div
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
               className="break-words"
               style={{
                 maxWidth: "100%",
@@ -93,7 +117,7 @@ const SubtitleCarousel: React.FC = () => {
               }}
             >
               {subtitle.text}
-            </div>
+            </motion.div>
           </motion.div>
         ))}
       </AnimatePresence>

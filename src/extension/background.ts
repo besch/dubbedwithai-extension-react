@@ -65,7 +65,7 @@ class BackgroundService {
       generateAudio: this.handleGenerateAudio.bind(this),
       setSubtitles: this.handleSetSubtitles.bind(this),
       fetchSubtitlesFromGoogleStorage:
-        this.handleFetchSubtitlesFromGoogleStorage.bind(this), // Add this line
+        this.handleFetchSubtitlesFromGoogleStorage.bind(this),
     };
 
     const handler = handlers[message.action];

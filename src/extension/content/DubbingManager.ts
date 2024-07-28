@@ -86,7 +86,6 @@ export class DubbingManager {
         // Cache the parsed subtitles
         this.subtitleManager.cacheSubtitles(movieId, subtitleId, subtitles);
       } else {
-        // Otherwise, fetch subtitles as before
         const fetchedSubtitles = await this.subtitleManager.getSubtitles(
           movieId,
           subtitleId

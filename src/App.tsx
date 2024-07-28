@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BrowserRouter as Router,
   Route,
@@ -22,9 +23,11 @@ import Navigation from "@/pages/Navigation";
 import SettingsPage from "@/pages/SettingsPage";
 import CurrentSubtitle from "@/components/CurrentSubtitle";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import SubtitleCarousel from "@/components/SubtitleCarousel";
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const [isExtended, setIsExtended] = useState(false);
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { isDubbingActive } = useSelector((state: RootState) => state.movie);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,6 +42,10 @@ const App: React.FC = () => {
 
     initializeApp();
   }, [dispatch]);
+
+  useEffect(() => {
+    setIsExtended(isDubbingActive);
+  }, [isDubbingActive]);
 
   useEffect(() => {
     const loadContentScript = async () => {
@@ -100,80 +107,41 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="w-[350px] h-[600px] flex flex-col overflow-hidden">
-        <div className="flex-grow h-[450px] bg-background text-foreground flex flex-col overflow-hidden">
-          <Navigation />
-          <div className="flex-grow overflow-auto">
-            <Routes>
-              {/* <Route path="/auth" element={<AuthPage />} /> */}
-              <Route
-                path="/search"
-                element={
-                  // isAuthenticated ? (
-                  <MovieSearchPage />
-                  // ) : (
-                  // <Navigate to="/auth" replace />
-                  // )
-                }
-              />
-              <Route
-                path="/language"
-                element={
-                  // isAuthenticated ? (
-                  <LanguageSelectionPage />
-                  // ) : (
-                  // <Navigate to="/auth" replace />
-                  // )
-                }
-              />
-              <Route
-                path="/dubbing"
-                element={
-                  // isAuthenticated ? (
-                  <DubbingPage />
-                  // ) : (
-                  // <Navigate to="/auth" replace />
-                  // )
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  // isAuthenticated ? (
-                  <ProfilePage />
-                  // ) : (
-                  // <Navigate to="/auth" replace />
-                  // )
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  // isAuthenticated ? (
-                  <SettingsPage />
-                  // ) : (
-                  // <Navigate to="/auth" replace />
-                  // )
-                }
-              />
-              <Route
-                path="*"
-                element={
-                  // isAuthenticated ? (
-                  isDubbingActive ? (
-                    <Navigate to="/dubbing" replace />
-                  ) : (
-                    <Navigate to="/search" replace />
-                  )
-                  // ) : (
-                  //   <Navigate to="/auth" replace />
-                  // )
-                }
-              />
-            </Routes>
+      <div
+        className={`h-[600px] min-h-[600px] flex overflow-hidden transition-all duration-300 ease-in-out ${
+          isExtended ? "w-[600px] min-w-[600px]" : "w-[350px] min-w-[350px]"
+        }`}
+      >
+        <div className="w-[350px] h-full flex flex-col overflow-hidden">
+          <div className="flex-grow h-[450px] bg-background text-foreground flex flex-col overflow-hidden">
+            <Navigation />
+            <div className="flex-grow overflow-auto">
+              <Routes>
+                <Route path="/search" element={<MovieSearchPage />} />
+                <Route path="/language" element={<LanguageSelectionPage />} />
+                <Route path="/dubbing" element={<DubbingPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route
+                  path="*"
+                  element={
+                    isDubbingActive ? (
+                      <Navigate to="/dubbing" replace />
+                    ) : (
+                      <Navigate to="/search" replace />
+                    )
+                  }
+                />
+              </Routes>
+            </div>
           </div>
         </div>
-        <CurrentSubtitle />
+
+        {isExtended && (
+          <div className="w-[250px] h-full bg-secondary bg-opacity-75 transition-all duration-300 ease-in-out flex-shrink-0">
+            <SubtitleCarousel />
+          </div>
+        )}
       </div>
     </Router>
   );

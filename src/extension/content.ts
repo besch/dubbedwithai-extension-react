@@ -15,7 +15,18 @@ class ContentScript {
     this.setupMessageListener();
     this.initializeFromStorage();
     this.setupVisibilityChangeListener();
+    this.setupUnloadListener();
   }
+
+  private setupUnloadListener(): void {
+    window.addEventListener("beforeunload", this.handlePageUnload);
+  }
+
+  private handlePageUnload = async (): Promise<void> => {
+    console.log("Page is unloading. Stopping dubbing.");
+    await this.stopDubbing();
+    await this.updateDubbingState(false);
+  };
 
   private setupMessageListener(): void {
     chrome.runtime.onMessage.addListener(this.handleMessage.bind(this));
@@ -26,15 +37,11 @@ class ContentScript {
     sender: chrome.runtime.MessageSender,
     sendResponse: (response?: any) => void
   ): Promise<boolean> {
-    if (message.action === "checkDubbingStatus") {
-      sendResponse({ isDubbingActive: this.isDubbingActive });
-      return true;
-    }
-
     if (message.action === "initializeDubbing") {
       await this.dubbingManager.initialize(
-        message.movieId!,
-        message.subtitleId!
+        message.movieId,
+        message.subtitleId,
+        message.srtContent
       );
       this.isDubbingActive = true;
       this.updateDubbingState(true);
@@ -125,7 +132,8 @@ class ContentScript {
       "isDubbingActive",
       "currentMovieId",
       "currentSubtitleId",
-    ])) as StorageData;
+      "srtContent",
+    ])) as StorageData & { srtContent?: string };
 
     if (
       storage.isDubbingActive &&
@@ -139,7 +147,8 @@ class ContentScript {
 
         await this.dubbingManager.initialize(
           storage.currentMovieId,
-          storage.currentSubtitleId
+          storage.currentSubtitleId,
+          storage.srtContent
         );
         await this.updateDubbingState(true);
         log(LogLevel.INFO, "Dubbing initialized from storage successfully");

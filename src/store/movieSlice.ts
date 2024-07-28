@@ -6,10 +6,12 @@ import { RootState } from "@/store/index";
 import { sendMessageToActiveTab } from "@/lib/messaging";
 import config from "@/extension/content/config";
 import languageCodes from "@/lib/languageCodes";
+import { DubbingMessage } from "@/extension/content/types";
 
 interface MovieState {
   selectedMovie: Movie | null;
   selectedLanguage: Language | null;
+  srtContent: string | null;
   languages: Language[];
   isDubbingActive: boolean;
   isLoading: boolean;
@@ -21,12 +23,12 @@ interface MovieState {
   dubbingVolumeMultiplier: number;
   videoVolumeWhilePlayingDubbing: number;
   subtitlesLoaded: boolean;
-  srtContent: string | null;
 }
 
 const initialState: MovieState = {
   selectedMovie: null,
   selectedLanguage: null,
+  srtContent: null,
   languages: Object.entries(languageCodes).map(([code, name]) => ({
     id: code,
     attributes: {
@@ -44,7 +46,6 @@ const initialState: MovieState = {
   dubbingVolumeMultiplier: 1.0,
   videoVolumeWhilePlayingDubbing: config.videoVolumeWhilePlayingDubbing,
   subtitlesLoaded: false,
-  srtContent: null,
 };
 
 export const loadSubtitles = createAsyncThunk(
@@ -117,6 +118,7 @@ export const selectSubtitle = createAsyncThunk(
 
       if (data.srtContent) {
         dispatch(setSrtContent(data.srtContent));
+        await chrome.storage.local.set({ srtContent: data.srtContent });
       }
 
       return {
@@ -173,8 +175,8 @@ export const startDubbingProcess = createAsyncThunk(
               action: "initializeDubbing",
               movieId: selectedMovie.imdbID,
               subtitleId: selectedLanguage.id,
-              srtContent: srtContent, // Pass srtContent if available
-            },
+              srtContent: srtContent,
+            } as DubbingMessage,
             (response) => {
               if (response && response.status === "initialized") {
                 dispatch(updateDubbingState(true));

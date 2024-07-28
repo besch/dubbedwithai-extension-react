@@ -13,7 +13,12 @@ export interface Subtitle {
 }
 
 export type DubbingMessage =
-  | { action: "initializeDubbing"; movieId: string; subtitleId: string }
+  | {
+      action: "initializeDubbing";
+      movieId: string;
+      subtitleId: string;
+      srtContent?: string;
+    }
   | { action: "playDubbing" }
   | { action: "pauseDubbing" }
   | { action: "stopDubbing" }

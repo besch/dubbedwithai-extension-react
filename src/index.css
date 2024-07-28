@@ -64,6 +64,6 @@
 
 .toast-container {
   position: absolute !important;
-  bottom: 100px !important;
-  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
 }

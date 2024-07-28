@@ -78,8 +78,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
           aria-label="Search for a movie"
         />
         <Search
-          className={`absolute left-3 top-2.5 ${
-            isLoading ? "animate-spin text-primary" : "text-muted-foreground"
+          className={`absolute left-3 top-2.5 text-muted-foreground"
           }`}
           size={20}
         />
@@ -94,8 +93,8 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
         )}
       </div>
       {isLoading && (
-        <div className="flex justify-center items-center mt-4">
-          <LoadingSpinner size="sm" />
+        <div className="flex justify-center items-center mt-8">
+          <LoadingSpinner size="lg" />
         </div>
       )}
       {error && <p className="text-destructive mt-2">{error}</p>}

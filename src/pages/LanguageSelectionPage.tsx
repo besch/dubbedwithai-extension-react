@@ -6,6 +6,7 @@ import LanguageSelector from "@/components/LanguageSelector";
 import { selectSubtitle, selectLanguages } from "@/store/movieSlice";
 import PageLayout from "@/components/ui/PageLayout";
 import MovieCard from "@/components/MovieCard";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const LanguageSelectionPage: React.FC = () => {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ const LanguageSelectionPage: React.FC = () => {
         <div className="mt-6 p-4 bg-card rounded-lg shadow-sm">
           {isLoading ? (
             <div className="animate-fade-in flex flex-col items-center">
-              <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
+              <LoadingSpinner size="lg" />
             </div>
           ) : error ? (
             <div className="text-red-500">{`Error: ${error}`}</div>

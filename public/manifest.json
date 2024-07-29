@@ -9,18 +9,9 @@
     "offscreen",
     "alarms",
     "storage",
-    "identity",
-    "identity.email",
     "scripting"
   ],
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAomiPIpvmrWvK6s27AQ5RWZokVnsdJf4SO0PhGycH1tMdIoOfvTxutTJ8lxMamW6pDxxdpn+OGAJXLsGHiqLD3zCA+XCBV75sUOs/Uq1KK50nAHZmi+1HyjXJOEczXYCGf8eEQ/86Lx9XayWBIatL5Oe4/G/Asmlc3O4BNEB0nkE+RLZRPY8u/K+eUysU/GoF90F2PDdsHuITurPNaDXeL3XgSMnOx++Y62wEGnZlniidmvCKk4MKqFwzLYTbLHHcGXXmE70DE07NdDtGX8MAHWbGryWfVRGJcSGK16IXMQnYe8M2ubLHLU94SeLIuxdaG9m21RhtfVQoOPhkgWL4cwIDAQAB",
-  "oauth2": {
-    "client_id": "75200943505-igj5qtoj017a42ocutobucdtvums6u5v.apps.googleusercontent.com",
-    "scopes": [
-      "https://www.googleapis.com/auth/userinfo.email",
-      "https://www.googleapis.com/auth/userinfo.profile"
-    ]
-  },
   "host_permissions": ["https://*/", "http://*/"],
   "action": {
     "default_popup": "index.html",

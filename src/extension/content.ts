@@ -71,7 +71,7 @@ class ContentScript {
       case "setVideoVolumeWhilePlayingDubbing":
         return this.setVideoVolumeWhilePlayingDubbing(message.payload);
       default:
-        throw new Error(`Unknown action: ${message.action}`);
+        return console.error(`Unknown action: ${message.action}`);
     }
   }
 
@@ -87,11 +87,11 @@ class ContentScript {
     subtitleId?: string
   ): Promise<any> {
     if (!this.checkForVideoElement()) {
-      throw new Error("No video element found on the page");
+      return console.error("No video element found on the page");
     }
 
     if (!movieId || !subtitleId) {
-      throw new Error("Missing movieId or subtitleId");
+      return console.error("Missing movieId or subtitleId");
     }
 
     try {
@@ -142,7 +142,7 @@ class ContentScript {
     ) {
       try {
         if (!this.checkForVideoElement()) {
-          throw new Error("No video element found on the page");
+          return console.error("No video element found on the page");
         }
 
         await this.dubbingManager.initialize(

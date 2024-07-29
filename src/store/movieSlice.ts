@@ -55,7 +55,7 @@ export const loadSubtitles = createAsyncThunk(
     const { selectedMovie, selectedLanguage } = state.movie;
 
     if (!selectedMovie || !selectedLanguage) {
-      throw new Error("No movie or language selected");
+      return console.error("No movie or language selected");
     }
 
     return dispatch(
@@ -163,7 +163,7 @@ export const startDubbingProcess = createAsyncThunk(
     const { selectedMovie, selectedLanguage, srtContent } = state.movie;
 
     if (!selectedMovie || !selectedLanguage) {
-      throw new Error("No movie or language selected");
+      return console.error("No movie or language selected");
     }
 
     return new Promise<void>((resolve, reject) => {
@@ -200,7 +200,7 @@ export const searchMovies = createAsyncThunk(
     try {
       // const token = await getAuthToken();
       // if (!token) {
-      //   throw new Error("No auth token available");
+      //   return console.error("No auth token available");
       // }
       const response = await fetch(
         `${process.env.REACT_APP_BASE_API_URL}/api/search-movies`,

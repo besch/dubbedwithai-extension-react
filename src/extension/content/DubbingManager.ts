@@ -91,7 +91,7 @@ export class DubbingManager {
           subtitleId
         );
         if (!fetchedSubtitles) {
-          throw new Error(
+          return console.error(
             `Failed to fetch subtitles for movie ${movieId} and subtitle ${subtitleId}`
           );
         }
@@ -100,7 +100,7 @@ export class DubbingManager {
 
       console.log("Subtitles loaded:", subtitles.length);
       if (subtitles.length === 0) {
-        throw new Error(
+        return console.error(
           `No subtitles found for movie ${movieId} and subtitle ${subtitleId}`
         );
       }
@@ -200,7 +200,7 @@ export class DubbingManager {
         this.playCurrentSubtitles(this.videoElement!.currentTime * 1000);
         console.log("Dubbing started successfully");
       } else {
-        throw new Error("No subtitles available for dubbing");
+        return console.error("No subtitles available for dubbing");
       }
     } catch (error) {
       console.error("Error starting dubbing:", error);

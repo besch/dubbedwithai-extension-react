@@ -72,7 +72,7 @@ const DubbingPage: React.FC = () => {
           dispatch(updateDubbingState(false));
           toast.success("Dubbing paused successfully");
         } else {
-          throw new Error("Failed to pause dubbing");
+          return console.error("Failed to pause dubbing");
         }
       }
     } catch (error) {

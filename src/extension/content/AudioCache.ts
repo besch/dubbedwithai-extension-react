@@ -51,7 +51,7 @@ export class AudioCache {
 
   async storeAudio(fileName: string, audioData: ArrayBuffer): Promise<void> {
     await this.dbReady;
-    if (!this.db) throw new Error("IndexedDB not initialized");
+    if (!this.db) return console.error("IndexedDB not initialized");
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(["audioFiles"], "readwrite");

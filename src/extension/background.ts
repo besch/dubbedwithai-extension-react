@@ -306,7 +306,7 @@ class BackgroundService {
     });
 
     if (Object.keys(iconData).length === 0) {
-      throw new Error("No valid ImageData found in iconCache");
+      return console.error("No valid ImageData found in iconCache");
     }
 
     return new Promise((resolve, reject) => {

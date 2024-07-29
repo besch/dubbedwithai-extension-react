@@ -76,9 +76,9 @@ const SubtitleCarousel: React.FC = () => {
               key={`${subtitle.start}-${subtitle.end}`}
               initial={{ opacity: 0, y: 100 }}
               animate={{
-                opacity: index === 2 ? 1 : 0.5,
-                y: (index - 2) * 80,
-                scale: index === 2 ? 1 : 0.9,
+                opacity: index === 2 ? 1 : 0.5 - Math.abs(index - 2) * 0.05,
+                y: (index - 2) * 120,
+                scale: 1 - Math.abs(index - 2) * 0.1,
               }}
               exit={{ opacity: 0, y: -100 }}
               transition={{
@@ -89,7 +89,7 @@ const SubtitleCarousel: React.FC = () => {
               }}
               className={`absolute w-full text-center px-4 ${
                 index === 2
-                  ? "text-white text-lg font-semibold"
+                  ? "text-white text-xl font-semibold"
                   : "text-gray-300 text-base"
               }`}
               style={{

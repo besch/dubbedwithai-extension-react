@@ -230,13 +230,21 @@ class BackgroundService {
     try {
       const response = await fetch(iconUrl);
       const blob = await response.blob();
-      const imageBitmap = await createImageBitmap(blob);
-      const canvas = new OffscreenCanvas(size, size);
-      const ctx = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
+      const img = new Image();
+      img.src = URL.createObjectURL(blob);
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
       if (ctx) {
-        ctx.drawImage(imageBitmap, 0, 0);
+        ctx.drawImage(img, 0, 0);
         this.iconCache[`${state}${size}`] = ctx.getImageData(0, 0, size, size);
       }
+      URL.revokeObjectURL(img.src);
     } catch (error) {
       console.error(`Failed to preload icon: ${iconUrl}`, error);
     }

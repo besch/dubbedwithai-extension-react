@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
@@ -16,10 +16,21 @@ const LanguageSelectionPage: React.FC = () => {
   );
   const languages = useSelector(selectLanguages);
 
+  const [seasonNumber, setSeasonNumber] = useState("1");
+  const [episodeNumber, setEpisodeNumber] = useState("1");
+
   const handleLanguageSelect = (languageCode: string) => {
     if (selectedMovie) {
       console.log("Selecting subtitle for language:", languageCode);
-      dispatch(selectSubtitle({ imdbID: selectedMovie.imdbID, languageCode }))
+      const params = {
+        imdbID: selectedMovie.imdbID,
+        languageCode,
+        ...(selectedMovie.Type === "series" && {
+          seasonNumber: parseInt(seasonNumber),
+          episodeNumber: parseInt(episodeNumber),
+        }),
+      };
+      dispatch(selectSubtitle(params))
         .unwrap()
         .then((result) => {
           if (result) {
@@ -47,6 +58,43 @@ const LanguageSelectionPage: React.FC = () => {
         <div className="mb-6 animate-fade-in">
           <MovieCard movie={selectedMovie} />
         </div>
+
+        {selectedMovie.Type === "series" && (
+          <div className="mb-4 grid grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="seasonNumber"
+                className="block mb-2 text-sm font-medium text-foreground"
+              >
+                Season Number
+              </label>
+              <input
+                type="number"
+                id="seasonNumber"
+                value={seasonNumber}
+                onChange={(e) => setSeasonNumber(e.target.value)}
+                className="w-full p-2 border border-border rounded bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                min="1"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="episodeNumber"
+                className="block mb-2 text-sm font-medium text-foreground"
+              >
+                Episode Number
+              </label>
+              <input
+                type="number"
+                id="episodeNumber"
+                value={episodeNumber}
+                onChange={(e) => setEpisodeNumber(e.target.value)}
+                className="w-full p-2 border border-border rounded bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                min="1"
+              />
+            </div>
+          </div>
+        )}
 
         <div className="mt-6 p-4 bg-card rounded-lg shadow-sm">
           {isLoading ? (

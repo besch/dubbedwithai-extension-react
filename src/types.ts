@@ -2,7 +2,7 @@ export interface Movie {
   imdbID: string;
   Title: string;
   Year: string;
-  Type: string;
+  Type: "movie" | "series";
   Poster: string;
 }
 

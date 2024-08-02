@@ -70,7 +70,12 @@ export const loadSubtitles = createAsyncThunk(
 export const selectSubtitle = createAsyncThunk(
   "movie/selectSubtitle",
   async (
-    { imdbID, languageCode }: { imdbID: string; languageCode: string },
+    params: {
+      imdbID: string;
+      languageCode: string;
+      seasonNumber?: number;
+      episodeNumber?: number;
+    },
     { dispatch }
   ) => {
     try {
@@ -81,7 +86,7 @@ export const selectSubtitle = createAsyncThunk(
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ imdbID, languageCode }),
+          body: JSON.stringify(params),
         }
       );
 
@@ -102,7 +107,7 @@ export const selectSubtitle = createAsyncThunk(
         chrome.runtime.sendMessage(
           {
             action: "setSubtitles",
-            movieId: imdbID,
+            movieId: params.imdbID,
             subtitleId: data.subtitleInfo.id,
             subtitles: data.srtContent,
           },
@@ -124,7 +129,7 @@ export const selectSubtitle = createAsyncThunk(
       return {
         id: data.subtitleInfo.id,
         attributes: {
-          language: languageCode,
+          language: params.languageCode,
           language_name: data.subtitleInfo.attributes.language,
         },
       };

@@ -37,7 +37,8 @@ export class AudioPlayer {
     buffer: AudioBuffer,
     filePath: string,
     subtitle: Subtitle,
-    offset: number = 0
+    offset: number = 0,
+    playbackRate: number = 1
   ): Promise<void> {
     const now = this.audioContext.currentTime;
     const lastPlayedTime = this.recentlyPlayedAudio.get(filePath) || 0;
@@ -51,6 +52,7 @@ export class AudioPlayer {
 
     const source = this.audioContext.createBufferSource();
     source.buffer = buffer;
+    source.playbackRate.value = playbackRate;
 
     const gainNode = this.audioContext.createGain();
     gainNode.gain.setValueAtTime(

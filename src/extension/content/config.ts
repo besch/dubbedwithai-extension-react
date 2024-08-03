@@ -9,6 +9,7 @@ export interface Config {
   audioFileGenerationCacheTimeout: number; // in milliseconds
   precisionTimerUpdateInterval: number; // in milliseconds
   precisionTimerSignificantChangeThreshold: number; // in milliseconds
+  minWordsPerSecond: number; // Minimum words per second for normal speech
 }
 
 // Create the config object that adheres to the Config interface
@@ -22,6 +23,7 @@ const config: Config = {
   audioFileGenerationCacheTimeout: 300000, // 5 minutes cache timeout,
   precisionTimerUpdateInterval: 50, // Update every 50ms
   precisionTimerSignificantChangeThreshold: 0.1, // 100ms
+  minWordsPerSecond: 2.5, // Minimum words per second for normal speech
 };
 
 export default config;

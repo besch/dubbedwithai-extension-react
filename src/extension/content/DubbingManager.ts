@@ -532,7 +532,12 @@ export class DubbingManager {
       ) {
         console.log("Playing audio for subtitle:", subtitle.text);
         const audioOffsetMs = Math.max(0, adjustedTimeMs - startTimeMs);
-        await this.playAudioIfAvailable(subtitle, audioOffsetMs / 1000);
+        const playbackRate = this.calculatePlaybackRate(subtitle);
+        await this.playAudioIfAvailable(
+          subtitle,
+          audioOffsetMs / 1000,
+          playbackRate
+        );
       }
     }
 
@@ -541,23 +546,42 @@ export class DubbingManager {
     }
   }
 
+  private calculatePlaybackRate(subtitle: Subtitle): number {
+    const durationInSeconds = (subtitle.end - subtitle.start) / 1000;
+    const wordCount = subtitle.text.split(/\s+/).length;
+    const wordsPerSecond = wordCount / durationInSeconds;
+
+    if (wordsPerSecond <= config.minWordsPerSecond) {
+      // Calculate the required speed increase
+      const requiredSpeed = config.minWordsPerSecond / wordsPerSecond;
+      // Cap the speed increase at 2x for intelligibility
+      return Math.min(requiredSpeed, 2);
+    } else {
+      return 1; // Normal speed
+    }
+  }
+
   private async playAudioIfAvailable(
     subtitle: Subtitle,
-    offset: number = 0
+    offset: number = 0,
+    playbackRate: number = 1
   ): Promise<void> {
     const filePath = this.getAudioFilePath(subtitle);
     try {
-      // First, check if the audio file exists or is being generated
       const exists = await this.audioFileManager.checkFileExists(filePath);
       if (!exists) {
-        // If not, trigger generation
         await this.audioFileManager.generateAudio(filePath, subtitle.text);
       }
 
-      // Now try to get the audio buffer
       const buffer = await this.audioFileManager.getAudioBuffer(filePath);
       if (buffer) {
-        await this.audioPlayer.playAudio(buffer, filePath, subtitle, offset);
+        await this.audioPlayer.playAudio(
+          buffer,
+          filePath,
+          subtitle,
+          offset,
+          playbackRate
+        );
       } else {
         log(LogLevel.WARN, `Audio buffer not available for file: ${filePath}`);
       }

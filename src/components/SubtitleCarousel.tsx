@@ -67,67 +67,63 @@ const SubtitleCarousel: React.FC = () => {
       className="h-full flex flex-col justify-center items-center p-2 overflow-hidden relative"
       style={{ minHeight: "400px", width: "100%" }}
     >
-      {currentIndex < 0 ? (
-        <div className="text-white text-lg">Waiting for subtitles...</div>
-      ) : (
-        <AnimatePresence initial={false}>
-          {visibleSubtitles.map((subtitle, index) => (
-            <motion.div
-              key={`${subtitle.start}-${subtitle.end}`}
-              initial={{ opacity: 0, y: 100 }}
-              animate={{
-                opacity: index === 2 ? 1 : 0.5 - Math.abs(index - 2) * 0.05,
-                y: (index - 2) * 120,
-                scale: 1 - Math.abs(index - 2) * 0.1,
-              }}
-              exit={{ opacity: 0, y: -100 }}
-              transition={{
-                duration: 0.5,
-                type: "spring",
-                stiffness: 120,
-                damping: 20,
-              }}
-              className={`absolute w-full text-center px-4 ${
+      <AnimatePresence initial={false}>
+        {visibleSubtitles.map((subtitle, index) => (
+          <motion.div
+            key={`${subtitle.start}-${subtitle.end}`}
+            initial={{ opacity: 0, y: 100 }}
+            animate={{
+              opacity: index === 2 ? 1 : 0.5 - Math.abs(index - 2) * 0.05,
+              y: (index - 2) * 120,
+              scale: 1 - Math.abs(index - 2) * 0.1,
+            }}
+            exit={{ opacity: 0, y: -100 }}
+            transition={{
+              duration: 0.5,
+              type: "spring",
+              stiffness: 120,
+              damping: 20,
+            }}
+            className={`absolute w-full text-center px-4 ${
+              index === 2
+                ? "text-white text-xl font-semibold"
+                : "text-gray-300 text-base"
+            }`}
+            style={{
+              maxWidth: "90%",
+              width: "100%",
+              filter:
                 index === 2
-                  ? "text-white text-xl font-semibold"
-                  : "text-gray-300 text-base"
-              }`}
+                  ? "drop-shadow(0 0 8px rgba(255,255,255,0.5))"
+                  : "none",
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mb-2 text-xs opacity-75"
+            >
+              {formatTime(subtitle.start)} - {formatTime(subtitle.end)}
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="break-words"
               style={{
-                maxWidth: "90%",
-                width: "100%",
-                filter:
-                  index === 2
-                    ? "drop-shadow(0 0 8px rgba(255,255,255,0.5))"
-                    : "none",
+                maxWidth: "100%",
+                whiteSpace: "normal",
+                wordWrap: "break-word",
               }}
             >
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="mb-2 text-xs opacity-75"
-              >
-                {formatTime(subtitle.start)} - {formatTime(subtitle.end)}
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className="break-words"
-                style={{
-                  maxWidth: "100%",
-                  whiteSpace: "normal",
-                  wordWrap: "break-word",
-                }}
-              >
-                {subtitle.text}
-              </motion.div>
+              {subtitle.text}
             </motion.div>
-          ))}
-        </AnimatePresence>
-      )}
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   );
 };

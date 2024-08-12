@@ -109,6 +109,7 @@ export class DubbingManager {
       console.log("Video element found:", !!this.videoElement);
 
       if (this.videoElement) {
+        this.precisionTimer.setVideoElement(this.videoElement);
         this.lastSentSubtitle = null;
         this.lastSentTime = 0;
         this.lastVideoTime = 0;
@@ -193,14 +194,16 @@ export class DubbingManager {
         this.currentSubtitleId!
       );
       console.log("Subtitles loaded:", subtitles ? subtitles.length : "none");
-      if (subtitles && subtitles.length > 0) {
+      if (subtitles && subtitles.length > 0 && this.videoElement) {
         console.log("Starting precision timer");
-        this.precisionTimer.start(this.videoElement!.currentTime);
+        this.precisionTimer.start(this.videoElement.currentTime);
         console.log("Playing current subtitles");
-        this.playCurrentSubtitles(this.videoElement!.currentTime * 1000);
+        this.playCurrentSubtitles(this.videoElement.currentTime * 1000);
         console.log("Dubbing started successfully");
       } else {
-        return console.error("No subtitles available for dubbing");
+        return console.error(
+          "No subtitles available for dubbing or no video element found"
+        );
       }
     } catch (error) {
       console.error("Error starting dubbing:", error);

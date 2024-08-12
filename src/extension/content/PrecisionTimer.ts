@@ -6,31 +6,36 @@ export class PrecisionTimer {
   private isPaused: boolean = true;
   private intervalId: number | null = null;
   private lastUpdateTime: number = 0;
+  private videoElement: HTMLVideoElement | null = null;
 
-  constructor(private callback: (time: number) => void) {}
+  constructor(
+    private callback: (time: number) => void,
+    videoElement: HTMLVideoElement | null = null
+  ) {
+    this.videoElement = videoElement;
+  }
 
   start(initialTime: number = 0) {
     this.startTime = performance.now() - initialTime * 1000;
-    this.isPaused = false;
+    this.isPaused = this.videoElement ? this.videoElement.paused : false;
     this.lastUpdateTime = initialTime;
     this.pausedTime = initialTime;
     this.startInterval();
   }
 
   pause() {
-    if (!this.isPaused) {
-      this.isPaused = true;
-      this.pausedTime = this.getCurrentTime();
-      this.stopInterval();
-    }
+    this.isPaused = true;
+    this.pausedTime = this.getCurrentTime();
+    this.stopInterval();
   }
 
   resume() {
-    if (this.isPaused) {
-      this.isPaused = false;
-      this.startTime = performance.now() - this.pausedTime * 1000;
-      this.startInterval();
+    if (this.videoElement && this.videoElement.paused) {
+      return; // Don't resume if video is paused
     }
+    this.isPaused = false;
+    this.startTime = performance.now() - this.pausedTime * 1000;
+    this.startInterval();
   }
 
   stop() {
@@ -51,6 +56,10 @@ export class PrecisionTimer {
       return this.pausedTime;
     }
     return (performance.now() - this.startTime) / 1000;
+  }
+
+  setVideoElement(videoElement: HTMLVideoElement | null) {
+    this.videoElement = videoElement;
   }
 
   setprecisionTimerUpdateInterval(interval: number) {
@@ -77,6 +86,10 @@ export class PrecisionTimer {
   }
 
   private tick() {
+    if (this.videoElement) {
+      this.isPaused = this.videoElement.paused;
+    }
+
     if (!this.isPaused) {
       const currentTime = this.getCurrentTime();
       if (this.shouldUpdate(currentTime)) {

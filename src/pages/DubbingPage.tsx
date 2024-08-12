@@ -19,8 +19,14 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 const DubbingPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const { selectedMovie, selectedLanguage, isDubbingActive, subtitlesLoaded } =
-    useSelector((state: RootState) => state.movie);
+  const {
+    selectedMovie,
+    selectedLanguage,
+    isDubbingActive,
+    subtitlesLoaded,
+    selectedSeasonNumber,
+    selectedEpisodeNumber,
+  } = useSelector((state: RootState) => state.movie);
   const [isLoadingSubtitles, setIsLoadingSubtitles] = useState(false);
 
   useEffect(() => {
@@ -100,6 +106,13 @@ const DubbingPage: React.FC = () => {
         <p className="text-sm text-muted-foreground">
           Language: {getFullLanguageName(selectedLanguage.attributes.language)}
         </p>
+        {selectedMovie.Type === "series" &&
+          selectedSeasonNumber &&
+          selectedEpisodeNumber && (
+            <p className="text-sm text-muted-foreground">
+              Season: {selectedSeasonNumber}, Episode: {selectedEpisodeNumber}
+            </p>
+          )}
         {isLoadingSubtitles ? (
           <LoadingSpinner size="lg" />
         ) : (

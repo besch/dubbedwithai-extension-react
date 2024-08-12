@@ -11,6 +11,8 @@ import { DubbingMessage } from "@/extension/content/types";
 interface MovieState {
   selectedMovie: Movie | null;
   selectedLanguage: Language | null;
+  selectedSeasonNumber: number | null;
+  selectedEpisodeNumber: number | null;
   srtContent: string | null;
   languages: Language[];
   isDubbingActive: boolean;
@@ -29,6 +31,8 @@ interface MovieState {
 const initialState: MovieState = {
   selectedMovie: null,
   selectedLanguage: null,
+  selectedSeasonNumber: null,
+  selectedEpisodeNumber: null,
   srtContent: null,
   languages: Object.entries(languageCodes).map(([code, name]) => ({
     id: code,
@@ -344,6 +348,14 @@ const movieSlice = createSlice({
     updateLastSelectedLanguage: (state, action: PayloadAction<Language>) => {
       state.lastSelectedLanguage = action.payload;
     },
+    setSelectedSeasonNumber: (state, action: PayloadAction<number | null>) => {
+      state.selectedSeasonNumber = action.payload;
+      chrome.storage.local.set({ movieState: { ...state } });
+    },
+    setSelectedEpisodeNumber: (state, action: PayloadAction<number | null>) => {
+      state.selectedEpisodeNumber = action.payload;
+      chrome.storage.local.set({ movieState: { ...state } });
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -405,6 +417,8 @@ export const {
   updateVideoVolumeWhilePlayingDubbing,
   setSrtContent,
   updateLastSelectedLanguage,
+  setSelectedSeasonNumber,
+  setSelectedEpisodeNumber,
 } = movieSlice.actions;
 
 export default movieSlice.reducer;

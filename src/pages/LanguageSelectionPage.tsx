@@ -8,6 +8,8 @@ import {
   selectLanguages,
   setLastSelectedLanguage,
   loadLastSelectedLanguage,
+  setSelectedSeasonNumber,
+  setSelectedEpisodeNumber,
 } from "@/store/movieSlice";
 import PageLayout from "@/components/ui/PageLayout";
 import MovieCard from "@/components/MovieCard";
@@ -24,8 +26,8 @@ const LanguageSelectionPage: React.FC = () => {
     (state: RootState) => state.movie.lastSelectedLanguage
   );
 
-  const [seasonNumber, setSeasonNumber] = useState("1");
-  const [episodeNumber, setEpisodeNumber] = useState("1");
+  const [seasonNumber, setSeasonNumber] = useState<number | null>(null);
+  const [episodeNumber, setEpisodeNumber] = useState<number | null>(null);
 
   useEffect(() => {
     dispatch(loadLastSelectedLanguage());
@@ -34,14 +36,18 @@ const LanguageSelectionPage: React.FC = () => {
   const handleLanguageSelect = (languageCode: string) => {
     if (selectedMovie) {
       console.log("Selecting subtitle for language:", languageCode);
-      const params = {
+      const params: any = {
         imdbID: selectedMovie.imdbID,
         languageCode,
-        ...(selectedMovie.Type === "series" && {
-          seasonNumber: parseInt(seasonNumber),
-          episodeNumber: parseInt(episodeNumber),
-        }),
       };
+
+      if (selectedMovie.Type === "series" && seasonNumber && episodeNumber) {
+        params.seasonNumber = seasonNumber;
+        params.episodeNumber = episodeNumber;
+        dispatch(setSelectedSeasonNumber(seasonNumber));
+        dispatch(setSelectedEpisodeNumber(episodeNumber));
+      }
+
       dispatch(selectSubtitle(params))
         .unwrap()
         .then((result) => {
@@ -76,6 +82,10 @@ const LanguageSelectionPage: React.FC = () => {
     return null;
   }
 
+  const isSeriesWithoutEpisodeInfo =
+    selectedMovie.Type === "series" &&
+    (seasonNumber === null || episodeNumber === null);
+
   return (
     <PageLayout title="Select Language">
       <div className="h-full overflow-visible">
@@ -95,8 +105,8 @@ const LanguageSelectionPage: React.FC = () => {
               <input
                 type="number"
                 id="seasonNumber"
-                value={seasonNumber}
-                onChange={(e) => setSeasonNumber(e.target.value)}
+                value={seasonNumber || ""}
+                onChange={(e) => setSeasonNumber(Number(e.target.value))}
                 className="w-full p-2 border border-border rounded bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 min="1"
               />
@@ -111,8 +121,8 @@ const LanguageSelectionPage: React.FC = () => {
               <input
                 type="number"
                 id="episodeNumber"
-                value={episodeNumber}
-                onChange={(e) => setEpisodeNumber(e.target.value)}
+                value={episodeNumber || ""}
+                onChange={(e) => setEpisodeNumber(Number(e.target.value))}
                 className="w-full p-2 border border-border rounded bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 min="1"
               />
@@ -120,38 +130,47 @@ const LanguageSelectionPage: React.FC = () => {
           </div>
         )}
 
-        <div className="mt-6 p-4 bg-card rounded-lg shadow-sm">
-          {isLoading ? (
-            <div className="animate-fade-in flex flex-col items-center">
-              <LoadingSpinner size="lg" />
-            </div>
-          ) : error ? (
-            <div className="text-red-500">{`Error: ${error}`}</div>
-          ) : (
-            <div className="animate-fade-in">
-              {lastSelectedLanguage && (
-                <div className="mb-4 p-3 bg-accent bg-opacity-10 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    Last selected language:{" "}
-                    <span className="font-semibold">
-                      {lastSelectedLanguage.attributes.language_name}
-                    </span>
-                  </p>
-                  <button
-                    onClick={handleUseLastLanguage}
-                    className="mt-2 px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
-                  >
-                    Use {lastSelectedLanguage.attributes.language_name}
-                  </button>
-                </div>
-              )}
-              <LanguageSelector
-                onSelectLanguage={handleLanguageSelect}
-                languages={languages}
-              />
-            </div>
-          )}
-        </div>
+        {!isSeriesWithoutEpisodeInfo && (
+          <div className="mt-6 p-4 bg-card rounded-lg shadow-sm">
+            {isLoading ? (
+              <div className="animate-fade-in flex flex-col items-center">
+                <LoadingSpinner size="lg" />
+              </div>
+            ) : error ? (
+              <div className="text-red-500">{`Error: ${error}`}</div>
+            ) : (
+              <div className="animate-fade-in">
+                {lastSelectedLanguage && (
+                  <div className="mb-8 bg-accent bg-opacity-10 rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      Last selected language:{" "}
+                      <span className="font-semibold">
+                        {lastSelectedLanguage.attributes.language_name}
+                      </span>
+                    </p>
+                    <button
+                      onClick={handleUseLastLanguage}
+                      className="mt-2 px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
+                    >
+                      Use {lastSelectedLanguage.attributes.language_name}
+                    </button>
+                  </div>
+                )}
+                <LanguageSelector
+                  onSelectLanguage={handleLanguageSelect}
+                  languages={languages}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {isSeriesWithoutEpisodeInfo && (
+          <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
+            Please enter both Season Number and Episode Number to select a
+            language for this series.
+          </div>
+        )}
       </div>
     </PageLayout>
   );

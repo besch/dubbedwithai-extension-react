@@ -1,9 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import LanguageSelector from "@/components/LanguageSelector";
-import { selectSubtitle, selectLanguages } from "@/store/movieSlice";
+import {
+  selectSubtitle,
+  selectLanguages,
+  setLastSelectedLanguage,
+  loadLastSelectedLanguage,
+} from "@/store/movieSlice";
 import PageLayout from "@/components/ui/PageLayout";
 import MovieCard from "@/components/MovieCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -15,9 +20,16 @@ const LanguageSelectionPage: React.FC = () => {
     (state: RootState) => state.movie
   );
   const languages = useSelector(selectLanguages);
+  const lastSelectedLanguage = useSelector(
+    (state: RootState) => state.movie.lastSelectedLanguage
+  );
 
   const [seasonNumber, setSeasonNumber] = useState("1");
   const [episodeNumber, setEpisodeNumber] = useState("1");
+
+  useEffect(() => {
+    dispatch(loadLastSelectedLanguage());
+  }, [dispatch]);
 
   const handleLanguageSelect = (languageCode: string) => {
     if (selectedMovie) {
@@ -35,6 +47,12 @@ const LanguageSelectionPage: React.FC = () => {
         .then((result) => {
           if (result) {
             console.log("Subtitle selected successfully");
+            const selectedLanguage = languages.find(
+              (lang) => lang.id === languageCode
+            );
+            if (selectedLanguage) {
+              dispatch(setLastSelectedLanguage(selectedLanguage));
+            }
             navigate("/dubbing");
           } else {
             console.log("No subtitles found or an error occurred");
@@ -43,6 +61,12 @@ const LanguageSelectionPage: React.FC = () => {
         .catch((error) => {
           console.error("Failed to select subtitle:", error);
         });
+    }
+  };
+
+  const handleUseLastLanguage = () => {
+    if (lastSelectedLanguage && selectedMovie) {
+      handleLanguageSelect(lastSelectedLanguage.id);
     }
   };
 
@@ -105,6 +129,22 @@ const LanguageSelectionPage: React.FC = () => {
             <div className="text-red-500">{`Error: ${error}`}</div>
           ) : (
             <div className="animate-fade-in">
+              {lastSelectedLanguage && (
+                <div className="mb-4 p-3 bg-accent bg-opacity-10 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    Last selected language:{" "}
+                    <span className="font-semibold">
+                      {lastSelectedLanguage.attributes.language_name}
+                    </span>
+                  </p>
+                  <button
+                    onClick={handleUseLastLanguage}
+                    className="mt-2 px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
+                  >
+                    Use {lastSelectedLanguage.attributes.language_name}
+                  </button>
+                </div>
+              )}
               <LanguageSelector
                 onSelectLanguage={handleLanguageSelect}
                 languages={languages}

@@ -23,6 +23,7 @@ interface MovieState {
   dubbingVolumeMultiplier: number;
   videoVolumeWhilePlayingDubbing: number;
   subtitlesLoaded: boolean;
+  lastSelectedLanguage: Language | null;
 }
 
 const initialState: MovieState = {
@@ -46,7 +47,28 @@ const initialState: MovieState = {
   dubbingVolumeMultiplier: 1.0,
   videoVolumeWhilePlayingDubbing: config.videoVolumeWhilePlayingDubbing,
   subtitlesLoaded: false,
+  lastSelectedLanguage: null,
 };
+
+export const setLastSelectedLanguage = createAsyncThunk(
+  "movie/setLastSelectedLanguage",
+  async (language: Language, { dispatch }) => {
+    await chrome.storage.local.set({ lastSelectedLanguage: language });
+    dispatch(updateLastSelectedLanguage(language));
+    return language;
+  }
+);
+
+export const loadLastSelectedLanguage = createAsyncThunk(
+  "movie/loadLastSelectedLanguage",
+  async () => {
+    return new Promise<Language | null>((resolve) => {
+      chrome.storage.local.get(["lastSelectedLanguage"], (result) => {
+        resolve(result.lastSelectedLanguage || null);
+      });
+    });
+  }
+);
 
 export const loadSubtitles = createAsyncThunk(
   "movie/loadSubtitles",
@@ -319,6 +341,9 @@ const movieSlice = createSlice({
       state.currentVideoTime = action.payload.currentTime;
       state.adjustedVideoTime = action.payload.adjustedTime;
     },
+    updateLastSelectedLanguage: (state, action: PayloadAction<Language>) => {
+      state.lastSelectedLanguage = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -358,6 +383,12 @@ const movieSlice = createSlice({
       .addCase(selectSubtitle.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+      .addCase(setLastSelectedLanguage.fulfilled, (state, action) => {
+        state.lastSelectedLanguage = action.payload;
+      })
+      .addCase(loadLastSelectedLanguage.fulfilled, (state, action) => {
+        state.lastSelectedLanguage = action.payload;
       });
   },
 });
@@ -373,6 +404,7 @@ export const {
   setDubbingVolumeMultiplier,
   updateVideoVolumeWhilePlayingDubbing,
   setSrtContent,
+  updateLastSelectedLanguage,
 } = movieSlice.actions;
 
 export default movieSlice.reducer;

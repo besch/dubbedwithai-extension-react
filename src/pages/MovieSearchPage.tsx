@@ -1,4 +1,3 @@
-// components/MovieSearchPage.tsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import MovieSearch from "@/components/MovieSearch";

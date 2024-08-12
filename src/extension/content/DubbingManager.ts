@@ -36,9 +36,7 @@ export class DubbingManager {
     this.audioPlayer = new AudioPlayer(this.audioContext);
     this.setupMessageListener();
     this.setupVolumeCheck();
-    this.currentVideoPlayerVolume = this.videoElement
-      ? this.videoElement.volume
-      : 1;
+    this.setupUnloadListener();
     chrome.storage.onChanged.addListener((changes, namespace) => {
       if (namespace === "local" && changes.movieState) {
         const newMovieState = changes.movieState.newValue;
@@ -81,9 +79,7 @@ export class DubbingManager {
     try {
       let subtitles: Subtitle[];
       if (srtContent) {
-        // If srtContent is provided, parse it directly
         subtitles = parseSrt(srtContent);
-        // Cache the parsed subtitles
         this.subtitleManager.cacheSubtitles(movieId, subtitleId, subtitles);
       } else {
         const fetchedSubtitles = await this.subtitleManager.getSubtitles(
@@ -109,6 +105,7 @@ export class DubbingManager {
       console.log("Video element found:", !!this.videoElement);
 
       if (this.videoElement) {
+        this.currentVideoPlayerVolume = this.videoElement.volume;
         this.precisionTimer.setVideoElement(this.videoElement);
         this.lastSentSubtitle = null;
         this.lastSentTime = 0;
@@ -156,7 +153,6 @@ export class DubbingManager {
 
     this.precisionTimer.start(currentVideoTime);
 
-    // Adjust volume when resuming
     this.adjustVolume(this.videoElement);
 
     this.playCurrentSubtitles(currentVideoTime * 1000);
@@ -169,9 +165,7 @@ export class DubbingManager {
     this.precisionTimer.pause();
     this.audioPlayer.stopAllAudio();
 
-    if (this.videoElement) {
-      this.videoElement.volume = this.currentVideoPlayerVolume;
-    }
+    this.restoreVideoVolume();
   }
 
   private setupVolumeCheck(): void {
@@ -222,16 +216,13 @@ export class DubbingManager {
     this.lastSentTime = 0;
     this.precisionTimer.stop();
     this.removeVideoEventListeners();
-    this.resetVideoVolume();
-    if (this.videoElement) {
-      this.videoElement.volume = this.currentVideoPlayerVolume;
-    }
+    this.restoreVideoVolume();
     this.videoElement = null;
     this.isInitialized = false;
     console.log("DubbingManager stopped and reset");
   }
 
-  private resetVideoVolume(): void {
+  private restoreVideoVolume(): void {
     if (this.videoElement) {
       this.videoElement.volume = this.currentVideoPlayerVolume;
     }
@@ -380,9 +371,7 @@ export class DubbingManager {
     if (!this.isDubbingPaused) {
       this.pauseDubbing();
     }
-    if (this.videoElement) {
-      this.videoElement.volume = this.currentVideoPlayerVolume;
-    }
+    this.restoreVideoVolume();
   };
 
   private handleVideoSeeking = (event: Event): void => {
@@ -403,7 +392,7 @@ export class DubbingManager {
       // Check if this is a human change (not caused by our extension)
       if (!this.isAdjustingVolume) {
         this.currentVideoPlayerVolume = newVolume;
-        this.adjustVolume(video);
+        // Don't call adjustVolume here, as it might interfere with user's manual adjustment
       }
     }
   };
@@ -498,14 +487,15 @@ export class DubbingManager {
     const isDubbingPlaying = this.isAnyDubbingAudioPlaying();
 
     if (isDubbingPlaying) {
+      // Always calculate based on the original currentVideoPlayerVolume
       video.volume =
-        this.currentVideoPlayerVolume * this.videoVolumeWhilePlayingDubbing;
+        this.currentVideoPlayerVolume * config.videoVolumeWhilePlayingDubbing;
     } else {
       video.volume = this.currentVideoPlayerVolume;
     }
 
     console.log(
-      `Adjusting volume: Video ${video.volume}, isDubbingPlaying: ${isDubbingPlaying}, VPV: ${this.currentVideoPlayerVolume}, VVWPD: ${this.videoVolumeWhilePlayingDubbing}`
+      `Adjusting volume: Video ${video.volume}, isDubbingPlaying: ${isDubbingPlaying}, CurrentVolume: ${this.currentVideoPlayerVolume}, VVWPD: ${config.videoVolumeWhilePlayingDubbing}`
     );
 
     setTimeout(() => {
@@ -513,11 +503,19 @@ export class DubbingManager {
     }, 50);
   }
 
+  private setupUnloadListener(): void {
+    window.addEventListener("beforeunload", this.handlePageUnload);
+  }
+
+  private handlePageUnload = (): void => {
+    this.restoreVideoVolume();
+  };
+
   private isAnyDubbingAudioPlaying(): boolean {
     return this.audioPlayer.getCurrentlyPlayingSubtitles().length > 0;
   }
 
-  private async playCurrentSubtitles(currentTimeMs: number): Promise<void> {
+  private playCurrentSubtitles(currentTimeMs: number): void {
     console.log("Playing current subtitles at time:", currentTimeMs);
     const adjustedTimeMs = currentTimeMs - this.subtitleOffset;
     const currentSubtitles =
@@ -535,12 +533,13 @@ export class DubbingManager {
       ) {
         console.log("Playing audio for subtitle:", subtitle.text);
         const audioOffsetMs = Math.max(0, adjustedTimeMs - startTimeMs);
-        await this.playAudioIfAvailable(subtitle, audioOffsetMs / 1000);
-      }
-    }
+        this.playAudioIfAvailable(subtitle, audioOffsetMs / 1000);
 
-    if (this.videoElement) {
-      this.adjustVolume(this.videoElement);
+        // Adjust volume after starting to play a new subtitle
+        if (this.videoElement) {
+          this.adjustVolume(this.videoElement);
+        }
+      }
     }
   }
 

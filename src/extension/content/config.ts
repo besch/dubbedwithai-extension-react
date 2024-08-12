@@ -1,4 +1,3 @@
-// Define the interface for the config object
 export interface Config {
   videoVolumeWhilePlayingDubbing: number;
   maxDubbingVolumeMultiplier: number;
@@ -9,19 +8,22 @@ export interface Config {
   audioFileGenerationCacheTimeout: number; // in milliseconds
   precisionTimerUpdateInterval: number; // in milliseconds
   precisionTimerSignificantChangeThreshold: number; // in milliseconds
+  subtitleFadeOutDuration: number; // in seconds
+  subtitleFadeOutVolume: number; // final volume as a percentage (0-1)
 }
 
-// Create the config object that adheres to the Config interface
 const config: Config = {
   videoVolumeWhilePlayingDubbing: 0.3,
-  maxDubbingVolumeMultiplier: 2.0, // Allow up to 200% volume
-  preloadAudioTime: 5000, // 5 seconds
-  preloadAudioGenerationTime: 15000, // 15 seconds
+  maxDubbingVolumeMultiplier: 2.0,
+  preloadAudioTime: 5000,
+  preloadAudioGenerationTime: 15000,
   subtitleUpdateInterval: 0.5,
-  audioFileExistenceCacheTimeout: 60000, // 1 minute cache timeout
-  audioFileGenerationCacheTimeout: 300000, // 5 minutes cache timeout,
-  precisionTimerUpdateInterval: 50, // Update every 50ms
-  precisionTimerSignificantChangeThreshold: 0.1, // 100ms
+  audioFileExistenceCacheTimeout: 60000,
+  audioFileGenerationCacheTimeout: 300000,
+  precisionTimerUpdateInterval: 50,
+  precisionTimerSignificantChangeThreshold: 0.1,
+  subtitleFadeOutDuration: 0.3, // 300 milliseconds fade-out duration
+  subtitleFadeOutVolume: 0.7, // Fade out to 70% of the original volume
 };
 
 export default config;

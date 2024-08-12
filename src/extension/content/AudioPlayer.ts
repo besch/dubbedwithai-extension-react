@@ -1,4 +1,5 @@
 import { Subtitle } from "./types";
+import config from "./config";
 
 export class AudioPlayer {
   private dubbingVolumeMultiplier: number = 1.0;
@@ -47,7 +48,11 @@ export class AudioPlayer {
       return;
     }
 
-    this.stopAudio(filePath);
+    // Instead of stopping, we'll just reduce the volume of any existing audio for this file
+    const existingAudio = this.activeAudio.get(filePath);
+    if (existingAudio) {
+      this.fadeOutAudio(existingAudio.gainNode);
+    }
 
     const source = this.audioContext.createBufferSource();
     source.buffer = buffer;
@@ -67,15 +72,44 @@ export class AudioPlayer {
     this.activeAudio.set(filePath, { source, subtitle, gainNode });
     this.recentlyPlayedAudio.set(filePath, now);
 
+    // Schedule the fade-out
+    const fadeOutStartTime =
+      this.audioContext.currentTime +
+      (subtitle.end - subtitle.start) / 1000 -
+      config.subtitleFadeOutDuration;
+
+    this.fadeOutAudio(gainNode, fadeOutStartTime);
+
     source.onended = () => {
       this.activeAudio.delete(filePath);
     };
   }
 
+  private fadeOutAudio(
+    gainNode: GainNode,
+    startTime: number = this.audioContext.currentTime
+  ): void {
+    const currentVolume = gainNode.gain.value;
+    const fadeOutEndTime = startTime + config.subtitleFadeOutDuration;
+
+    gainNode.gain.setValueAtTime(currentVolume, startTime);
+    gainNode.gain.linearRampToValueAtTime(
+      currentVolume * config.subtitleFadeOutVolume,
+      fadeOutEndTime
+    );
+  }
+
   stopExpiredAudio(adjustedTime: number): void {
     this.activeAudio.forEach((audioInfo, filePath) => {
-      if (adjustedTime >= audioInfo.subtitle.end) {
-        this.stopAudio(filePath);
+      if (
+        adjustedTime >=
+        audioInfo.subtitle.end + config.subtitleFadeOutDuration * 1000
+      ) {
+        // Instead of stopping, we'll just keep the volume at the faded-out level
+        audioInfo.gainNode.gain.setValueAtTime(
+          this.dubbingVolumeMultiplier * config.subtitleFadeOutVolume,
+          this.audioContext.currentTime
+        );
       }
     });
   }
@@ -83,17 +117,19 @@ export class AudioPlayer {
   stopAudio(filePath: string): void {
     const audioInfo = this.activeAudio.get(filePath);
     if (audioInfo) {
-      audioInfo.source.stop();
-      audioInfo.gainNode.disconnect();
-      this.activeAudio.delete(filePath);
+      this.fadeOutAudio(audioInfo.gainNode);
+      // We don't disconnect or delete the audio immediately, allowing it to fade out
+      setTimeout(() => {
+        audioInfo.source.stop();
+        audioInfo.gainNode.disconnect();
+        this.activeAudio.delete(filePath);
+      }, config.subtitleFadeOutDuration * 1000);
     }
   }
 
   stopAllAudio(): void {
     this.activeAudio.forEach((audioInfo, filePath) => {
-      audioInfo.source.stop();
-      audioInfo.gainNode.disconnect();
-      this.activeAudio.delete(filePath);
+      this.stopAudio(filePath);
     });
     this.recentlyPlayedAudio.clear();
   }

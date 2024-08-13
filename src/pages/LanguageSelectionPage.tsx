@@ -164,13 +164,6 @@ const LanguageSelectionPage: React.FC = () => {
             )}
           </div>
         )}
-
-        {isSeriesWithoutEpisodeInfo && (
-          <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
-            Please enter both Season Number and Episode Number to select a
-            language for this series.
-          </div>
-        )}
       </div>
     </PageLayout>
   );

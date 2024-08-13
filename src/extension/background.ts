@@ -1,6 +1,6 @@
 import { parseSrt } from "./utils";
 import { getAuthToken } from "./auth";
-import { DubbingMessage, Subtitle } from "./content/types";
+import { DubbingMessage, Subtitle } from "@/types";
 
 const API_BASE_URL = process.env.REACT_APP_BASE_API_URL;
 const ICON_BASE_PATH = chrome.runtime.getURL("icons/");

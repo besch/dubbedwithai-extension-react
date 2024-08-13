@@ -1,5 +1,5 @@
 import { DubbingManager } from "./content/DubbingManager";
-import { DubbingMessage, StorageData } from "./content/types";
+import { DubbingMessage, StorageData } from "@/types";
 import { log, LogLevel } from "./content/utils";
 
 class ContentScript {
@@ -133,7 +133,7 @@ class ContentScript {
       "currentMovieId",
       "currentSubtitleId",
       "srtContent",
-    ])) as StorageData & { srtContent?: string };
+    ])) as StorageData;
 
     if (
       storage.isDubbingActive &&

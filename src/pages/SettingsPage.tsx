@@ -12,7 +12,7 @@ import Button from "@/components/ui/Button";
 import { millisecondsToTimeString } from "@/extension/utils";
 import { toast } from "react-toastify";
 import config from "@/extension/content/config";
-import { DubbingMessage } from "@/extension/content/types";
+import { DubbingMessage } from "@/types";
 import { createPopper, Instance as PopperInstance } from "@popperjs/core";
 import { Info } from "lucide-react";
 

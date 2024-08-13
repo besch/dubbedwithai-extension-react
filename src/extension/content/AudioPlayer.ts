@@ -1,4 +1,4 @@
-import { Subtitle } from "./types";
+import { Subtitle } from "@/types";
 import config from "./config";
 
 export class AudioPlayer {

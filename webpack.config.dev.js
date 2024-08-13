@@ -7,7 +7,7 @@ module.exports = {
     content: path.join(__dirname, "src", "extension", "content.ts"),
     background: path.join(__dirname, "src", "extension", "background.ts"),
   },
-  mode: "development", // Changed from "production" to "development"
+  mode: "development",
   module: {
     rules: [
       {

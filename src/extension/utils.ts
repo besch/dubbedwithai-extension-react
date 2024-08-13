@@ -1,4 +1,4 @@
-import { Subtitle } from "./content/types";
+import { Subtitle } from "@/types";
 import { timeStringToMilliseconds } from "./content/utils";
 
 export interface SrtObject {

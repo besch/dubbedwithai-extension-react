@@ -2,7 +2,7 @@ import { AudioFileManager } from "./AudioFileManager";
 import { SubtitleManager } from "./SubtitleManager";
 import { AudioPlayer } from "./AudioPlayer";
 import { PrecisionTimer } from "./PrecisionTimer";
-import { DubbingMessage, Subtitle } from "./types";
+import { DubbingMessage, Subtitle } from "@/types";
 import { log, LogLevel } from "./utils";
 import config from "./config";
 import { parseSrt } from "../utils";
@@ -477,7 +477,9 @@ export class DubbingManager {
 
   public setVideoVolumeWhilePlayingDubbing(volume: number): void {
     this.videoVolumeWhilePlayingDubbing = volume;
-    this.adjustVolume(this.videoElement);
+    if (this.videoElement) {
+      this.adjustVolume(this.videoElement);
+    }
   }
 
   private adjustVolume(video: HTMLVideoElement | null): void {
@@ -487,15 +489,15 @@ export class DubbingManager {
     const isDubbingPlaying = this.isAnyDubbingAudioPlaying();
 
     if (isDubbingPlaying) {
-      // Always calculate based on the original currentVideoPlayerVolume
+      // Use the class property instead of config
       video.volume =
-        this.currentVideoPlayerVolume * config.videoVolumeWhilePlayingDubbing;
+        this.currentVideoPlayerVolume * this.videoVolumeWhilePlayingDubbing;
     } else {
       video.volume = this.currentVideoPlayerVolume;
     }
 
     console.log(
-      `Adjusting volume: Video ${video.volume}, isDubbingPlaying: ${isDubbingPlaying}, CurrentVolume: ${this.currentVideoPlayerVolume}, VVWPD: ${config.videoVolumeWhilePlayingDubbing}`
+      `Adjusting volume: Video ${video.volume}, isDubbingPlaying: ${isDubbingPlaying}, CurrentVolume: ${this.currentVideoPlayerVolume}, VVWPD: ${this.videoVolumeWhilePlayingDubbing}`
     );
 
     setTimeout(() => {

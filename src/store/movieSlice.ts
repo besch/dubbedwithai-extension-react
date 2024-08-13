@@ -6,7 +6,7 @@ import { RootState } from "@/store/index";
 import { sendMessageToActiveTab } from "@/lib/messaging";
 import config from "@/extension/content/config";
 import languageCodes from "@/lib/languageCodes";
-import { DubbingMessage } from "@/extension/content/types";
+import { DubbingMessage } from "@/types";
 
 interface MovieState {
   selectedMovie: Movie | null;

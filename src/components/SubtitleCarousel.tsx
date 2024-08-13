@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { parseSrt } from "@/extension/utils";
-import { Subtitle } from "@/extension/content/types";
+import { Subtitle } from "@/types";
 
 const SubtitleCarousel: React.FC = () => {
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);

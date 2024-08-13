@@ -1,4 +1,4 @@
-import { Subtitle } from "./types";
+import { Subtitle } from "@/types";
 
 export class SubtitleManager {
   private static instance: SubtitleManager | null = null;

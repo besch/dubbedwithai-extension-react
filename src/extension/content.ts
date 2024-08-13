@@ -52,12 +52,22 @@ class ContentScript {
     try {
       const response = await this.handleDubbingAction(message);
       sendResponse(response);
-    } catch (error) {
+    } catch (error: unknown) {
       log(LogLevel.ERROR, "Error in dubbing action:", error);
-      sendResponse({ status: "error", message: error.message });
+      sendResponse({
+        status: "error",
+        message: this.getErrorMessage(error),
+      });
     }
 
     return true;
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return String(error);
   }
 
   private async handleDubbingAction(message: DubbingMessage): Promise<any> {

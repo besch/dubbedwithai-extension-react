@@ -24,6 +24,7 @@ import SettingsPage from "@/pages/SettingsPage";
 import CurrentSubtitle from "@/components/CurrentSubtitle";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import SubtitleCarousel from "@/components/SubtitleCarousel";
+import FeedbackPage from "./pages/FeedbackPage";
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -122,6 +123,7 @@ const App: React.FC = () => {
                 <Route path="/dubbing" element={<DubbingPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/feedback" element={<FeedbackPage />} />
                 <Route
                   path="*"
                   element={

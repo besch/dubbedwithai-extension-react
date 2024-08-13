@@ -2,7 +2,7 @@ import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
-import { Search, Mic, User, Settings } from "lucide-react";
+import { Search, Mic, Settings, MessageSquare } from "lucide-react";
 import { checkDubbingStatus } from "@/store/movieSlice";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +49,11 @@ const Navigation: React.FC = () => {
   return (
     <nav className="flex justify-between items-center p-4 bg-background border-b border-border">
       <div className="flex items-center space-x-4">
-        <img src="/icons/logo-onedub.png" className="w-[125px]" />
+        <img
+          src="/icons/logo-onedub.png"
+          className="w-[125px]"
+          alt="OneDub Logo"
+        />
       </div>
       <div className="flex space-x-6 items-center">
         <Search
@@ -67,11 +71,11 @@ const Navigation: React.FC = () => {
           onClick={() => handleNavigate("/settings")}
           size={24}
         />
-        {/* <User
-          className={getIconClass("/profile")}
-          onClick={() => handleNavigate("/profile")}
+        <MessageSquare
+          className={getIconClass("/feedback")}
+          onClick={() => handleNavigate("/feedback")}
           size={24}
-        /> */}
+        />
       </div>
     </nav>
   );

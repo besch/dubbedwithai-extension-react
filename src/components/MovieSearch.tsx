@@ -97,7 +97,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
           <LoadingSpinner size="lg" />
         </div>
       )}
-      {error && <p className="text-destructive mt-2">{error}</p>}
+      {error && <p className="ttext-red-400 mt-2">{error}</p>}
       {searchResults && searchResults.length > 0 ? (
         <ul className="mt-2">
           {searchResults.map((movie, index) => (

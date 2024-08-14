@@ -118,7 +118,9 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
           )}
           {!movieQuery.length && !isLoading && !error && (
             <p className="mt-2 text-muted-foreground">
-              Start typing to search for movies.
+              Start typing to search for movies. If the movie you seek has an
+              original name not in English, search for the movie name in IMDB
+              and get the movie title in English.
             </p>
           )}
         </>

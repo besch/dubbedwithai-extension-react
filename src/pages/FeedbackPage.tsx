@@ -109,7 +109,7 @@ const FeedbackPage: React.FC = () => {
             {...register("message")}
             rows={4}
             className="w-full p-2 pl-3 pr-3 border rounded bg-input text-foreground border-border placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            placeholder="Describe the bug or feature request in detail"
+            placeholder="E.g. Describe the bug or feature request in detail"
           ></textarea>
           {errors.message && (
             <p className="text-red-400 mt-2 text-sm">

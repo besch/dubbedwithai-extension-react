@@ -256,8 +256,8 @@ class BackgroundService {
   private startPulsing(): void {
     if (this.isPulsing) return;
     this.isPulsing = true;
-    chrome.alarms.create("iconPulse", { periodInMinutes: 1 / 60 });
-    this.updateIcon(true, false);
+    chrome.alarms.create("iconPulse", { periodInMinutes: 1 / 120 });
+    this.updateIcon(true, true);
   }
 
   private stopPulsing(): void {
@@ -501,25 +501,6 @@ class BackgroundService {
       });
     }
   }
-
-  // private async handleAuthStatusCheck(
-  //   sendResponse: (response: any) => void
-  // ): Promise<void> {
-  //   await this.checkAndUpdateAuthStatus();
-  //   sendResponse({ action: "authStatusChecked" });
-  // }
-
-  // private async checkAndUpdateAuthStatus(): Promise<void> {
-  //   try {
-  //     const token = await getAuthToken();
-  //     token
-  //       ? chrome.storage.local.set({ authToken: token })
-  //       : chrome.storage.local.remove(["authToken"]);
-  //   } catch (error) {
-  //     console.error("Error checking auth status:", error);
-  //     chrome.storage.local.remove(["authToken"]);
-  //   }
-  // }
 }
 
 new BackgroundService();

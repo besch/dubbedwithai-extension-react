@@ -148,7 +148,6 @@ const SettingsPage: React.FC = () => {
   ) => {
     const newLanguage = event.target.value;
     dispatch(changeLanguage(newLanguage));
-    toast.success(t("languageChanged"));
   };
 
   const availableLanguages = [
@@ -233,7 +232,7 @@ const SettingsPage: React.FC = () => {
 
           <div className="bg-secondary p-4 rounded-lg shadow-inner">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold">Dubbing Volume</h3>
+              <h3 className="text-sm font-semibold">{t("dubbingVolume")}</h3>
               <div
                 id="dubbing-volume-info"
                 className="cursor-help"

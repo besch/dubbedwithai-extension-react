@@ -5,11 +5,13 @@ import { AppDispatch, RootState } from "@/store";
 import { Search, Mic, Settings, MessageSquare } from "lucide-react";
 import { checkDubbingStatus } from "@/store/movieSlice";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 const Navigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const { t } = useTranslation();
 
   const { isDubbingActive } = useSelector((state: RootState) => state.movie);
 
@@ -60,21 +62,25 @@ const Navigation: React.FC = () => {
           className={getIconClass("/search")}
           onClick={() => handleNavigate("/search")}
           size={24}
+          aria-label={t("search")}
         />
         <Mic
           className={getMicIconClass()}
           onClick={() => handleNavigate("/dubbing")}
           size={24}
+          aria-label={t("dubbing")}
         />
         <Settings
           className={getIconClass("/settings")}
           onClick={() => handleNavigate("/settings")}
           size={24}
+          aria-label={t("settings")}
         />
         <MessageSquare
           className={getIconClass("/feedback")}
           onClick={() => handleNavigate("/feedback")}
           size={24}
+          aria-label={t("feedback")}
         />
       </div>
     </nav>

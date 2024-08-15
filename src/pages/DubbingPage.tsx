@@ -15,8 +15,10 @@ import PageLayout from "@/components/ui/PageLayout";
 import MovieCard from "@/components/MovieCard";
 import { toast } from "react-toastify";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { useTranslation } from "react-i18next";
 
 const DubbingPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const {
@@ -45,29 +47,27 @@ const DubbingPage: React.FC = () => {
         })
         .catch((error) => {
           console.error("Failed to load subtitles:", error);
-          toast.error("Failed to load subtitles. Please try again.");
+          toast.error(t("failedToLoadSubtitles"));
           setIsLoadingSubtitles(false);
         });
     }
-  }, [selectedMovie, selectedLanguage, subtitlesLoaded, dispatch, navigate]);
+  }, [selectedMovie, selectedLanguage, subtitlesLoaded, dispatch, navigate, t]);
 
   const handleDubbingToggle = async (isActive: boolean) => {
     if (isLoadingSubtitles) {
-      toast.warning(
-        "Please wait for subtitles to load before toggling dubbing."
-      );
+      toast.warning(t("waitForSubtitlesToLoad"));
       return;
     }
 
     if (!subtitlesLoaded) {
-      toast.error("Subtitles are not loaded. Please try reloading the page.");
+      toast.error(t("subtitlesNotLoaded"));
       return;
     }
 
     try {
       if (isActive) {
         await dispatch(startDubbingProcess()).unwrap();
-        toast.success("Dubbing started successfully");
+        toast.success(t("dubbingStarted"));
       } else {
         const response = await sendMessageToActiveTab({
           action: "updateDubbingState",
@@ -76,14 +76,14 @@ const DubbingPage: React.FC = () => {
 
         if (response?.status === "updated") {
           dispatch(updateDubbingState(false));
-          toast.success("Dubbing paused successfully");
+          toast.success(t("dubbingPaused"));
         } else {
           return console.error("Failed to pause dubbing");
         }
       }
     } catch (error) {
       console.error("Failed to toggle dubbing:", error);
-      toast.error("Failed to toggle dubbing. Please try again.");
+      toast.error(t("failedToToggleDubbing"));
       dispatch(updateDubbingState(false));
     }
   };
@@ -93,24 +93,28 @@ const DubbingPage: React.FC = () => {
 
   if (!selectedMovie || !selectedLanguage) {
     return (
-      <PageLayout title="Dubbing Controls">
-        {toast.error("No movie or language selected")}
+      <PageLayout title={t("dubbingControls")}>
+        {toast.error(t("noMovieOrLanguageSelected"))}
       </PageLayout>
     );
   }
 
   return (
-    <PageLayout title="Dubbing Controls">
+    <PageLayout title={t("dubbingControls")}>
       <div className="space-y-4">
         <MovieCard movie={selectedMovie} />
         <p className="text-sm text-muted-foreground">
-          Language: {getFullLanguageName(selectedLanguage.attributes.language)}
+          {t("language")}:{" "}
+          {getFullLanguageName(selectedLanguage.attributes.language)}
         </p>
         {selectedMovie.Type === "series" &&
           selectedSeasonNumber &&
           selectedEpisodeNumber && (
             <p className="text-sm text-muted-foreground">
-              Season: {selectedSeasonNumber}, Episode: {selectedEpisodeNumber}
+              {t("seasonEpisode", {
+                season: selectedSeasonNumber,
+                episode: selectedEpisodeNumber,
+              })}
             </p>
           )}
         {isLoadingSubtitles ? (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { RootState, AppDispatch } from "@/store";
 import LanguageSelector from "@/components/LanguageSelector";
 import {
@@ -16,6 +17,7 @@ import MovieCard from "@/components/MovieCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const LanguageSelectionPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { selectedMovie, isLoading, error } = useSelector(
@@ -87,7 +89,7 @@ const LanguageSelectionPage: React.FC = () => {
     (seasonNumber === null || episodeNumber === null);
 
   return (
-    <PageLayout title="Select Language">
+    <PageLayout title={t("selectLanguage")}>
       <div className="h-full overflow-visible">
         <div className="mb-6 animate-fade-in">
           <MovieCard movie={selectedMovie} />
@@ -100,7 +102,7 @@ const LanguageSelectionPage: React.FC = () => {
                 htmlFor="seasonNumber"
                 className="block mb-2 text-sm font-medium text-foreground"
               >
-                Season Number
+                {t("seasonNumber")}
               </label>
               <input
                 type="number"
@@ -116,7 +118,7 @@ const LanguageSelectionPage: React.FC = () => {
                 htmlFor="episodeNumber"
                 className="block mb-2 text-sm font-medium text-foreground"
               >
-                Episode Number
+                {t("episodeNumber")}
               </label>
               <input
                 type="number"
@@ -143,7 +145,7 @@ const LanguageSelectionPage: React.FC = () => {
                 {lastSelectedLanguage && (
                   <div className="mb-8 bg-accent bg-opacity-10 rounded-lg">
                     <p className="text-sm text-muted-foreground">
-                      Last selected language:{" "}
+                      {t("lastSelectedLanguage")}{" "}
                       <span className="font-semibold">
                         {lastSelectedLanguage.attributes.language_name}
                       </span>
@@ -152,7 +154,9 @@ const LanguageSelectionPage: React.FC = () => {
                       onClick={handleUseLastLanguage}
                       className="mt-2 px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
                     >
-                      Use {lastSelectedLanguage.attributes.language_name}
+                      {t("useLanguage", {
+                        language: lastSelectedLanguage.attributes.language_name,
+                      })}
                     </button>
                   </div>
                 )}

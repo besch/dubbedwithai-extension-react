@@ -1,7 +1,6 @@
 import { toast } from "react-toastify";
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Language, Movie } from "@/types";
-import { getAuthToken } from "@/extension/auth";
 import { RootState } from "@/store/index";
 import { sendMessageToActiveTab } from "@/lib/messaging";
 import config from "@/extension/content/config";

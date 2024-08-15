@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   BrowserRouter as Router,
   Route,
@@ -8,20 +7,18 @@ import {
 } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import { checkAuthStatus } from "@/store/authSlice";
 import {
   loadMovieState,
   updateDubbingState,
   checkDubbingStatus,
 } from "@/store/movieSlice";
-import AuthPage from "@/pages/AuthPage";
+import { loadSavedLanguage } from "@/store/languageSlice";
 import MovieSearchPage from "@/pages/MovieSearchPage";
 import LanguageSelectionPage from "@/pages/LanguageSelectionPage";
 import DubbingPage from "@/pages/DubbingPage";
 import ProfilePage from "@/pages/ProfilePage";
 import Navigation from "@/pages/Navigation";
 import SettingsPage from "@/pages/SettingsPage";
-import CurrentSubtitle from "@/components/CurrentSubtitle";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import SubtitleCarousel from "@/components/SubtitleCarousel";
 import FeedbackPage from "./pages/FeedbackPage";
@@ -29,14 +26,13 @@ import FeedbackPage from "./pages/FeedbackPage";
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [isExtended, setIsExtended] = useState(false);
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { isDubbingActive } = useSelector((state: RootState) => state.movie);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const initializeApp = async () => {
-      // await dispatch(checkAuthStatus());
       await dispatch(loadMovieState());
+      dispatch(loadSavedLanguage());
       await dispatch(checkDubbingStatus());
       setIsLoading(false);
     };

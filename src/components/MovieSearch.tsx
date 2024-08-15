@@ -6,12 +6,14 @@ import MovieItem from "@/components/MovieItem";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Search, X } from "lucide-react";
 import { searchMovies, setSelectedMovie } from "@/store/movieSlice";
+import { useTranslation } from "react-i18next";
 
 interface MovieSearchProps {
   onSelectMovie: (movie: Movie) => void;
 }
 
 const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const { searchResults, isLoading, error } = useSelector(
     (state: RootState) => state.movie
@@ -65,7 +67,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
     <div className="mb-4">
       <div className="relative">
         <label htmlFor="movie-search" className="sr-only">
-          Search for a movie
+          {t("searchForMovie")}
         </label>
         <input
           id="movie-search"
@@ -73,20 +75,19 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
           value={movieQuery}
           onChange={(e) => setMovieQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Search for a movie"
+          placeholder={t("searchForMovie")}
           className="w-full p-2 pl-10 pr-10 border rounded bg-input text-foreground border-border placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          aria-label="Search for a movie"
+          aria-label={t("searchForMovie")}
         />
         <Search
-          className={`absolute left-3 top-2.5 text-muted-foreground"
-          }`}
+          className={`absolute left-3 top-2.5 text-muted-foreground`}
           size={20}
         />
         {movieQuery && (
           <button
             onClick={handleClearSearch}
             className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-            aria-label="Clear search"
+            aria-label={t("clearSearch")}
           >
             <X size={20} />
           </button>
@@ -97,7 +98,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
           <LoadingSpinner size="lg" />
         </div>
       )}
-      {error && <p className="ttext-red-400 mt-2">{error}</p>}
+      {error && <p className="text-red-400 mt-2">{error}</p>}
       {searchResults && searchResults.length > 0 ? (
         <ul className="mt-2">
           {searchResults.map((movie, index) => (
@@ -112,16 +113,10 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
       ) : (
         <>
           {movieQuery.length > 2 && !isLoading && !error && (
-            <p className="mt-2 text-muted-foreground">
-              No movies found. Try another search term.
-            </p>
+            <p className="mt-2 text-muted-foreground">{t("noMoviesFound")}</p>
           )}
           {!movieQuery.length && !isLoading && !error && (
-            <p className="mt-2 text-muted-foreground">
-              Start typing to search for movies. If the movie you seek has an
-              original name not in English, search for the movie name in IMDB
-              and get the movie title in English.
-            </p>
+            <p className="mt-2 text-muted-foreground">{t("startTyping")}</p>
           )}
         </>
       )}

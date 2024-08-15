@@ -5,10 +5,12 @@ import { useDispatch } from "react-redux";
 import { setSelectedMovie } from "@/store/movieSlice";
 import { Movie } from "@/types";
 import PageLayout from "@/components/ui/PageLayout";
+import { useTranslation } from "react-i18next";
 
 const MovieSearchPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { t } = useTranslation();
 
   const handleMovieSelect = (movie: Movie) => {
     dispatch(setSelectedMovie(movie));
@@ -16,7 +18,7 @@ const MovieSearchPage: React.FC = () => {
   };
 
   return (
-    <PageLayout title="Search for a Movie">
+    <PageLayout title={t("searchForMovie")}>
       <div className="h-full overflow-visible">
         <MovieSearch onSelectMovie={handleMovieSelect} />
       </div>

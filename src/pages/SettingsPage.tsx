@@ -15,9 +15,12 @@ import config from "@/extension/content/config";
 import { DubbingMessage } from "@/types";
 import { createPopper, Instance as PopperInstance } from "@popperjs/core";
 import { Info } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { changeLanguage } from "@/store/languageSlice";
 
 const SettingsPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const { t, i18n } = useTranslation();
   const {
     subtitleOffset,
     dubbingVolumeMultiplier,
@@ -125,7 +128,7 @@ const SettingsPage: React.FC = () => {
         } as DubbingMessage);
       }
     });
-    toast.success("Settings applied successfully!");
+    toast.success(t("settingsApplied"));
   };
 
   const handleReset = () => {
@@ -137,23 +140,72 @@ const SettingsPage: React.FC = () => {
     setLocalOffset(0);
     setLocalDubbingVolume(1);
     setLocalVideoVolume(config.videoVolumeWhilePlayingDubbing);
-    toast.success("Settings reset to default!");
+    toast.success(t("settingsReset"));
   };
 
+  const handleLanguageChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const newLanguage = event.target.value;
+    dispatch(changeLanguage(newLanguage));
+    toast.success(t("languageChanged"));
+  };
+
+  const availableLanguages = [
+    { code: "en", name: "English" },
+    { code: "es", name: "Español" },
+    { code: "zh", name: "中文" },
+    { code: "hi", name: "हिन्दी" },
+    { code: "ar", name: "العربية" },
+    { code: "pt", name: "Português" },
+    { code: "bn", name: "বাংলা" },
+    { code: "ru", name: "Русский" },
+    { code: "ja", name: "日本語" },
+    { code: "pa", name: "ਪੰਜਾਬੀ" },
+    { code: "de", name: "Deutsch" },
+    { code: "jv", name: "Basa Jawa" },
+    { code: "ko", name: "한국어" },
+    { code: "fr", name: "Français" },
+    { code: "te", name: "తెలుగు" },
+    { code: "mr", name: "मराठी" },
+    { code: "tr", name: "Türkçe" },
+  ];
+
   return (
-    <PageLayout title="Dubbing Settings">
+    <PageLayout title={t("dubbingSettings")}>
       <div className="space-y-6">
         <div className="bg-secondary p-4 rounded-lg shadow-inner">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold">{t("language")}</h3>
+          </div>
+          <select
+            value={i18n.language}
+            onChange={handleLanguageChange}
+            className="w-full p-2 border border-border rounded bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            {availableLanguages.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="bg-secondary p-4 rounded-lg shadow-inner">
           <div className="flex justify-between text-sm font-medium">
-            <span>Current: {millisecondsToTimeString(currentTime)}</span>
-            <span>Adjusted: {millisecondsToTimeString(adjustedTime)}</span>
+            <span>
+              {t("current")}: {millisecondsToTimeString(currentTime)}
+            </span>
+            <span>
+              {t("adjusted")}: {millisecondsToTimeString(adjustedTime)}
+            </span>
           </div>
         </div>
 
         <div className="space-y-6">
           <div className="bg-secondary p-4 rounded-lg shadow-inner">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold">Subtitle Offset</h3>
+              <h3 className="text-sm font-semibold">{t("subtitleOffset")}</h3>
               <div
                 id="subtitle-offset-info"
                 className="cursor-help"
@@ -210,7 +262,7 @@ const SettingsPage: React.FC = () => {
           <div className="bg-secondary p-4 rounded-lg shadow-inner">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold">
-                Video Volume During Dubbing
+                {t("videoVolumeDuringDubbing")}
               </h3>
               <div
                 id="video-volume-info"
@@ -244,10 +296,10 @@ const SettingsPage: React.FC = () => {
             variant="primary"
             className="flex-1"
           >
-            Apply Changes
+            {t("applyChanges")}
           </Button>
           <Button onClick={handleReset} variant="outline" className="flex-1">
-            Reset to Default
+            {t("resetToDefault")}
           </Button>
         </div>
       </div>
@@ -257,12 +309,9 @@ const SettingsPage: React.FC = () => {
           ref={tooltipRef}
           className="bg-gray-800 text-white p-2 rounded-md text-sm z-10"
         >
-          {activeTooltip === "subtitle-offset-info" &&
-            "Adjust the timing of subtitles relative to the audio."}
-          {activeTooltip === "dubbing-volume-info" &&
-            "Adjust the volume of the dubbed audio."}
-          {activeTooltip === "video-volume-info" &&
-            "Adjust the volume of the original video while dubbing is active."}
+          {activeTooltip === "subtitle-offset-info" && t("subtitleOffsetInfo")}
+          {activeTooltip === "dubbing-volume-info" && t("dubbingVolumeInfo")}
+          {activeTooltip === "video-volume-info" && t("videoVolumeInfo")}
         </div>
       )}
     </PageLayout>

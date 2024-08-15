@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { Language } from "@/types";
+import { useTranslation } from "react-i18next";
 
 interface LanguageSelectorProps {
   onSelectLanguage: (languageCode: string) => void;
@@ -13,6 +14,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { t } = useTranslation();
 
   const handleSelectLanguage = (languageCode: string) => {
     onSelectLanguage(languageCode);
@@ -37,7 +39,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="w-full p-2 border border-border rounded bg-input text-foreground flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary"
       >
-        <span>Select a language</span>
+        <span>{t("selectLanguage")}</span>
         <ChevronDown className="w-4 h-4" />
       </button>
       {isOpen && (
@@ -46,7 +48,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search languages..."
+                placeholder={t("searchLanguages")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full p-2 pl-8 border border-border rounded bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"

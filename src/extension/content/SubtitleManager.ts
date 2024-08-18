@@ -17,9 +17,9 @@ export class SubtitleManager {
 
   async getSubtitles(
     movieId: string,
-    subtitleId: string
+    languageCode: string
   ): Promise<Subtitle[] | null> {
-    const cacheKey = `${movieId}-${subtitleId}`;
+    const cacheKey = `${movieId}-${languageCode}`;
 
     if (this.subtitlesCache.has(cacheKey)) {
       return this.subtitlesCache.get(cacheKey)!;
@@ -29,7 +29,7 @@ export class SubtitleManager {
       return this.pendingRequests.get(cacheKey)!;
     }
 
-    const subtitlesPromise = this.fetchSubtitles(movieId, subtitleId);
+    const subtitlesPromise = this.fetchSubtitles(movieId, languageCode);
     this.pendingRequests.set(cacheKey, subtitlesPromise);
 
     try {
@@ -66,11 +66,11 @@ export class SubtitleManager {
 
   private async fetchSubtitles(
     movieId: string,
-    subtitleId: string
+    languageCode: string
   ): Promise<Subtitle[] | null> {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage(
-        { action: "requestSubtitles", movieId, subtitleId },
+        { action: "requestSubtitles", movieId, languageCode },
         async (response: any) => {
           if (response?.action === "subtitlesData" && response.data) {
             resolve(response.data);
@@ -78,7 +78,7 @@ export class SubtitleManager {
             // If subtitles are not available, try fetching from Google Storage
             const googleStorageSubtitles = await this.fetchFromGoogleStorage(
               movieId,
-              subtitleId
+              languageCode
             );
             if (googleStorageSubtitles) {
               resolve(googleStorageSubtitles);
@@ -93,14 +93,14 @@ export class SubtitleManager {
 
   private async fetchFromGoogleStorage(
     movieId: string,
-    subtitleId: string
+    languageCode: string
   ): Promise<Subtitle[] | null> {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage(
         {
           action: "fetchSubtitlesFromGoogleStorage",
           movieId,
-          subtitleId,
+          languageCode,
         },
         (response: any) => {
           if (response && response.subtitles) {
@@ -119,10 +119,10 @@ export class SubtitleManager {
 
   public cacheSubtitles(
     movieId: string,
-    subtitleId: string,
+    languageCode: string,
     subtitles: Subtitle[]
   ): void {
-    const cacheKey = `${movieId}-${subtitleId}`;
+    const cacheKey = `${movieId}-${languageCode}`;
     this.subtitlesCache.set(cacheKey, subtitles);
     this.sortSubtitles(subtitles);
   }

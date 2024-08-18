@@ -15,7 +15,7 @@ export class DubbingManager {
   private audioPlayer: AudioPlayer;
   private audioContext: AudioContext;
   private currentMovieId: string | null = null;
-  private currentSubtitleId: string | null = null;
+  private currentLanguageCode: string | null = null;
   private isDubbingPaused = false;
   private lastSentSubtitle: Subtitle | null = null;
   private lastSentTime: number = 0;
@@ -57,12 +57,12 @@ export class DubbingManager {
 
   public async initialize(
     movieId: string,
-    subtitleId: string,
+    languageCode: string,
     srtContent?: string
   ): Promise<void> {
     console.log("Initializing DubbingManager:", {
       movieId,
-      subtitleId,
+      languageCode,
       isInitialized: this.isInitialized,
       hasSrtContent: !!srtContent,
     });
@@ -73,22 +73,22 @@ export class DubbingManager {
     }
 
     this.currentMovieId = movieId;
-    this.currentSubtitleId = subtitleId;
+    this.currentLanguageCode = languageCode;
     this.isDubbingPaused = false;
 
     try {
       let subtitles: Subtitle[];
       if (srtContent) {
         subtitles = parseSrt(srtContent);
-        this.subtitleManager.cacheSubtitles(movieId, subtitleId, subtitles);
+        this.subtitleManager.cacheSubtitles(movieId, languageCode, subtitles);
       } else {
         const fetchedSubtitles = await this.subtitleManager.getSubtitles(
           movieId,
-          subtitleId
+          languageCode
         );
         if (!fetchedSubtitles) {
           return console.error(
-            `Failed to fetch subtitles for movie ${movieId} and subtitle ${subtitleId}`
+            `Failed to fetch subtitles for movie ${movieId} and language ${languageCode}`
           );
         }
         subtitles = fetchedSubtitles;
@@ -97,7 +97,7 @@ export class DubbingManager {
       console.log("Subtitles loaded:", subtitles.length);
       if (subtitles.length === 0) {
         return console.error(
-          `No subtitles found for movie ${movieId} and subtitle ${subtitleId}`
+          `No subtitles found for movie ${movieId} and language ${languageCode}`
         );
       }
 
@@ -173,11 +173,13 @@ export class DubbingManager {
       if (
         this.videoElement &&
         !this.isAnyDubbingAudioPlaying() &&
-        !this.isDubbingPaused
+        !this.isDubbingPaused &&
+        this.currentMovieId &&
+        this.currentLanguageCode
       ) {
         this.adjustVolume(this.videoElement);
       }
-    }, 1000); // Check every second
+    }, 1000);
   }
 
   private async startDubbing(): Promise<void> {
@@ -185,7 +187,7 @@ export class DubbingManager {
     try {
       const subtitles = await this.subtitleManager.getSubtitles(
         this.currentMovieId!,
-        this.currentSubtitleId!
+        this.currentLanguageCode!
       );
       console.log("Subtitles loaded:", subtitles ? subtitles.length : "none");
       if (subtitles && subtitles.length > 0 && this.videoElement) {
@@ -210,7 +212,8 @@ export class DubbingManager {
     this.audioFileManager.clearCache();
     this.audioPlayer.stopAllAudio();
     this.subtitleManager.reset();
-    this.currentMovieId = this.currentSubtitleId = null;
+    this.currentMovieId = null;
+    this.currentLanguageCode = null;
     this.isDubbingPaused = true;
     this.lastSentSubtitle = null;
     this.lastSentTime = 0;
@@ -228,9 +231,10 @@ export class DubbingManager {
     }
   }
 
-  public isCurrentDubbing(movieId: string, subtitleId: string): boolean {
+  public isCurrentDubbing(movieId: string, languageCode: string): boolean {
     return (
-      this.currentMovieId === movieId && this.currentSubtitleId === subtitleId
+      this.currentMovieId === movieId &&
+      this.currentLanguageCode === languageCode
     );
   }
 
@@ -311,13 +315,14 @@ export class DubbingManager {
       (message: DubbingMessage, sender, sendResponse) => {
         switch (message.action) {
           case "initializeDubbing":
-            if (message.movieId && message.subtitleId) {
-              this.initialize(message.movieId, message.subtitleId);
+            if (message.movieId && message.languageCode) {
+              // Change here
+              this.initialize(message.movieId, message.languageCode);
               sendResponse({ status: "initialized" });
             } else {
               sendResponse({
                 status: "error",
-                message: "Missing movieId or subtitleId",
+                message: "Missing movieId or languageCode", // Change here
               });
             }
             break;
@@ -325,13 +330,13 @@ export class DubbingManager {
             sendResponse({
               isDubbingActive:
                 !!this.currentMovieId &&
-                !!this.currentSubtitleId &&
+                !!this.currentLanguageCode && // Change here
                 !this.isDubbingPaused,
             });
             break;
           case "updateDubbingState":
             if (message.payload) {
-              this.isDubbingPaused = false; // Change this line
+              this.isDubbingPaused = false;
               this.resumeDubbing();
             } else {
               this.pauseDubbing();
@@ -468,7 +473,7 @@ export class DubbingManager {
   }
 
   private getAudioFilePath(subtitle: Subtitle): string {
-    return `${this.currentMovieId}/${this.currentSubtitleId}/${subtitle.start}-${subtitle.end}.mp3`;
+    return `${this.currentMovieId}/${this.currentLanguageCode}/${subtitle.start}-${subtitle.end}.mp3`;
   }
 
   setDubbingVolumeMultiplier(multiplier: number): void {

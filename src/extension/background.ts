@@ -78,14 +78,17 @@ class BackgroundService {
   }
 
   private handleSetSubtitles(
-    message: { movieId: string; subtitleId: string; subtitles: string },
+    message: { movieId: string; languageCode: string; subtitles: string },
     sendResponse: (response?: any) => void
   ): void {
-    const { movieId, subtitleId, subtitles } = message;
-    const cacheKey = `${movieId}_${subtitleId}`;
+    const { movieId, languageCode, subtitles } = message;
+    const cacheKey = `${movieId}_${languageCode}`;
     this.subtitlesCache[cacheKey] = subtitles;
     this.clearOldSubtitlesCache();
-    console.log("Subtitles set in background script:", { movieId, subtitleId });
+    console.log("Subtitles set in background script:", {
+      movieId,
+      languageCode,
+    });
     sendResponse({ status: "success" });
   }
 

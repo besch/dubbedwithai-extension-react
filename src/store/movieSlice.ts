@@ -133,7 +133,7 @@ export const selectSubtitle = createAsyncThunk(
           {
             action: "setSubtitles",
             movieId: params.imdbID,
-            subtitleId: data.subtitleInfo.id,
+            languageCode: params.languageCode,
             subtitles: data.srtContent,
           },
           (response) => {
@@ -204,7 +204,7 @@ export const startDubbingProcess = createAsyncThunk(
             {
               action: "initializeDubbing",
               movieId: selectedMovie.imdbID,
-              subtitleId: selectedLanguage.id,
+              languageCode: selectedLanguage.id, // Changed from subtitleId to languageCode
               srtContent: srtContent,
             } as DubbingMessage,
             (response) => {

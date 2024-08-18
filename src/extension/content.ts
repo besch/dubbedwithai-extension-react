@@ -40,7 +40,7 @@ class ContentScript {
     if (message.action === "initializeDubbing") {
       await this.dubbingManager.initialize(
         message.movieId,
-        message.subtitleId,
+        message.languageCode,
         message.srtContent
       );
       this.isDubbingActive = true;
@@ -73,7 +73,7 @@ class ContentScript {
   private async handleDubbingAction(message: DubbingMessage): Promise<any> {
     switch (message.action) {
       case "initializeDubbing":
-        return this.initializeDubbing(message.movieId, message.subtitleId);
+        return this.initializeDubbing(message.movieId, message.languageCode);
       case "stopDubbing":
         return this.stopDubbing();
       case "updateDubbingState":
@@ -94,20 +94,20 @@ class ContentScript {
 
   private async initializeDubbing(
     movieId?: string,
-    subtitleId?: string
+    languageCode?: string
   ): Promise<any> {
     if (!this.checkForVideoElement()) {
       return console.error("No video element found on the page");
     }
 
-    if (!movieId || !subtitleId) {
-      return console.error("Missing movieId or subtitleId");
+    if (!movieId || !languageCode) {
+      return console.error("Missing movieId or languageCode");
     }
 
     try {
-      await this.dubbingManager.initialize(movieId, subtitleId);
+      await this.dubbingManager.initialize(movieId, languageCode);
       await this.updateDubbingState(true);
-      await this.updateStorage({ movieId, subtitleId });
+      await this.updateStorage({ movieId, languageCode });
       return { status: "initialized" };
     } catch (error) {
       console.error("Failed to initialize dubbing:", error);
@@ -141,14 +141,14 @@ class ContentScript {
     const storage = (await chrome.storage.local.get([
       "isDubbingActive",
       "currentMovieId",
-      "currentSubtitleId",
+      "currentLanguageCode",
       "srtContent",
     ])) as StorageData;
 
     if (
       storage.isDubbingActive &&
       storage.currentMovieId &&
-      storage.currentSubtitleId
+      storage.currentLanguageCode
     ) {
       try {
         if (!this.checkForVideoElement()) {
@@ -157,7 +157,7 @@ class ContentScript {
 
         await this.dubbingManager.initialize(
           storage.currentMovieId,
-          storage.currentSubtitleId,
+          storage.currentLanguageCode,
           storage.srtContent
         );
         await this.updateDubbingState(true);
@@ -199,11 +199,11 @@ class ContentScript {
 
   private async updateStorage(data: {
     movieId?: string;
-    subtitleId?: string;
+    languageCode?: string;
   }): Promise<void> {
     const storageData: Partial<StorageData> = {};
     if (data.movieId) storageData.currentMovieId = data.movieId;
-    if (data.subtitleId) storageData.currentSubtitleId = data.subtitleId;
+    if (data.languageCode) storageData.currentLanguageCode = data.languageCode;
     await chrome.storage.local.set(storageData);
   }
 

@@ -327,6 +327,7 @@ const movieSlice = createSlice({
       state.selectedLanguage = action.payload;
       state.isDubbingActive = false;
       state.subtitleOffset = 0;
+      state.error = null;
       chrome.storage.local.set({ movieState: { ...state } });
       state.srtContent = null;
     },
@@ -362,6 +363,9 @@ const movieSlice = createSlice({
     setSelectedEpisodeNumber: (state, action: PayloadAction<number | null>) => {
       state.selectedEpisodeNumber = action.payload;
       chrome.storage.local.set({ movieState: { ...state } });
+    },
+    clearMovieErrors: (state) => {
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -401,7 +405,7 @@ const movieSlice = createSlice({
       })
       .addCase(selectSubtitle.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.error.message || "Failed to select subtitle";
       })
       .addCase(setLastSelectedLanguage.fulfilled, (state, action) => {
         state.lastSelectedLanguage = action.payload;
@@ -426,6 +430,7 @@ export const {
   updateLastSelectedLanguage,
   setSelectedSeasonNumber,
   setSelectedEpisodeNumber,
+  clearMovieErrors,
 } = movieSlice.actions;
 
 export default movieSlice.reducer;

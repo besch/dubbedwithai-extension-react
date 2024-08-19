@@ -151,16 +151,10 @@ export const selectSubtitle = createAsyncThunk(
         await chrome.storage.local.set({ srtContent: data.srtContent });
       }
 
-      return {
-        id: data.subtitleInfo.id,
-        attributes: {
-          language: params.languageCode,
-          language_name: data.subtitleInfo.attributes.language,
-        },
-      };
+      return data.subtitleInfo;
     } catch (error) {
       toast.error("An error occurred while fetching subtitles.");
-      return null;
+      throw error;
     }
   }
 );
@@ -190,7 +184,13 @@ export const startDubbingProcess = createAsyncThunk(
   "movie/startDubbingProcess",
   async (_, { getState, dispatch }) => {
     const state = getState() as RootState;
-    const { selectedMovie, selectedLanguage, srtContent } = state.movie;
+    const {
+      selectedMovie,
+      selectedLanguage,
+      srtContent,
+      selectedSeasonNumber,
+      selectedEpisodeNumber,
+    } = state.movie;
 
     if (!selectedMovie || !selectedLanguage) {
       return console.error("No movie or language selected");
@@ -199,23 +199,31 @@ export const startDubbingProcess = createAsyncThunk(
     return new Promise<void>((resolve, reject) => {
       chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         if (tabs[0]?.id) {
-          chrome.tabs.sendMessage(
-            tabs[0].id,
-            {
-              action: "initializeDubbing",
-              movieId: selectedMovie.imdbID,
-              languageCode: selectedLanguage.id, // Changed from subtitleId to languageCode
-              srtContent: srtContent,
-            } as DubbingMessage,
-            (response) => {
-              if (response && response.status === "initialized") {
-                dispatch(updateDubbingState(true));
-                resolve();
-              } else {
-                reject(new Error("Failed to initialize dubbing"));
-              }
+          const message: DubbingMessage = {
+            action: "initializeDubbing",
+            movieId: selectedMovie.imdbID,
+            languageCode: selectedLanguage.attributes.language,
+            srtContent: srtContent,
+          };
+
+          // Only include season and episode numbers for TV series
+          if (
+            selectedMovie.Type === "series" &&
+            selectedSeasonNumber !== null &&
+            selectedEpisodeNumber !== null
+          ) {
+            (message as any).seasonNumber = selectedSeasonNumber;
+            (message as any).episodeNumber = selectedEpisodeNumber;
+          }
+
+          chrome.tabs.sendMessage(tabs[0].id, message, (response) => {
+            if (response && response.status === "initialized") {
+              dispatch(updateDubbingState(true));
+              resolve();
+            } else {
+              reject(new Error("Failed to initialize dubbing"));
             }
-          );
+          });
         } else {
           reject(new Error("No active tab found"));
         }

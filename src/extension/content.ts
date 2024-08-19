@@ -38,10 +38,12 @@ class ContentScript {
     sendResponse: (response?: any) => void
   ): Promise<boolean> {
     if (message.action === "initializeDubbing") {
-      await this.dubbingManager.initialize(
+      await this.initializeDubbing(
         message.movieId,
         message.languageCode,
-        message.srtContent
+        message.srtContent,
+        message.seasonNumber,
+        message.episodeNumber
       );
       this.isDubbingActive = true;
       this.updateDubbingState(true);
@@ -73,7 +75,13 @@ class ContentScript {
   private async handleDubbingAction(message: DubbingMessage): Promise<any> {
     switch (message.action) {
       case "initializeDubbing":
-        return this.initializeDubbing(message.movieId, message.languageCode);
+        return this.initializeDubbing(
+          message.movieId,
+          message.languageCode,
+          message.srtContent,
+          message.seasonNumber,
+          message.episodeNumber
+        );
       case "stopDubbing":
         return this.stopDubbing();
       case "updateDubbingState":
@@ -94,7 +102,10 @@ class ContentScript {
 
   private async initializeDubbing(
     movieId?: string,
-    languageCode?: string
+    languageCode?: string,
+    srtContent?: string | null,
+    seasonNumber?: number,
+    episodeNumber?: number
   ): Promise<any> {
     if (!this.checkForVideoElement()) {
       return console.error("No video element found on the page");
@@ -105,9 +116,21 @@ class ContentScript {
     }
 
     try {
-      await this.dubbingManager.initialize(movieId, languageCode);
+      await this.dubbingManager.initialize(
+        movieId,
+        languageCode,
+        srtContent,
+        seasonNumber,
+        episodeNumber
+      );
       await this.updateDubbingState(true);
-      await this.updateStorage({ movieId, languageCode });
+      await this.updateStorage({
+        movieId,
+        languageCode,
+        srtContent,
+        seasonNumber,
+        episodeNumber,
+      });
       return { status: "initialized" };
     } catch (error) {
       console.error("Failed to initialize dubbing:", error);
@@ -158,7 +181,9 @@ class ContentScript {
         await this.dubbingManager.initialize(
           storage.currentMovieId,
           storage.currentLanguageCode,
-          storage.srtContent
+          storage.srtContent,
+          storage.seasonNumber,
+          storage.episodeNumber
         );
         await this.updateDubbingState(true);
         log(LogLevel.INFO, "Dubbing initialized from storage successfully");
@@ -200,11 +225,20 @@ class ContentScript {
   private async updateStorage(data: {
     movieId?: string;
     languageCode?: string;
+    srtContent?: string | null;
+    seasonNumber?: number;
+    episodeNumber?: number;
   }): Promise<void> {
-    const storageData: Partial<StorageData> = {};
-    if (data.movieId) storageData.currentMovieId = data.movieId;
-    if (data.languageCode) storageData.currentLanguageCode = data.languageCode;
-    await chrome.storage.local.set(storageData);
+    const storage: StorageData = {};
+    if (data.movieId) storage.currentMovieId = data.movieId;
+    if (data.languageCode) storage.currentLanguageCode = data.languageCode;
+    if (data.srtContent !== undefined) storage.srtContent = data.srtContent;
+    if (data.seasonNumber !== undefined)
+      storage.seasonNumber = data.seasonNumber;
+    if (data.episodeNumber !== undefined)
+      storage.episodeNumber = data.episodeNumber;
+
+    await chrome.storage.local.set(storage);
   }
 
   private formatError(error: unknown): { status: string; message: string } {

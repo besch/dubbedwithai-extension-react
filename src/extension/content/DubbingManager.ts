@@ -16,6 +16,8 @@ export class DubbingManager {
   private audioContext: AudioContext;
   private currentMovieId: string | null = null;
   private currentLanguageCode: string | null = null;
+  private currentSeasonNumber: number | null = null;
+  private currentEpisodeNumber: number | null = null;
   private isDubbingPaused = false;
   private lastSentSubtitle: Subtitle | null = null;
   private lastSentTime: number = 0;
@@ -58,13 +60,17 @@ export class DubbingManager {
   public async initialize(
     movieId: string,
     languageCode: string,
-    srtContent?: string
+    srtContent: string | null | undefined,
+    seasonNumber?: number,
+    episodeNumber?: number
   ): Promise<void> {
     console.log("Initializing DubbingManager:", {
       movieId,
       languageCode,
       isInitialized: this.isInitialized,
       hasSrtContent: !!srtContent,
+      seasonNumber,
+      episodeNumber,
     });
 
     if (this.isInitialized) {
@@ -74,6 +80,8 @@ export class DubbingManager {
 
     this.currentMovieId = movieId;
     this.currentLanguageCode = languageCode;
+    this.currentSeasonNumber = seasonNumber || null;
+    this.currentEpisodeNumber = episodeNumber || null;
     this.isDubbingPaused = false;
 
     try {
@@ -316,13 +324,18 @@ export class DubbingManager {
         switch (message.action) {
           case "initializeDubbing":
             if (message.movieId && message.languageCode) {
-              // Change here
-              this.initialize(message.movieId, message.languageCode);
+              this.initialize(
+                message.movieId,
+                message.languageCode,
+                message.srtContent,
+                message.seasonNumber,
+                message.episodeNumber
+              );
               sendResponse({ status: "initialized" });
             } else {
               sendResponse({
                 status: "error",
-                message: "Missing movieId or languageCode", // Change here
+                message: "Missing movieId or languageCode",
               });
             }
             break;
@@ -330,7 +343,7 @@ export class DubbingManager {
             sendResponse({
               isDubbingActive:
                 !!this.currentMovieId &&
-                !!this.currentLanguageCode && // Change here
+                !!this.currentLanguageCode &&
                 !this.isDubbingPaused,
             });
             break;
@@ -473,7 +486,16 @@ export class DubbingManager {
   }
 
   private getAudioFilePath(subtitle: Subtitle): string {
-    return `${this.currentMovieId}/${this.currentLanguageCode}/${subtitle.start}-${subtitle.end}.mp3`;
+    if (
+      this.currentSeasonNumber !== null &&
+      this.currentEpisodeNumber !== null
+    ) {
+      // TV series
+      return `${this.currentMovieId}/${this.currentSeasonNumber}/${this.currentEpisodeNumber}/${this.currentLanguageCode}/${subtitle.start}-${subtitle.end}.mp3`;
+    } else {
+      // Movie
+      return `${this.currentMovieId}/${this.currentLanguageCode}/${subtitle.start}-${subtitle.end}.mp3`;
+    }
   }
 
   setDubbingVolumeMultiplier(multiplier: number): void {

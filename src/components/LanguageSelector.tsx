@@ -23,7 +23,6 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
   const filteredLanguages = useMemo(() => {
     if (!Array.isArray(languages)) {
-      console.error("Languages is not an array:", languages);
       return [];
     }
     return languages.filter((lang) =>

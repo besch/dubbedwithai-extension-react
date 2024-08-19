@@ -15,6 +15,7 @@ import {
 import PageLayout from "@/components/ui/PageLayout";
 import MovieCard from "@/components/MovieCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Button from "@/components/ui/Button";
 
 const LanguageSelectionPage: React.FC = () => {
   const { t } = useTranslation();
@@ -150,14 +151,15 @@ const LanguageSelectionPage: React.FC = () => {
                         {lastSelectedLanguage.attributes.language_name}
                       </span>
                     </p>
-                    <button
+                    <Button
                       onClick={handleUseLastLanguage}
-                      className="mt-2 px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
+                      className="mt-2 w-full"
+                      variant="secondary"
                     >
                       {t("useLanguage", {
                         language: lastSelectedLanguage.attributes.language_name,
                       })}
-                    </button>
+                    </Button>
                   </div>
                 )}
                 <LanguageSelector

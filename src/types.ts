@@ -41,7 +41,9 @@ export type DubbingMessage =
       action: "initializeDubbing";
       movieId: string;
       languageCode: string;
-      srtContent?: string;
+      srtContent: string | null;
+      seasonNumber?: number;
+      episodeNumber?: number;
     }
   | { action: "playDubbing" }
   | { action: "pauseDubbing" }
@@ -55,5 +57,7 @@ export interface StorageData {
   isDubbingActive?: boolean;
   currentMovieId?: string;
   currentLanguageCode?: string;
-  srtContent?: string;
+  srtContent?: string | null;
+  seasonNumber?: number;
+  episodeNumber?: number;
 }

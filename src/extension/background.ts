@@ -1,22 +1,15 @@
 import { parseSrt } from "./utils";
-import { getAuthToken } from "./auth";
 import { DubbingMessage, Subtitle } from "@/types";
+import { IconManager } from "./content/IconManager";
 
 const API_BASE_URL = process.env.REACT_APP_BASE_API_URL;
-const ICON_BASE_PATH = chrome.runtime.getURL("icons/");
-const ICON_SIZES = [16, 48, 128] as const;
-const ICON_STATES = ["active", "active-filled", "inactive"] as const;
-
-type IconSize = (typeof ICON_SIZES)[number];
-type IconState = (typeof ICON_STATES)[number];
 
 class BackgroundService {
-  private iconCache: Record<string, ImageData> = {};
-  private isPulsing = false;
-  private pulseState = false;
   private subtitlesCache: { [key: string]: string } = {};
+  private iconManager: IconManager;
 
   constructor() {
+    this.iconManager = new IconManager();
     this.initializeListeners();
   }
 
@@ -35,14 +28,12 @@ class BackgroundService {
   }
 
   private async onInstalled(): Promise<void> {
-    await this.preloadIcons();
+    await this.iconManager.preloadIcons();
     await this.initializeStorage();
-    // await this.checkAndUpdateAuthStatus();
   }
 
   private async onStartup(): Promise<void> {
-    await this.preloadIcons();
-    // await this.checkAndUpdateAuthStatus();
+    await this.iconManager.preloadIcons();
   }
 
   private onMessage(
@@ -168,34 +159,13 @@ class BackgroundService {
     }
   }
 
-  private async fetchWithAuth(
-    url: string,
-    options: RequestInit = {}
-  ): Promise<Response> {
-    const token = await getAuthToken();
-    if (!token) throw new Error("No auth token available");
-
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return response;
-  }
-
   private onSuspend(): void {
-    chrome.alarms.clear("iconPulse");
+    this.iconManager.stopPulsing();
   }
 
   private onAlarm(alarm: chrome.alarms.Alarm): void {
     if (alarm.name === "iconPulse") {
-      this.pulseState = !this.pulseState;
-      this.updateIcon(true, this.pulseState);
+      this.iconManager.togglePulseState();
     }
   }
 
@@ -219,55 +189,9 @@ class BackgroundService {
     }
   }
 
-  private async preloadIcons(): Promise<void> {
-    for (const size of ICON_SIZES) {
-      for (const state of ICON_STATES) {
-        await this.preloadIcon(size, state);
-      }
-    }
-    console.log("Icons preloaded and cached");
-  }
-
-  private async preloadIcon(size: IconSize, state: IconState): Promise<void> {
-    const iconUrl = `${ICON_BASE_PATH}mic-${state}${size}.png`;
-    try {
-      const response = await fetch(iconUrl);
-      const blob = await response.blob();
-      const imageBitmap = await createImageBitmap(blob);
-
-      const offscreenCanvas = new OffscreenCanvas(size, size);
-      const ctx = offscreenCanvas.getContext(
-        "2d"
-      ) as OffscreenCanvasRenderingContext2D | null;
-
-      if (ctx) {
-        ctx.drawImage(imageBitmap, 0, 0);
-        this.iconCache[`${state}${size}`] = ctx.getImageData(0, 0, size, size);
-      } else {
-        throw new Error("Failed to get 2D context from OffscreenCanvas");
-      }
-    } catch (error) {
-      console.error(`Failed to preload icon: ${iconUrl}`, error);
-    }
-  }
-
   private async initializeStorage(): Promise<void> {
     const { movieState } = await chrome.storage.local.get("movieState");
     chrome.storage.local.set({ movieState: movieState ?? {} });
-  }
-
-  private startPulsing(): void {
-    if (this.isPulsing) return;
-    this.isPulsing = true;
-    chrome.alarms.create("iconPulse", { periodInMinutes: 1 / 120 });
-    this.updateIcon(true, true);
-  }
-
-  private stopPulsing(): void {
-    if (!this.isPulsing) return;
-    this.isPulsing = false;
-    chrome.alarms.clear("iconPulse");
-    this.updateIcon(false);
   }
 
   private async updateDubbingState(
@@ -277,15 +201,14 @@ class BackgroundService {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tabs[0]?.id === tabId) {
       if (isActive) {
-        this.startPulsing();
+        this.iconManager.startPulsing();
       } else {
-        this.stopPulsing();
+        this.iconManager.stopPulsing();
       }
-      this.updateIcon(isActive);
+      this.iconManager.updateIcon(isActive);
     } else {
-      // The tab that was active when the check started is no longer active
-      this.stopPulsing();
-      this.updateIcon(false);
+      this.iconManager.stopPulsing();
+      this.iconManager.updateIcon(false);
     }
   }
 
@@ -296,41 +219,6 @@ class BackgroundService {
     this.checkDubbingStatusOnActiveTab();
   }
 
-  private async updateIcon(
-    isDubbingActive: boolean,
-    pulse: boolean = false
-  ): Promise<void> {
-    const state = isDubbingActive
-      ? pulse
-        ? "active-filled"
-        : "active"
-      : "inactive";
-    const iconData: { [key: number]: ImageData } = {};
-
-    ICON_SIZES.forEach((size) => {
-      const cachedIcon = this.iconCache[`${state}${size}`];
-      if (cachedIcon instanceof ImageData) {
-        iconData[size] = cachedIcon;
-      }
-    });
-
-    if (Object.keys(iconData).length === 0) {
-      return console.error("No valid ImageData found in iconCache");
-    }
-
-    return new Promise((resolve, reject) => {
-      chrome.action.setIcon({ imageData: iconData }, () => {
-        chrome.runtime.lastError
-          ? reject(
-              new Error(
-                `Error setting icon: ${chrome.runtime.lastError.message}`
-              )
-            )
-          : resolve();
-      });
-    });
-  }
-
   private checkDubbingStatusOnActiveTab(): void {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
@@ -339,38 +227,31 @@ class BackgroundService {
           { action: "checkDubbingStatus" } as DubbingMessage,
           (response) => {
             if (chrome.runtime.lastError) {
-              // No content script found, or other error occurred
-              this.stopPulsing();
-              this.updateIcon(false);
+              this.iconManager.stopPulsing();
+              this.iconManager.updateIcon(false);
             } else if (response?.isDubbingActive !== undefined) {
               this.updateDubbingState(response.isDubbingActive, tabs[0].id!);
             } else {
-              // Response received but no isDubbingActive property
-              this.stopPulsing();
-              this.updateIcon(false);
+              this.iconManager.stopPulsing();
+              this.iconManager.updateIcon(false);
             }
           }
         );
       } else {
-        // No active tab found
-        this.stopPulsing();
-        this.updateIcon(false);
+        this.iconManager.stopPulsing();
+        this.iconManager.updateIcon(false);
       }
     });
   }
 
   private async fetchAudioFile(filePath: string): Promise<ArrayBuffer | null> {
     try {
-      // const token = await getAuthToken();
-      // if (!token) throw new Error("No auth token available");
-
       const response = await fetch(
         `${API_BASE_URL}/api/google-storage/fetch-audio-file`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            // Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ filePath }),
         }

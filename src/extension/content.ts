@@ -23,7 +23,7 @@ class ContentScript {
   }
 
   private handlePageUnload = async (): Promise<void> => {
-    console.log("Page is unloading. Stopping dubbing.");
+    log(LogLevel.INFO, "Page is unloading. Stopping dubbing.");
     await this.stopDubbing();
     await this.updateDubbingState(false);
   };
@@ -37,42 +37,18 @@ class ContentScript {
     sender: chrome.runtime.MessageSender,
     sendResponse: (response?: any) => void
   ): Promise<boolean> {
-    if (message.action === "initializeDubbing") {
-      await this.initializeDubbing(
-        message.movieId,
-        message.languageCode,
-        message.srtContent,
-        message.seasonNumber,
-        message.episodeNumber
-      );
-      this.isDubbingActive = true;
-      this.updateDubbingState(true);
-      sendResponse({ status: "initialized" });
-      return true;
-    }
-
     try {
-      const response = await this.handleDubbingAction(message);
+      const response = await this.processDubbingMessage(message);
       sendResponse(response);
     } catch (error: unknown) {
       log(LogLevel.ERROR, "Error in dubbing action:", error);
-      sendResponse({
-        status: "error",
-        message: this.getErrorMessage(error),
-      });
+      sendResponse(this.formatError(error));
     }
 
     return true;
   }
 
-  private getErrorMessage(error: unknown): string {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return String(error);
-  }
-
-  private async handleDubbingAction(message: DubbingMessage): Promise<any> {
+  private async processDubbingMessage(message: DubbingMessage): Promise<any> {
     switch (message.action) {
       case "initializeDubbing":
         return this.initializeDubbing(
@@ -85,11 +61,11 @@ class ContentScript {
       case "stopDubbing":
         return this.stopDubbing();
       case "updateDubbingState":
-        return this.updateDubbingState(message.payload as boolean);
+        return this.updateDubbingState(message.payload);
       case "setVideoVolumeWhilePlayingDubbing":
         return this.setVideoVolumeWhilePlayingDubbing(message.payload);
       default:
-        return console.error(`Unknown action: ${message.action}`);
+        throw new Error(`Unknown action: ${(message as any).action}`);
     }
   }
 
@@ -101,18 +77,14 @@ class ContentScript {
   }
 
   private async initializeDubbing(
-    movieId?: string,
-    languageCode?: string,
-    srtContent?: string | null,
+    movieId: string,
+    languageCode: string,
+    srtContent: string | null,
     seasonNumber?: number,
     episodeNumber?: number
   ): Promise<any> {
     if (!this.checkForVideoElement()) {
-      return console.error("No video element found on the page");
-    }
-
-    if (!movieId || !languageCode) {
-      return console.error("Missing movieId or languageCode");
+      throw new Error("No video element found on the page");
     }
 
     try {
@@ -133,9 +105,9 @@ class ContentScript {
       });
       return { status: "initialized" };
     } catch (error) {
-      console.error("Failed to initialize dubbing:", error);
+      log(LogLevel.ERROR, "Failed to initialize dubbing:", error);
       await this.updateDubbingState(false);
-      return this.formatError(error);
+      throw error;
     }
   }
 
@@ -145,8 +117,8 @@ class ContentScript {
       await this.updateDubbingState(false);
       return { status: "stopped" };
     } catch (error) {
-      console.error("Error stopping dubbing:", error);
-      return this.formatError(error);
+      log(LogLevel.ERROR, "Error stopping dubbing:", error);
+      throw error;
     }
   }
 
@@ -163,24 +135,22 @@ class ContentScript {
   private async initializeFromStorage(): Promise<void> {
     const storage = (await chrome.storage.local.get([
       "isDubbingActive",
-      "currentMovieId",
-      "currentLanguageCode",
+      "movieId",
+      "languageCode",
       "srtContent",
+      "seasonNumber",
+      "episodeNumber",
     ])) as StorageData;
 
-    if (
-      storage.isDubbingActive &&
-      storage.currentMovieId &&
-      storage.currentLanguageCode
-    ) {
+    if (storage.isDubbingActive && storage.movieId && storage.languageCode) {
       try {
         if (!this.checkForVideoElement()) {
-          return console.error("No video element found on the page");
+          throw new Error("No video element found on the page");
         }
 
         await this.dubbingManager.initialize(
-          storage.currentMovieId,
-          storage.currentLanguageCode,
+          storage.movieId,
+          storage.languageCode,
           storage.srtContent,
           storage.seasonNumber,
           storage.episodeNumber
@@ -212,7 +182,7 @@ class ContentScript {
 
   private async handleVisibilityChange(): Promise<void> {
     if (document.hidden && this.isDubbingActive) {
-      console.log("Tab became hidden. Stopping dubbing.");
+      log(LogLevel.INFO, "Tab became hidden. Stopping dubbing.");
       await this.stopDubbing();
       await this.updateDubbingState(false);
     }
@@ -222,23 +192,8 @@ class ContentScript {
     return !!document.querySelector("video");
   }
 
-  private async updateStorage(data: {
-    movieId?: string;
-    languageCode?: string;
-    srtContent?: string | null;
-    seasonNumber?: number;
-    episodeNumber?: number;
-  }): Promise<void> {
-    const storage: StorageData = {};
-    if (data.movieId) storage.currentMovieId = data.movieId;
-    if (data.languageCode) storage.currentLanguageCode = data.languageCode;
-    if (data.srtContent !== undefined) storage.srtContent = data.srtContent;
-    if (data.seasonNumber !== undefined)
-      storage.seasonNumber = data.seasonNumber;
-    if (data.episodeNumber !== undefined)
-      storage.episodeNumber = data.episodeNumber;
-
-    await chrome.storage.local.set(storage);
+  private async updateStorage(data: Partial<StorageData>): Promise<void> {
+    await chrome.storage.local.set(data);
   }
 
   private formatError(error: unknown): { status: string; message: string } {

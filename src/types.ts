@@ -55,8 +55,8 @@ export type DubbingMessage =
 
 export interface StorageData {
   isDubbingActive?: boolean;
-  currentMovieId?: string;
-  currentLanguageCode?: string;
+  movieId?: string;
+  languageCode?: string;
   srtContent?: string | null;
   seasonNumber?: number;
   episodeNumber?: number;

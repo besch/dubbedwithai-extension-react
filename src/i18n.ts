@@ -69,6 +69,8 @@ i18n.use(initReactI18next).init({
           "E.g. Describe the bug or feature request in detail",
         loading: "Loading...",
         useLanguage: "Use {{language}}",
+        subtitlesGenerate:
+          "If subtitles do not exist in our database, it may take up to 10 seconds to generate them. Please be patient.",
       },
     },
     es: {
@@ -142,6 +144,8 @@ i18n.use(initReactI18next).init({
           "Por ejemplo, describe el error o la solicitud de función en detalle",
         loading: "Cargando...",
         useLanguage: "Usar {{language}}",
+        subtitlesGenerate:
+          "Si los subtítulos no existen en nuestra base de datos, puede llevar hasta 10 segundos generarlos. Por favor, sea paciente.",
       },
     },
     zh: {
@@ -205,6 +209,8 @@ i18n.use(initReactI18next).init({
         messagePlaceholder: "例如：详细描述错误或功能请求",
         loading: "加载中...",
         useLanguage: "使用{{language}}",
+        subtitlesGenerate:
+          "如果我们的数据库中不存在字幕，生成可能需要最多10秒。请耐心等待。",
       },
     },
     hi: {
@@ -274,6 +280,8 @@ i18n.use(initReactI18next).init({
         messagePlaceholder: "उदाहरण: बग या सुविधा अनुरोध का विस्तृत विवरण दें",
         loading: "लोड हो रहा है...",
         useLanguage: "{{language}} का उपयोग करें",
+        subtitlesGenerate:
+          "यदि हमारे डेटाबेस में उपशीर्षक मौजूद नहीं हैं, तो उन्हें जनरेट करने में 10 सेकंड तक लग सकते हैं। कृपया धैर्य रखें।",
       },
     },
     ar: {
@@ -339,6 +347,8 @@ i18n.use(initReactI18next).init({
         messagePlaceholder: "مثال: وصف مفصل للخطأ أو طلب الميزة",
         loading: "جارٍ التحميل...",
         useLanguage: "استخدم {{language}}",
+        subtitlesGenerate:
+          "إذا لم تكن الترجمات موجودة في قاعدة بياناتنا، فقد يستغرق إنشاؤها ما يصل إلى 10 ثوانٍ. يرجى التحلي بالصبر.",
       },
     },
     pt: {
@@ -409,6 +419,8 @@ i18n.use(initReactI18next).init({
           "Ex: Descreva o bug ou a solicitação de recurso em detalhes",
         loading: "Carregando...",
         useLanguage: "Usar {{language}}",
+        subtitlesGenerate:
+          "Se as legendas não existirem em nosso banco de dados, pode levar até 10 segundos para gerá-las. Por favor, seja paciente.",
       },
     },
     bn: {
@@ -480,6 +492,8 @@ i18n.use(initReactI18next).init({
           "উদাহরণ: বাগ বা ফিচার অনুরোধের বিস্তারিত বর্ণনা দিন",
         loading: "লোড হচ্ছে...",
         useLanguage: "{{language}} ব্যবহার করুন",
+        subtitlesGenerate:
+          "যদি আমাদের ডাটাবেসে সাবটাইটেল না থাকে, তবে সেগুলি তৈরি করতে 10 সেকেন্ড পর্যন্ত সময় লাগতে পারে। অনুগ্রহ করে ধৈর্য ধরুন।",
       },
     },
     ru: {
@@ -551,6 +565,8 @@ i18n.use(initReactI18next).init({
           "Например, опишите ошибку или запрос функции подробно",
         loading: "Загрузка...",
         useLanguage: "Использовать {{language}}",
+        subtitlesGenerate:
+          "Если субтитры отсутствуют в нашей базе данных, их создание может занять до 10 секунд. Пожалуйста, будьте терпеливы.",
       },
     },
     ja: {
@@ -621,6 +637,8 @@ i18n.use(initReactI18next).init({
           "例：バグまたは機能リクエストの詳細を説明してください",
         loading: "読み込み中...",
         useLanguage: "{{language}}を使用",
+        subtitlesGenerate:
+          "字幕が私たちのデータベースに存在しない場合、生成に最大10秒かかる場合があります。お待ちください。",
       },
     },
     pa: {
@@ -691,6 +709,8 @@ i18n.use(initReactI18next).init({
         messagePlaceholder: "ਉਦਾਹਰਨ: ਬੱਗ ਜਾਂ ਫੀਚਰ ਬੇਨਤੀ ਦਾ ਵਿਸਥਾਰ ਨਾਲ ਵਰਣਨ ਕਰੋ",
         loading: "ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
         useLanguage: "{{language}} ਵਰਤੋ",
+        subtitlesGenerate:
+          "ਜੇਕਰ ਸਾਡੇ ਡਾਟਾਬੇਸ ਵਿੱਚ ਉਪਸਿਰਲੇਖ ਮੌਜੂਦ ਨਹੀਂ ਹਨ, ਤਾਂ ਉਨ੍ਹਾਂ ਨੂੰ ਤਿਆਰ ਕਰਨ ਵਿੱਚ 10 ਸਕਿੰਟ ਤੱਕ ਦਾ ਸਮਾਂ ਲੱਗ ਸਕਦਾ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਧੀਰਜ ਰੱਖੋ।",
       },
     },
     de: {
@@ -764,6 +784,8 @@ i18n.use(initReactI18next).init({
           "Z.B. Beschreiben Sie den Fehler oder den Funktionswunsch im Detail",
         loading: "Laden...",
         useLanguage: "{{language}} verwenden",
+        subtitlesGenerate:
+          "Wenn Untertitel in unserer Datenbank nicht vorhanden sind, kann es bis zu 10 Sekunden dauern, sie zu generieren. Bitte haben Sie Geduld.",
       },
     },
     jv: {
@@ -829,6 +851,8 @@ i18n.use(initReactI18next).init({
           "Conto: Jelasake kesalahan utawa panjalukan fitur kanthi rinci",
         loading: "Ngemot...",
         useLanguage: "Gunakake {{language}}",
+        subtitlesGenerate:
+          "Yen subtitel ora ana ing basis data kita, bisa butuh nganti 10 detik kanggo nggawe. Tulung sabar.",
       },
     },
     ko: {
@@ -896,6 +920,8 @@ i18n.use(initReactI18next).init({
         messagePlaceholder: "예: 버그나 기능 요청을 자세히 설명해주세요",
         loading: "로딩 중...",
         useLanguage: "{{language}} 사용",
+        subtitlesGenerate:
+          "자막이 우리 데이터베이스에 존재하지 않는 경우, 생성하는 데 최대 10초가 소요될 수 있습니다. 잠시만 기다려 주세요.",
       },
     },
     fr: {
@@ -967,6 +993,8 @@ i18n.use(initReactI18next).init({
           "Ex : Décrivez le bug ou la demande de fonctionnalité en détail",
         loading: "Chargement...",
         useLanguage: "Utiliser {{language}}",
+        subtitlesGenerate:
+          "Si les sous-titres n'existent pas dans notre base de données, cela pourrait prendre jusqu'à 10 secondes pour les générer. Veuillez patienter.",
       },
     },
     te: {
@@ -1038,6 +1066,8 @@ i18n.use(initReactI18next).init({
         messagePlaceholder: "ఉదా. బగ్ లేదా ఫీచర్ అభ్యర్థనను వివరంగా వివరించండి",
         loading: "లోడ్ అవుతోంది...",
         useLanguage: "{{language}} ఉపయోగించండి",
+        subtitlesGenerate:
+          "మా డేటాబేస్‌లో ఉపశీర్షికలు లేకపోతే, వాటిని రూపొందించడానికి 10 సెకన్ల వరకు పట్టవచ్చు. దయచేసి ఓపిక పట్టండి.",
       },
     },
     mr: {
@@ -1108,6 +1138,8 @@ i18n.use(initReactI18next).init({
           "उदा. बग किंवा वैशिष्ट्य विनंतीचे तपशीलवार वर्णन करा",
         loading: "लोड होत आहे...",
         useLanguage: "{{language}} वापरा",
+        subtitlesGenerate:
+          "जर आमच्या डेटाबेसमध्ये उपशीर्षके अस्तित्वात नसतील, तर त्यांना तयार करण्यासाठी 10 सेकंदांपर्यंत वेळ लागू शकतो. कृपया धीर धरा.",
       },
     },
     tr: {
@@ -1176,6 +1208,8 @@ i18n.use(initReactI18next).init({
           "Örn. Hatayı veya özellik isteğini detaylı bir şekilde açıklayın",
         loading: "Yükleniyor...",
         useLanguage: "{{language}} kullan",
+        subtitlesGenerate:
+          "Eğer altyazılar veritabanımızda mevcut değilse, oluşturulması 10 saniye kadar sürebilir. Lütfen sabırlı olun.",
       },
     },
   },

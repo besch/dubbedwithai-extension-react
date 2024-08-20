@@ -138,6 +138,9 @@ const LanguageSelectionPage: React.FC = () => {
             {isLoading ? (
               <div className="animate-fade-in flex flex-col items-center">
                 <LoadingSpinner size="lg" />
+                <p className="mt-2 text-sm text-muted-foreground text-center">
+                  {t("subtitlesGenerate")}
+                </p>
               </div>
             ) : error ? (
               <div className="text-red-500">{`Error: ${error}`}</div>

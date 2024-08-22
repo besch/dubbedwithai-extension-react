@@ -427,7 +427,7 @@ export class DubbingManager {
   }
 
   private handleVideoPlay = (): void => {
-    if (this.currentState.isDubbingPaused) {
+    if (!this.currentState.isDubbingPaused) {
       this.resumeDubbing();
     }
     if (this.videoElement) {

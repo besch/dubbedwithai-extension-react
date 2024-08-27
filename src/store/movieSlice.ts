@@ -161,8 +161,13 @@ export const selectSubtitle = createAsyncThunk(
 
 export const setVideoVolumeWhilePlayingDubbing = createAsyncThunk(
   "movie/setVideoVolumeWhilePlayingDubbing",
-  async (volume: number, { dispatch }) => {
-    await chrome.storage.local.set({ videoVolumeWhilePlayingDubbing: volume });
+  async (volume: number, { dispatch, getState }) => {
+    const state = getState() as RootState;
+    const updatedMovieState = {
+      ...state.movie,
+      videoVolumeWhilePlayingDubbing: volume,
+    };
+    await chrome.storage.local.set({ movieState: updatedMovieState });
     dispatch(updateVideoVolumeWhilePlayingDubbing(volume));
     return volume;
   }
@@ -174,6 +179,10 @@ export const loadMovieState = createAsyncThunk("movie/loadState", async () => {
       const movieState = result.movieState || {};
       if (typeof movieState.subtitleOffset !== "number") {
         movieState.subtitleOffset = 0;
+      }
+      if (typeof movieState.videoVolumeWhilePlayingDubbing !== "number") {
+        movieState.videoVolumeWhilePlayingDubbing =
+          config.videoVolumeWhilePlayingDubbing;
       }
       resolve(movieState);
     });

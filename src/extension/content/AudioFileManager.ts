@@ -1,6 +1,6 @@
 import { AudioCache } from "./AudioCache";
 import config from "./config";
-import { base64ToArrayBuffer, log, LogLevel } from "./utils";
+import { base64ToArrayBuffer } from "../utils";
 
 export class AudioFileManager {
   private static instance: AudioFileManager | null = null;
@@ -167,7 +167,7 @@ export class AudioFileManager {
       this.inMemoryCache.set(filePath, buffer);
       return buffer;
     } catch (error) {
-      log(LogLevel.ERROR, "Error fetching or processing audio:", error);
+      console.error("Error fetching or processing audio:", error);
       return null;
     } finally {
       this.ongoingFetchRequests.delete(filePath);
@@ -211,7 +211,7 @@ export class AudioFileManager {
       this.existenceCache.set(filePath, true);
       this.lastExistenceCheck.set(filePath, Date.now());
     } catch (error) {
-      log(LogLevel.ERROR, `Failed to generate audio for ${filePath}:`, error);
+      console.error(`Failed to generate audio for ${filePath}:`, error);
       this.notFoundFiles.add(filePath);
     } finally {
       this.audioGenerationQueue.delete(filePath);

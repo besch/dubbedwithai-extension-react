@@ -1,6 +1,5 @@
 import { DubbingManager } from "./content/DubbingManager";
 import { DubbingMessage, StorageData } from "@/types";
-import { log, LogLevel } from "./content/utils";
 
 class ContentScript {
   private dubbingManager: DubbingManager;
@@ -23,7 +22,7 @@ class ContentScript {
   }
 
   private handlePageUnload = async (): Promise<void> => {
-    log(LogLevel.INFO, "Page is unloading. Stopping dubbing.");
+    console.log("Page is unloading. Stopping dubbing.");
     await this.stopDubbing();
     await this.updateDubbingState(false);
   };
@@ -41,7 +40,7 @@ class ContentScript {
       const response = await this.processDubbingMessage(message);
       sendResponse(response);
     } catch (error: unknown) {
-      log(LogLevel.ERROR, "Error in dubbing action:", error);
+      console.error("Error in dubbing action:", error);
       sendResponse(this.formatError(error));
     }
 
@@ -105,7 +104,7 @@ class ContentScript {
       });
       return { status: "initialized" };
     } catch (error) {
-      log(LogLevel.ERROR, "Failed to initialize dubbing:", error);
+      console.error("Failed to initialize dubbing:", error);
       await this.updateDubbingState(false);
       throw error;
     }
@@ -117,7 +116,7 @@ class ContentScript {
       await this.updateDubbingState(false);
       return { status: "stopped" };
     } catch (error) {
-      log(LogLevel.ERROR, "Error stopping dubbing:", error);
+      console.error("Error stopping dubbing:", error);
       throw error;
     }
   }
@@ -156,20 +155,16 @@ class ContentScript {
           storage.episodeNumber
         );
         await this.updateDubbingState(true);
-        log(LogLevel.INFO, "Dubbing initialized from storage successfully");
+        console.log("Dubbing initialized from storage successfully");
       } catch (error) {
-        log(
-          LogLevel.ERROR,
-          "Failed to initialize dubbing from storage:",
-          error
-        );
+        console.error("Failed to initialize dubbing from storage:", error);
         await this.updateDubbingState(false);
       }
     } else if (storage.isDubbingActive) {
       await this.updateDubbingState(false);
-      log(LogLevel.WARN, "Dubbing was active but missing necessary data");
+      console.warn("Dubbing was active but missing necessary data");
     } else {
-      log(LogLevel.INFO, "No active dubbing session found in storage");
+      console.log("No active dubbing session found in storage");
     }
   }
 
@@ -182,7 +177,7 @@ class ContentScript {
 
   private async handleVisibilityChange(): Promise<void> {
     if (document.hidden && this.isDubbingActive) {
-      log(LogLevel.INFO, "Tab became hidden. Stopping dubbing.");
+      console.log("Tab became hidden. Stopping dubbing.");
       await this.stopDubbing();
       await this.updateDubbingState(false);
     }
@@ -207,6 +202,6 @@ class ContentScript {
 const contentScript = new ContentScript();
 (window as any).dubbingManager = contentScript;
 
-log(LogLevel.INFO, "Content script loaded");
+console.log("Content script loaded");
 
 (window as any).__DUBBING_CONTENT_SCRIPT_LOADED__ = true;

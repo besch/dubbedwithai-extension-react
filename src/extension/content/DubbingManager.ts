@@ -3,7 +3,6 @@ import { SubtitleManager } from "./SubtitleManager";
 import { AudioPlayer } from "./AudioPlayer";
 import { PrecisionTimer } from "./PrecisionTimer";
 import { DubbingMessage, Subtitle } from "@/types";
-import { log, LogLevel } from "./utils";
 import config from "./config";
 import { parseSrt } from "../utils";
 
@@ -632,10 +631,10 @@ export class DubbingManager {
       if (buffer) {
         await this.audioPlayer.playAudio(buffer, filePath, subtitle, offset);
       } else {
-        log(LogLevel.WARN, `Audio buffer not available for file: ${filePath}`);
+        console.warn(`Audio buffer not available for file: ${filePath}`);
       }
     } catch (error) {
-      log(LogLevel.ERROR, `Error playing audio for file: ${filePath}`, error);
+      console.error(`Error playing audio for file: ${filePath}`, error);
     }
   }
 

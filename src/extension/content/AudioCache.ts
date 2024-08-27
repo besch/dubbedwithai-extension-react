@@ -1,5 +1,3 @@
-import { LogLevel, log } from "./utils";
-
 export class AudioCache {
   private dbName = "AudioCache";
   private dbVersion = 1;
@@ -22,7 +20,7 @@ export class AudioCache {
         };
       });
     } catch (error) {
-      log(LogLevel.ERROR, "IndexedDB initialization error:", error);
+      console.error("IndexedDB initialization error:", error);
       throw error;
     }
   }
@@ -39,11 +37,7 @@ export class AudioCache {
       request.onsuccess = () =>
         resolve(request.result ? request.result.audioData : null);
       request.onerror = () => {
-        log(
-          LogLevel.ERROR,
-          "Error fetching audio from IndexedDB:",
-          request.error
-        );
+        console.error("Error fetching audio from IndexedDB:", request.error);
         reject(new Error("Failed to fetch audio from IndexedDB"));
       };
     });

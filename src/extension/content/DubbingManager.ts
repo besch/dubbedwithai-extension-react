@@ -443,11 +443,17 @@ export class DubbingManager {
 
   private handleVideoSeeking = (event: Event): void => {
     const video = event.target as HTMLVideoElement;
-    this.precisionTimer.start(video.currentTime);
+    const newTime = video.currentTime;
+
+    this.precisionTimer.stop();
+    this.audioPlayer.stopAllAudio();
+    this.precisionTimer.start(newTime);
+
     if (!this.currentState.isDubbingPaused) {
-      this.audioPlayer.stopAllAudio();
-      this.playCurrentSubtitles(video.currentTime * 1000);
+      this.playCurrentSubtitles(newTime * 1000);
     }
+
+    this.checkAndGenerateUpcomingAudio(newTime * 1000);
   };
 
   private handleVolumeChange = (event: Event): void => {
@@ -596,23 +602,41 @@ export class DubbingManager {
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
     console.log("Current subtitles:", currentSubtitles);
 
-    for (const subtitle of currentSubtitles) {
-      const audioFilePath = this.getAudioFilePath(subtitle);
-      const startTimeMs = subtitle.start;
-
-      if (
-        adjustedTimeMs >= startTimeMs &&
-        adjustedTimeMs < subtitle.end &&
-        !this.audioPlayer.isAudioActive(audioFilePath)
-      ) {
-        console.log("Playing audio for subtitle:", subtitle.text);
-        const audioOffsetMs = Math.max(0, adjustedTimeMs - startTimeMs);
-        this.playAudioIfAvailable(subtitle, audioOffsetMs / 1000);
-
-        if (this.videoElement) {
-          this.adjustVolume(this.videoElement);
-        }
+    if (currentSubtitles.length === 0) {
+      const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
+        adjustedTimeMs,
+        config.preloadAudioTime
+      );
+      if (upcomingSubtitles.length > 0) {
+        this.prepareAndPlaySubtitle(upcomingSubtitles[0], adjustedTimeMs);
+      } else {
+        console.log("No upcoming subtitles found.");
       }
+    } else {
+      for (const subtitle of currentSubtitles) {
+        this.prepareAndPlaySubtitle(subtitle, adjustedTimeMs);
+      }
+    }
+
+    if (this.videoElement) {
+      this.adjustVolume(this.videoElement);
+    }
+  }
+
+  private prepareAndPlaySubtitle(
+    subtitle: Subtitle,
+    adjustedTimeMs: number
+  ): void {
+    const audioFilePath = this.getAudioFilePath(subtitle);
+    const startTimeMs = subtitle.start;
+
+    if (
+      adjustedTimeMs >= startTimeMs &&
+      adjustedTimeMs < subtitle.end &&
+      !this.audioPlayer.isAudioActive(audioFilePath)
+    ) {
+      const audioOffsetMs = Math.max(0, adjustedTimeMs - startTimeMs);
+      this.playAudioIfAvailable(subtitle, audioOffsetMs / 1000);
     }
   }
 

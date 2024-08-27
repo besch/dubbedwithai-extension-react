@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import {
   setSubtitleOffset,
-  resetSubtitleOffset,
+  resetSettings,
   setDubbingVolumeMultiplier,
   setVideoVolumeWhilePlayingDubbing,
 } from "@/store/movieSlice";
@@ -132,7 +132,7 @@ const SettingsPage: React.FC = () => {
   };
 
   const handleReset = () => {
-    dispatch(resetSubtitleOffset());
+    dispatch(resetSettings());
     dispatch(setDubbingVolumeMultiplier(1));
     dispatch(
       setVideoVolumeWhilePlayingDubbing(config.videoVolumeWhilePlayingDubbing)

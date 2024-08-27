@@ -342,7 +342,7 @@ const movieSlice = createSlice({
       state.subtitleOffset = action.payload;
       chrome.storage.local.set({ movieState: { ...state } });
     },
-    resetSubtitleOffset: (state) => {
+    resetSettings: (state) => {
       state.subtitleOffset = 0;
       chrome.storage.local.set({ movieState: { ...state } });
     },
@@ -422,7 +422,7 @@ export const {
   setSearchResults,
   updateDubbingState,
   setSubtitleOffset,
-  resetSubtitleOffset,
+  resetSettings,
   updateCurrentTime,
   setDubbingVolumeMultiplier,
   updateVideoVolumeWhilePlayingDubbing,

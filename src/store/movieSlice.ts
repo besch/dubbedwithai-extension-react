@@ -279,7 +279,7 @@ export const checkDubbingStatus = createAsyncThunk(
   }
 );
 
-export const selectLanguages = (state: RootState) =>
+export const availableLanguages = (state: RootState) =>
   Array.isArray(state.movie.languages) ? state.movie.languages : [];
 
 const movieSlice = createSlice({

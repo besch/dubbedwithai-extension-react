@@ -6,7 +6,7 @@ import { RootState, AppDispatch } from "@/store";
 import LanguageSelector from "@/components/LanguageSelector";
 import {
   selectSubtitle,
-  selectLanguages,
+  availableLanguages,
   setLastSelectedLanguage,
   loadLastSelectedLanguage,
   setSelectedSeasonNumber,
@@ -24,7 +24,7 @@ const LanguageSelectionPage: React.FC = () => {
   const { selectedMovie, isLoading, error } = useSelector(
     (state: RootState) => state.movie
   );
-  const languages = useSelector(selectLanguages);
+  const languages = useSelector(availableLanguages);
   const lastSelectedLanguage = useSelector(
     (state: RootState) => state.movie.lastSelectedLanguage
   );

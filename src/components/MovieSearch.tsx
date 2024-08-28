@@ -23,8 +23,9 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
 
   const handleSearch = useCallback(
     async (query: string) => {
-      if (query.length > 2) {
-        dispatch(searchMovies(query));
+      const trimmedQuery = query.trim();
+      if (trimmedQuery.length > 2) {
+        dispatch(searchMovies(trimmedQuery));
       }
     },
     [dispatch]
@@ -112,10 +113,10 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
         </ul>
       ) : (
         <>
-          {movieQuery.length > 2 && !isLoading && !error && (
+          {movieQuery.trim().length > 2 && !isLoading && !error && (
             <p className="mt-2 text-muted-foreground">{t("noMoviesFound")}</p>
           )}
-          {!movieQuery.length && !isLoading && !error && (
+          {!movieQuery.trim().length && !isLoading && !error && (
             <p className="mt-2 text-muted-foreground">{t("startTyping")}</p>
           )}
         </>

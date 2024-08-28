@@ -51,16 +51,13 @@ const SubtitleCarousel: React.FC = () => {
       .padStart(2, "0")}`;
   };
 
-  const visibleSubtitles =
-    currentIndex >= 0
-      ? [
-          subtitles[currentIndex - 2],
-          subtitles[currentIndex - 1],
-          subtitles[currentIndex],
-          subtitles[currentIndex + 1],
-          subtitles[currentIndex + 2],
-        ].filter(Boolean)
-      : [];
+  const visibleSubtitles: (Subtitle | null)[] = [
+    subtitles[currentIndex - 2] || null,
+    subtitles[currentIndex - 1] || null,
+    subtitles[currentIndex] || null,
+    subtitles[currentIndex + 1] || null,
+    subtitles[currentIndex + 2] || null,
+  ];
 
   return (
     <div
@@ -70,10 +67,14 @@ const SubtitleCarousel: React.FC = () => {
       <AnimatePresence initial={false}>
         {visibleSubtitles.map((subtitle, index) => (
           <motion.div
-            key={`${subtitle.start}-${subtitle.end}`}
+            key={`subtitle-${currentIndex}-${index}`}
             initial={{ opacity: 0, y: 100 }}
             animate={{
-              opacity: index === 2 ? 1 : 0.5 - Math.abs(index - 2) * 0.05,
+              opacity: subtitle
+                ? index === 2
+                  ? 1
+                  : 0.5 - Math.abs(index - 2) * 0.05
+                : 0,
               y: (index - 2) * 120,
               scale: 1 - Math.abs(index - 2) * 0.1,
             }}
@@ -96,31 +97,36 @@ const SubtitleCarousel: React.FC = () => {
                 index === 2
                   ? "drop-shadow(0 0 8px rgba(255,255,255,0.5))"
                   : "none",
+              pointerEvents: "none",
             }}
           >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mb-2 text-xs opacity-75"
-            >
-              {formatTime(subtitle.start)} - {formatTime(subtitle.end)}
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
-              className="break-words"
-              style={{
-                maxWidth: "100%",
-                whiteSpace: "normal",
-                wordWrap: "break-word",
-              }}
-            >
-              {subtitle.text}
-            </motion.div>
+            {subtitle && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="mb-2 text-xs opacity-75"
+                >
+                  {formatTime(subtitle.start)} - {formatTime(subtitle.end)}
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="break-words"
+                  style={{
+                    maxWidth: "100%",
+                    whiteSpace: "normal",
+                    wordWrap: "break-word",
+                  }}
+                >
+                  {subtitle.text}
+                </motion.div>
+              </>
+            )}
           </motion.div>
         ))}
       </AnimatePresence>

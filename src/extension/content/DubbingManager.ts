@@ -167,12 +167,6 @@ export class DubbingManager {
     this.audioPlayer = new AudioPlayer(this.audioContext);
   }
 
-  private setupPeriodicCleanup(): void {
-    setInterval(() => {
-      this.audioPlayer.clearRecentlyPlayedAudio();
-    }, 5000); // Clean up every 5 seconds
-  }
-
   public toggleDubbing(): void {
     if (this.currentState.isDubbingActive) {
       this.stopDubbing();
@@ -184,7 +178,7 @@ export class DubbingManager {
   private stopDubbing(): void {
     this.updateCurrentState({ isDubbingActive: false });
     this.precisionTimer.pause();
-    this.audioPlayer.stopAllAudio();
+    this.audioPlayer.pauseAllAudio();
     this.restoreVideoVolume();
   }
 
@@ -226,7 +220,6 @@ export class DubbingManager {
 
   private setupEventListeners(): void {
     this.setupStorageListener();
-    this.setupPeriodicCleanup();
     this.setupMessageListener();
     this.setupVolumeCheck();
     this.setupUnloadListener();
@@ -248,7 +241,7 @@ export class DubbingManager {
   public async stop(): Promise<void> {
     this.audioFileManager.stop();
     this.audioFileManager.clearCache();
-    this.audioPlayer.stopAllAudio();
+    this.audioPlayer.pauseAllAudio();
     this.subtitleManager.reset();
     this.precisionTimer.stop();
     this.removeVideoEventListeners();
@@ -407,7 +400,10 @@ export class DubbingManager {
 
   private handleVideoPlay = (): void => {
     if (this.currentState.isDubbingActive) {
-      this.startDubbing();
+      const currentTime = this.videoElement?.currentTime || 0;
+      this.precisionTimer.start(currentTime);
+      this.playCurrentSubtitles(currentTime * 1000);
+      this.checkAndGenerateUpcomingAudio(currentTime * 1000);
     }
     if (this.videoElement) {
       this.adjustVolume(this.videoElement);
@@ -416,7 +412,8 @@ export class DubbingManager {
 
   private handleVideoPause = (): void => {
     if (this.currentState.isDubbingActive) {
-      this.stopDubbing();
+      this.precisionTimer.pause();
+      this.audioPlayer.pauseAllAudio();
     }
     this.restoreVideoVolume();
   };
@@ -426,7 +423,7 @@ export class DubbingManager {
     const newTime = video.currentTime;
 
     this.precisionTimer.stop();
-    this.audioPlayer.stopAllAudio();
+    this.audioPlayer.pauseAllAudio();
     this.precisionTimer.start(newTime);
 
     if (this.currentState.isDubbingActive) {

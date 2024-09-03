@@ -127,13 +127,6 @@ export class AudioPlayer {
     }
   }
 
-  stopAllAudio(): void {
-    this.activeAudio.forEach((audioInfo, filePath) => {
-      this.stopAudio(filePath);
-    });
-    this.recentlyPlayedAudio.clear();
-  }
-
   isAudioActive(filePath: string): boolean {
     return this.activeAudio.has(filePath);
   }
@@ -153,18 +146,7 @@ export class AudioPlayer {
     );
   }
 
-  clearRecentlyPlayedAudio(): void {
-    const now = this.audioContext.currentTime;
-    const entriesToDelete: string[] = [];
-
-    this.recentlyPlayedAudio.forEach((lastPlayedTime, filePath) => {
-      if (now - lastPlayedTime >= this.REPLAY_THRESHOLD_MS / 1000) {
-        entriesToDelete.push(filePath);
-      }
-    });
-
-    entriesToDelete.forEach((filePath) => {
-      this.recentlyPlayedAudio.delete(filePath);
-    });
+  public pauseAllAudio(): void {
+    this.activeAudio.forEach(({ source }) => source.stop());
   }
 }

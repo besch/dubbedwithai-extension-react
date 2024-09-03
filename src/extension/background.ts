@@ -49,7 +49,11 @@ class BackgroundService {
       requestSubtitles: this.handleSubtitlesRequest.bind(this),
       requestAudioFile: this.handleAudioFileRequest.bind(this),
       updateDubbingState: (msg) => {
-        if (sender.tab?.id) this.updateDubbingState(msg.payload, sender.tab.id);
+        console.log("Updating dubbing state:", msg.payload);
+        if (sender.tab?.id) {
+          this.updateDubbingState(msg.payload, sender.tab.id);
+        }
+        sendResponse({ status: "updated" });
       },
       updateCurrentTime: (msg) => chrome.runtime.sendMessage(msg),
       checkAudioFileExists: this.handleCheckAudioFileExists.bind(this),
@@ -198,6 +202,7 @@ class BackgroundService {
     isActive: boolean,
     tabId: number
   ): Promise<void> {
+    console.log(`Updating dubbing state: isActive=${isActive}, tabId=${tabId}`);
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tabs[0]?.id === tabId) {
       if (isActive) {

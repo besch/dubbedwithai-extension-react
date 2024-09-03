@@ -180,6 +180,11 @@ export class DubbingManager {
     this.precisionTimer.pause();
     this.audioPlayer.pauseAllAudio();
     this.restoreVideoVolume();
+  
+    chrome.runtime.sendMessage({
+      action: "updateDubbingState",
+      payload: false
+    });
   }
 
   private startDubbing(): void {
@@ -190,12 +195,17 @@ export class DubbingManager {
       console.error("No video element found");
       return;
     }
-
+  
     const currentVideoTime = this.videoElement.currentTime;
     this.precisionTimer.start(currentVideoTime);
     this.adjustVolume(this.videoElement);
     this.playCurrentSubtitles(currentVideoTime * 1000);
     this.checkAndGenerateUpcomingAudio(currentVideoTime * 1000);
+  
+    chrome.runtime.sendMessage({
+      action: "updateDubbingState",
+      payload: true
+    });
   }
 
   private setupVolumeCheck(): void {

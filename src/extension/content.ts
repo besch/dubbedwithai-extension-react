@@ -184,7 +184,8 @@ class ContentScript {
   }
 
   private checkForVideoElement(): boolean {
-    return !!document.querySelector("video");
+    this.dubbingManager.findAndStoreVideoElement();
+    return this.dubbingManager.hasVideoElement();
   }
 
   private async updateStorage(data: Partial<StorageData>): Promise<void> {

@@ -272,7 +272,7 @@ export class DubbingManager {
     );
   }
 
-  private findAndStoreVideoElement(): void {
+  public findAndStoreVideoElement(): void {
     this.videoElement = document.querySelector("video");
 
     if (this.videoElement) {
@@ -475,7 +475,7 @@ export class DubbingManager {
     this.preloadUpcomingSubtitles(currentTimeMs);
     this.sendCurrentSubtitleInfo(
       adjustedTimeMs,
-      this.subtitleManager.getCurrentSubtitles(adjustedTimeMs)
+            this.subtitleManager.getCurrentSubtitles(adjustedTimeMs)
     );
     this.checkAndGenerateUpcomingAudio(currentTimeMs);
 
@@ -689,5 +689,9 @@ export class DubbingManager {
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  public hasVideoElement(): boolean {
+    return !!this.videoElement;
   }
 }

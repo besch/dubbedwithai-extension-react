@@ -10,7 +10,6 @@ import {
   toggleDubbingProcess
 } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
-import { sendMessageToActiveTab } from "@/lib/messaging";
 import PageLayout from "@/components/ui/PageLayout";
 import MovieCard from "@/components/MovieCard";
 import { toast } from "react-toastify";

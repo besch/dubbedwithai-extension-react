@@ -49,7 +49,8 @@ i18n.use(initReactI18next).init({
           "Subtitles are not loaded. Please try reloading the page.",
         dubbingStarted: "Dubbing started successfully.",
         dubbingPaused: "Dubbing paused successfully.",
-        failedToToggleDubbing: "Failed to toggle dubbing. Please try again.",
+        failedToToggleDubbing:
+          "Video player not found. Failed to toggle dubbing. Please try again.",
         dubbingControls: "Dubbing Controls",
         noMovieOrLanguageSelected: "No movie or language selected.",
         language: "Language",

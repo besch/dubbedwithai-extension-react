@@ -7,7 +7,7 @@ import {
   updateDubbingState,
   checkDubbingStatus,
   loadSubtitles,
-  startDubbingProcess,
+  toggleDubbingProcess
 } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
 import { sendMessageToActiveTab } from "@/lib/messaging";
@@ -53,7 +53,7 @@ const DubbingPage: React.FC = () => {
     }
   }, [selectedMovie, selectedLanguage, subtitlesLoaded, dispatch, navigate, t]);
 
-  const handleDubbingToggle = async (isActive: boolean) => {
+  const handleDubbingToggle = async () => {
     if (isLoadingSubtitles) {
       toast.warning(t("waitForSubtitlesToLoad"));
       return;
@@ -65,26 +65,12 @@ const DubbingPage: React.FC = () => {
     }
 
     try {
-      if (isActive) {
-        await dispatch(startDubbingProcess()).unwrap();
-        toast.success(t("dubbingStarted"));
-      } else {
-        const response = await sendMessageToActiveTab({
-          action: "updateDubbingState",
-          payload: false,
-        });
-
-        if (response?.status === "updated") {
-          dispatch(updateDubbingState(false));
-          toast.success(t("dubbingPaused"));
-        } else {
-          return console.error("Failed to pause dubbing");
-        }
-      }
+      await dispatch(toggleDubbingProcess());
+      dispatch(updateDubbingState(!isDubbingActive));
+      toast.success(isDubbingActive ? t("dubbingStopped") : t("dubbingStarted"));
     } catch (error) {
       console.error("Failed to toggle dubbing:", error);
       toast.error(t("failedToToggleDubbing"));
-      dispatch(updateDubbingState(false));
     }
   };
 

@@ -15,8 +15,6 @@ interface MovieState {
   srtContent: string | null;
   languages: Language[];
   isDubbingActive: boolean;
-  isLoading: boolean;
-  error: string | null;
   searchResults: Movie[];
   subtitleOffset: number;
   currentVideoTime: number;
@@ -25,6 +23,8 @@ interface MovieState {
   videoVolumeWhilePlayingDubbing: number;
   subtitlesLoaded: boolean;
   lastSelectedLanguage: Language | null;
+  error: string | null;
+  isLoading: boolean;
 }
 
 const initialState: MovieState = {
@@ -41,8 +41,6 @@ const initialState: MovieState = {
     },
   })),
   isDubbingActive: false,
-  isLoading: false,
-  error: null,
   searchResults: [],
   subtitleOffset: 0,
   currentVideoTime: 0,
@@ -51,6 +49,8 @@ const initialState: MovieState = {
   videoVolumeWhilePlayingDubbing: config.videoVolumeWhilePlayingDubbing,
   subtitlesLoaded: false,
   lastSelectedLanguage: null,
+  error: null,
+  isLoading: false,
 };
 
 export const setLastSelectedLanguage = createAsyncThunk(
@@ -189,48 +189,34 @@ export const loadMovieState = createAsyncThunk("movie/loadState", async () => {
   });
 });
 
-export const startDubbingProcess = createAsyncThunk(
-  "movie/startDubbingProcess",
+export const toggleDubbingProcess = createAsyncThunk(
+  "movie/toggleDubbingProcess",
   async (_, { getState, dispatch }) => {
     const state = getState() as RootState;
-    const {
-      selectedMovie,
-      selectedLanguage,
-      srtContent,
-      selectedSeasonNumber,
-      selectedEpisodeNumber,
-    } = state.movie;
+    const { selectedMovie, selectedLanguage, isDubbingActive } = state.movie;
 
     if (!selectedMovie || !selectedLanguage) {
-      return console.error("No movie or language selected");
+      throw new Error("No movie or language selected");
     }
 
     return new Promise<void>((resolve, reject) => {
       chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         if (tabs[0]?.id) {
           const message: DubbingMessage = {
-            action: "initializeDubbing",
+            action: isDubbingActive ? "stopDubbing" : "initializeDubbing",
             movieId: selectedMovie.imdbID,
             languageCode: selectedLanguage.attributes.language,
-            srtContent: srtContent,
+            srtContent: state.movie.srtContent,
+            seasonNumber: state.movie.selectedSeasonNumber || undefined,
+            episodeNumber: state.movie.selectedEpisodeNumber || undefined,
           };
 
-          // Only include season and episode numbers for TV series
-          if (
-            selectedMovie.Type === "series" &&
-            selectedSeasonNumber !== null &&
-            selectedEpisodeNumber !== null
-          ) {
-            (message as any).seasonNumber = selectedSeasonNumber;
-            (message as any).episodeNumber = selectedEpisodeNumber;
-          }
-
           chrome.tabs.sendMessage(tabs[0].id, message, (response) => {
-            if (response && response.status === "initialized") {
-              dispatch(updateDubbingState(true));
+            if (response && response.status === "success") {
+              dispatch(updateDubbingState(!isDubbingActive));
               resolve();
             } else {
-              reject(new Error("Failed to initialize dubbing"));
+              reject(new Error("Failed to toggle dubbing"));
             }
           });
         } else {
@@ -331,7 +317,6 @@ const movieSlice = createSlice({
       state.selectedLanguage = action.payload;
       state.isDubbingActive = false;
       state.subtitleOffset = 0;
-      state.error = null;
       chrome.storage.local.set({ movieState: { ...state } });
       state.srtContent = null;
     },
@@ -392,8 +377,8 @@ const movieSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      .addCase(startDubbingProcess.rejected, (state, action) => {
-        state.error = action.error.message || "Failed to start dubbing process";
+      .addCase(toggleDubbingProcess.rejected, (state, action) => {
+        state.error = action.error.message || "Failed to toggle dubbing process";
       })
       .addCase(checkDubbingStatus.rejected, (state) => {
         state.isDubbingActive = false;

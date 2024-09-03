@@ -45,9 +45,8 @@ export type DubbingMessage =
       seasonNumber?: number;
       episodeNumber?: number;
     }
-  | { action: "playDubbing" }
-  | { action: "pauseDubbing" }
   | { action: "stopDubbing" }
+  | { action: "toggleDubbing" }
   | { action: "checkDubbingStatus" }
   | { action: "updateDubbingState"; payload: boolean }
   | { action: "setDubbingVolumeMultiplier"; payload: number }

@@ -22,8 +22,7 @@ export class DubbingManager {
     seasonNumber: number | null;
     episodeNumber: number | null;
     subtitleOffset: number;
-    isDubbingPaused: boolean;
-    isInitialized: boolean;
+    isDubbingActive: boolean;
     lastSentSubtitle: Subtitle | null;
     lastSentTime: number;
     lastVideoTime: number;
@@ -44,8 +43,7 @@ export class DubbingManager {
       seasonNumber: null,
       episodeNumber: null,
       subtitleOffset: 0,
-      isDubbingPaused: false,
-      isInitialized: false,
+      isDubbingActive: false,
       lastSentSubtitle: null,
       lastSentTime: 0,
       lastVideoTime: 0,
@@ -73,14 +71,13 @@ export class DubbingManager {
     console.log("Initializing DubbingManager:", {
       movieId,
       languageCode,
-      isInitialized: this.currentState.isInitialized,
       hasSrtContent: !!srtContent,
       seasonNumber,
       episodeNumber,
     });
 
-    if (this.currentState.isInitialized) {
-      console.log("DubbingManager is already initialized. Reinitializing...");
+    if (this.currentState.isDubbingActive) {
+      console.log("DubbingManager is already active. Stopping current dubbing...");
       await this.stop();
     }
 
@@ -89,7 +86,7 @@ export class DubbingManager {
       languageCode,
       seasonNumber: seasonNumber || null,
       episodeNumber: episodeNumber || null,
-      isDubbingPaused: false,
+      isDubbingActive: false,
     });
 
     try {
@@ -111,17 +108,16 @@ export class DubbingManager {
         this.setupAudioContext();
         await this.startDubbing();
         this.updateCurrentState({
-          isInitialized: true,
-          isDubbingPaused: false,
+          isDubbingActive: true,
         });
-        console.log("DubbingManager initialized successfully");
+        console.log("DubbingManager initialized and started successfully");
       } else {
         console.warn("No video element found. Setting up observer.");
         this.setupVideoObserver();
       }
     } catch (error) {
       console.warn("Error during initialization:", error);
-      this.updateCurrentState({ isInitialized: false });
+      this.updateCurrentState({ isDubbingActive: false });
       throw error;
     }
   }
@@ -177,12 +173,23 @@ export class DubbingManager {
     }, 5000); // Clean up every 5 seconds
   }
 
-  public resumeDubbing(): void {
-    if (!this.currentState.isDubbingPaused) {
-      return;
+  public toggleDubbing(): void {
+    if (this.currentState.isDubbingActive) {
+      this.stopDubbing();
+    } else {
+      this.startDubbing();
     }
+  }
 
-    this.updateCurrentState({ isDubbingPaused: false });
+  private stopDubbing(): void {
+    this.updateCurrentState({ isDubbingActive: false });
+    this.precisionTimer.pause();
+    this.audioPlayer.stopAllAudio();
+    this.restoreVideoVolume();
+  }
+
+  private startDubbing(): void {
+    this.updateCurrentState({ isDubbingActive: true });
     this.audioContext.resume();
 
     if (!this.videoElement) {
@@ -197,44 +204,18 @@ export class DubbingManager {
     this.checkAndGenerateUpcomingAudio(currentVideoTime * 1000);
   }
 
-  public pauseDubbing(): void {
-    this.updateCurrentState({ isDubbingPaused: true });
-    this.precisionTimer.pause();
-    this.audioPlayer.stopAllAudio();
-    this.restoreVideoVolume();
-  }
-
   private setupVolumeCheck(): void {
     setInterval(() => {
       if (
         this.videoElement &&
         !this.isAnyDubbingAudioPlaying() &&
-        !this.currentState.isDubbingPaused &&
+        !this.currentState.isDubbingActive &&
         this.currentState.movieId &&
         this.currentState.languageCode
       ) {
         this.adjustVolume(this.videoElement);
       }
     }, 1000);
-  }
-
-  private async startDubbing(): Promise<void> {
-    console.log("Starting dubbing process");
-    const subtitles = await this.subtitleManager.getSubtitles(
-      this.currentState.movieId!,
-      this.currentState.languageCode!
-    );
-    if (subtitles && subtitles.length > 0 && this.videoElement) {
-      console.log("Starting precision timer");
-      this.precisionTimer.start(this.videoElement.currentTime);
-      console.log("Playing current subtitles");
-      this.playCurrentSubtitles(this.videoElement.currentTime * 1000);
-      console.log("Dubbing started successfully");
-    } else {
-      throw new Error(
-        "No subtitles available for dubbing or no video element found"
-      );
-    }
   }
 
   private updateCurrentState(
@@ -276,10 +257,9 @@ export class DubbingManager {
     this.updateCurrentState({
       movieId: null,
       languageCode: null,
-      isDubbingPaused: true,
+      isDubbingActive: false,
       lastSentSubtitle: null,
       lastSentTime: 0,
-      isInitialized: false,
     });
 
     this.videoElement = null;
@@ -394,14 +374,14 @@ export class DubbingManager {
               isDubbingActive:
                 !!this.currentState.movieId &&
                 !!this.currentState.languageCode &&
-                !this.currentState.isDubbingPaused,
+                this.currentState.isDubbingActive,
             });
             break;
           case "updateDubbingState":
             if (message.payload) {
-              this.resumeDubbing();
+              this.startDubbing();
             } else {
-              this.pauseDubbing();
+              this.stopDubbing();
             }
             sendResponse({ status: "updated" });
             break;
@@ -426,8 +406,8 @@ export class DubbingManager {
   }
 
   private handleVideoPlay = (): void => {
-    if (!this.currentState.isDubbingPaused) {
-      this.resumeDubbing();
+    if (this.currentState.isDubbingActive) {
+      this.startDubbing();
     }
     if (this.videoElement) {
       this.adjustVolume(this.videoElement);
@@ -435,8 +415,8 @@ export class DubbingManager {
   };
 
   private handleVideoPause = (): void => {
-    if (!this.currentState.isDubbingPaused) {
-      this.pauseDubbing();
+    if (this.currentState.isDubbingActive) {
+      this.stopDubbing();
     }
     this.restoreVideoVolume();
   };
@@ -449,7 +429,7 @@ export class DubbingManager {
     this.audioPlayer.stopAllAudio();
     this.precisionTimer.start(newTime);
 
-    if (!this.currentState.isDubbingPaused) {
+    if (this.currentState.isDubbingActive) {
       this.playCurrentSubtitles(newTime * 1000);
     }
 
@@ -481,7 +461,7 @@ export class DubbingManager {
 
   private handlePreciseTime = (time: number): void => {
     console.log("Precise time update:", time);
-    if (this.currentState.isDubbingPaused) {
+    if (!this.currentState.isDubbingActive) {
       console.log("Dubbing is paused, skipping update");
       return;
     }

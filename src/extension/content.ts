@@ -180,6 +180,12 @@ class ContentScript {
       console.log("Tab became hidden. Stopping dubbing.");
       await this.stopDubbing();
       await this.updateDubbingState(false);
+    } else if (!document.hidden) {
+      console.log("Tab became visible. Checking dubbing status.");
+      const storage = await chrome.storage.local.get("isDubbingActive") as { isDubbingActive: boolean };
+      if (storage.isDubbingActive !== this.isDubbingActive) {
+        await this.updateDubbingState(storage.isDubbingActive);
+      }
     }
   }
 

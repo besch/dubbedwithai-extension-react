@@ -262,10 +262,16 @@ export const checkDubbingStatus = createAsyncThunk(
       if (response && response.status === "checked") {
         dispatch(updateDubbingState(response.isDubbingActive));
         return response.isDubbingActive;
+      } else {
+        const storage = await chrome.storage.local.get("isDubbingActive") as { isDubbingActive: boolean };
+        dispatch(updateDubbingState(storage.isDubbingActive));
+        return storage.isDubbingActive;
       }
     } catch (error) {
       console.error("Failed to check dubbing status:", error);
-      dispatch(updateDubbingState(false));
+      const storage = await chrome.storage.local.get("isDubbingActive") as { isDubbingActive: boolean };
+      dispatch(updateDubbingState(storage.isDubbingActive));
+      return storage.isDubbingActive;
     }
   }
 );

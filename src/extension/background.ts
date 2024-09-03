@@ -235,19 +235,27 @@ class BackgroundService {
             if (chrome.runtime.lastError) {
               this.iconManager.stopPulsing();
               this.iconManager.updateIcon(false);
+              this.updateStorageDubbingState(false);
             } else if (response?.isDubbingActive !== undefined) {
               this.updateDubbingState(response.isDubbingActive, tabs[0].id!);
+              this.updateStorageDubbingState(response.isDubbingActive);
             } else {
               this.iconManager.stopPulsing();
               this.iconManager.updateIcon(false);
+              this.updateStorageDubbingState(false);
             }
           }
         );
       } else {
         this.iconManager.stopPulsing();
         this.iconManager.updateIcon(false);
+        this.updateStorageDubbingState(false);
       }
     });
+  }
+
+  private updateStorageDubbingState(isDubbingActive: boolean): void {
+    chrome.storage.local.set({ isDubbingActive });
   }
 
   private async fetchAudioFile(filePath: string): Promise<ArrayBuffer | null> {

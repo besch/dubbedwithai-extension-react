@@ -36,7 +36,18 @@ const DubbingPage: React.FC = () => {
       return;
     }
 
-    dispatch(checkDubbingStatus());
+    const checkStatus = () => dispatch(checkDubbingStatus());
+
+    checkStatus();
+
+    const visibilityChangeHandler = () => {
+      if (!document.hidden) {
+        checkStatus();
+      }
+    };
+
+    document.addEventListener("visibilitychange", visibilityChangeHandler);
+
     if (!subtitlesLoaded) {
       setIsLoadingSubtitles(true);
       dispatch(loadSubtitles())
@@ -50,6 +61,10 @@ const DubbingPage: React.FC = () => {
           setIsLoadingSubtitles(false);
         });
     }
+
+    return () => {
+      document.removeEventListener("visibilitychange", visibilityChangeHandler);
+    };
   }, [selectedMovie, selectedLanguage, subtitlesLoaded, dispatch, navigate, t]);
 
   const handleDubbingToggle = async () => {

@@ -61,6 +61,7 @@ class BackgroundService {
       setSubtitles: this.handleSetSubtitles.bind(this),
       fetchSubtitlesFromGoogleStorage:
         this.handleFetchSubtitlesFromGoogleStorage.bind(this),
+      updateVideoPlaybackState: this.handleVideoPlaybackStateUpdate.bind(this),
     };
 
     const handler = handlers[message.action];
@@ -389,6 +390,23 @@ class BackgroundService {
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }
+  }
+
+  private handleVideoPlaybackStateUpdate(
+    message: { isPlaying: boolean; isDubbingActive: boolean },
+    sendResponse: (response?: any) => void
+  ): void {
+    const { isPlaying, isDubbingActive } = message;
+    if (isDubbingActive) {
+      if (isPlaying) {
+        this.iconManager.startPulsing();
+      } else {
+        this.iconManager.stopPulsing();
+      }
+    } else {
+      this.iconManager.stopPulsing();
+    }
+    sendResponse({ status: "updated" });
   }
 }
 

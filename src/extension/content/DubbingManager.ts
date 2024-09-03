@@ -414,6 +414,7 @@ export class DubbingManager {
       this.precisionTimer.start(currentTime);
       this.playCurrentSubtitles(currentTime * 1000);
       this.checkAndGenerateUpcomingAudio(currentTime * 1000);
+      this.notifyBackgroundScript(true);
     }
     if (this.videoElement) {
       this.adjustVolume(this.videoElement);
@@ -424,9 +425,18 @@ export class DubbingManager {
     if (this.currentState.isDubbingActive) {
       this.precisionTimer.pause();
       this.audioPlayer.pauseAllAudio();
+      this.notifyBackgroundScript(false);
     }
     this.restoreVideoVolume();
   };
+
+  private notifyBackgroundScript(isPlaying: boolean): void {
+    chrome.runtime.sendMessage({
+      action: "updateVideoPlaybackState",
+      isPlaying: isPlaying,
+      isDubbingActive: this.currentState.isDubbingActive
+    });
+  }
 
   private handleVideoSeeking = (event: Event): void => {
     const video = event.target as HTMLVideoElement;

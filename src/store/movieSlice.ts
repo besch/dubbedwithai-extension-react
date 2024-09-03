@@ -261,6 +261,7 @@ export const checkDubbingStatus = createAsyncThunk(
       });
       if (response && response.status === "checked") {
         dispatch(updateDubbingState(response.isDubbingActive));
+        return response.isDubbingActive;
       }
     } catch (error) {
       console.error("Failed to check dubbing status:", error);

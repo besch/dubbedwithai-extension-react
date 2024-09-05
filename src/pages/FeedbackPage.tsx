@@ -6,6 +6,8 @@ import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import PageLayout from "@/components/ui/PageLayout";
 import Button from "@/components/ui/Button";
+import { useMutation } from 'react-query';
+import { sendFeedback } from '@/api';
 
 const FeedbackPage: React.FC = () => {
   const { t } = useTranslation();
@@ -30,26 +32,18 @@ const FeedbackPage: React.FC = () => {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BASE_API_URL}/api/send-feedback`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
-        }
-      );
-
-      if (response.ok) {
-        toast.success(t("feedbackSuccess"));
-        reset();
-      } else {
-        throw new Error(t("feedbackError"));
-      }
-    } catch (error) {
+  const mutation = useMutation(sendFeedback, {
+    onSuccess: () => {
+      toast.success(t("feedbackSuccess"));
+      reset();
+    },
+    onError: () => {
       toast.error(t("feedbackError"));
-    }
+    },
+  });
+
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    mutation.mutate(values);
   };
 
   return (

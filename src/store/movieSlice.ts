@@ -6,6 +6,7 @@ import { sendMessageToActiveTab } from "@/lib/messaging";
 import config from "@/extension/content/config";
 import languageCodes from "@/lib/languageCodes";
 import { DubbingMessage } from "@/types";
+import { fetchMovies, fetchSubtitles } from "@/api";
 
 interface MovieState {
   selectedMovie: Movie | null;
@@ -104,23 +105,7 @@ export const selectSubtitle = createAsyncThunk(
     { dispatch }
   ) => {
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BASE_API_URL}/api/opensubtitles/fetch-subtitles`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(params),
-        }
-      );
-
-      if (!response.ok) {
-        toast.error("No subtitles found for the selected language.");
-        return null;
-      }
-
-      const data = await response.json();
+      const data = await fetchSubtitles(params);
 
       if (!data.srtContent) {
         toast.error("No subtitles found for the selected language.");
@@ -231,21 +216,7 @@ export const searchMovies = createAsyncThunk(
   "movie/searchMovies",
   async (query: string, { rejectWithValue }) => {
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BASE_API_URL}/api/search-movies`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ text: query }),
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to search movies");
-      }
-      const data = await response.json();
-      return data.Search as Movie[];
+      return await fetchMovies(query);
     } catch (error) {
       return rejectWithValue((error as Error).message);
     }

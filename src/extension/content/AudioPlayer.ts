@@ -118,15 +118,6 @@ export class AudioPlayer {
     return this.activeAudio.has(filePath);
   }
 
-  setVolume(volume: number): void {
-    this.activeAudio.forEach((audioInfo) => {
-      audioInfo.gainNode.gain.setValueAtTime(
-        volume,
-        this.audioContext.currentTime
-      );
-    });
-  }
-
   getCurrentlyPlayingSubtitles(): Subtitle[] {
     return Array.from(this.activeAudio.values()).map(
       (audioInfo) => audioInfo.subtitle

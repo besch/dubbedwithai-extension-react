@@ -167,14 +167,6 @@ export class DubbingManager {
     this.audioPlayer = new AudioPlayer(this.audioContext);
   }
 
-  public toggleDubbing(): void {
-    if (this.currentState.isDubbingActive) {
-      this.stopDubbing();
-    } else {
-      this.startDubbing();
-    }
-  }
-
   private stopDubbing(): void {
     this.updateCurrentState({ isDubbingActive: false });
     this.precisionTimer.pause();

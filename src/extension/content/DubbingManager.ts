@@ -491,7 +491,7 @@ export class DubbingManager {
     }
 
     this.playCurrentSubtitles(currentTimeMs);
-    this.audioPlayer.stopExpiredAudio(adjustedTimeMs);
+    this.audioPlayer.fadeOutExpiredAudio(adjustedTimeMs);
     this.preloadUpcomingSubtitles(currentTimeMs);
     this.sendCurrentSubtitleInfo(
       adjustedTimeMs,

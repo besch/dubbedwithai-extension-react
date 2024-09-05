@@ -99,7 +99,7 @@ export class AudioPlayer {
     );
   }
 
-  stopExpiredAudio(adjustedTime: number): void {
+  fadeOutExpiredAudio(adjustedTime: number): void {
     this.activeAudio.forEach((audioInfo, filePath) => {
       if (
         adjustedTime >=
@@ -112,19 +112,6 @@ export class AudioPlayer {
         );
       }
     });
-  }
-
-  stopAudio(filePath: string): void {
-    const audioInfo = this.activeAudio.get(filePath);
-    if (audioInfo) {
-      this.fadeOutAudio(audioInfo.gainNode);
-      // We don't disconnect or delete the audio immediately, allowing it to fade out
-      setTimeout(() => {
-        audioInfo.source.stop();
-        audioInfo.gainNode.disconnect();
-        this.activeAudio.delete(filePath);
-      }, config.subtitleFadeOutDuration * 1000);
-    }
   }
 
   isAudioActive(filePath: string): boolean {

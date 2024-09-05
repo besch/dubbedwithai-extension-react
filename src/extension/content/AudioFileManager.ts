@@ -12,10 +12,7 @@ export class AudioFileManager {
   private notFoundFiles: Set<string> = new Set();
   private audioGenerationQueue: Map<string, Promise<void>> = new Map();
   private existenceCache: Map<string, boolean> = new Map();
-  private existenceCacheTimeout: number = config.audioFileExistenceCacheTimeout;
   private lastExistenceCheck: Map<string, number> = new Map();
-  private generationCacheTimeout: number =
-    config.audioFileGenerationCacheTimeout;
   private lastGenerationAttempt: Map<string, number> = new Map();
 
   constructor(private audioContext: AudioContext) {
@@ -44,7 +41,7 @@ export class AudioFileManager {
     const now = Date.now();
     const lastCheck = this.lastExistenceCheck.get(filePath) || 0;
 
-    if (now - lastCheck < this.existenceCacheTimeout) {
+    if (now - lastCheck < config.audioFileExistenceCacheTimeout) {
       return this.existenceCache.get(filePath) || false;
     }
 
@@ -74,7 +71,7 @@ export class AudioFileManager {
     const now = Date.now();
     const lastAttempt = this.lastGenerationAttempt.get(filePath) || 0;
 
-    if (now - lastAttempt < this.generationCacheTimeout) {
+    if (now - lastAttempt < config.audioFileGenerationCacheTimeout) {
       return;
     }
 

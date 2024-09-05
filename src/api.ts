@@ -57,11 +57,13 @@ export const generateAudio = (text: string, filePath: string): Promise<{ success
     body: JSON.stringify({ text, filePath }),
   });
 
-export const fetchAudioFile = (filePath: string): Promise<ArrayBuffer> =>
-  apiFetch<ArrayBuffer>(API_ENDPOINTS.FETCH_AUDIO_FILE, {
+export const fetchAudioFile = async (filePath: string): Promise<ArrayBuffer> => {
+  const response = await apiFetch<Response>(API_ENDPOINTS.FETCH_AUDIO_FILE, {
     method: 'POST',
     body: JSON.stringify({ filePath }),
   });
+  return response.arrayBuffer();
+};
 
 export const fetchSubtitlesFromGoogleStorage = (
   movieId: string,

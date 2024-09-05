@@ -54,6 +54,20 @@ export const checkAudioFileExists = async (filePath: string): Promise<boolean> =
   return data.exists;
 };
 
+export const generateAudio = async (text: string, filePath: string): Promise<{ success: boolean; message: string }> => {
+  const response = await fetch(
+    `${API_BASE_URL}/api/openai/generate-audio`,
+    {
+      method: "POST",
+      body: JSON.stringify({ text, filePath }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  return await response.json();
+};
+
 export const fetchAudioFile = async (filePath: string): Promise<ArrayBuffer> => {
   const response = await fetch(
     `${API_BASE_URL}/api/google-storage/fetch-audio-file`,

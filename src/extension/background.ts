@@ -1,8 +1,12 @@
 import { parseSrt } from "./utils";
 import { DubbingMessage, Subtitle } from "@/types";
 import { IconManager } from "./content/IconManager";
-
-const API_BASE_URL = process.env.REACT_APP_BASE_API_URL;
+import {
+  checkAudioFileExists,
+  generateAudio,
+  fetchAudioFile,
+  fetchSubtitlesFromGoogleStorage
+} from "@/api";
 
 class BackgroundService {
   private subtitlesCache: { [key: string]: string } = {};
@@ -102,19 +106,8 @@ class BackgroundService {
   ): Promise<void> {
     const { filePath } = message;
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/google-storage/check-file-exists`,
-        {
-          method: "POST",
-          body: JSON.stringify({ filePath }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const data = await response.json();
-      sendResponse({ exists: data.exists });
+      const exists = await checkAudioFileExists(filePath);
+      sendResponse({ exists });
     } catch (e) {
       console.error("Error checking if audio file exists:", e);
       sendResponse({
@@ -142,18 +135,7 @@ class BackgroundService {
     }
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/openai/generate-audio`,
-        {
-          method: "POST",
-          body: JSON.stringify({ text, filePath }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const result = await response.json();
+      const result = await generateAudio(text, filePath);
       sendResponse({ success: true, message: result.message });
     } catch (e: unknown) {
       console.error("Error generating audio:", e);
@@ -260,20 +242,7 @@ class BackgroundService {
 
   private async fetchAudioFile(filePath: string): Promise<ArrayBuffer | null> {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/google-storage/fetch-audio-file`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ filePath }),
-        }
-      );
-
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
-      return await response.arrayBuffer();
+      return await fetchAudioFile(filePath);
     } catch (e) {
       console.error("There was a problem fetching the audio file:", e);
       return null;
@@ -358,23 +327,7 @@ class BackgroundService {
     subtitleId: string
   ): Promise<Subtitle[] | null> {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/google-storage/fetch-subtitles`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ movieId, subtitleId }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch subtitles from Google Storage");
-      }
-
-      const data = await response.json();
-      return data.subtitles;
+      return await fetchSubtitlesFromGoogleStorage(movieId, subtitleId);
     } catch (error) {
       console.error("Error fetching subtitles from Google Storage:", error);
       return null;

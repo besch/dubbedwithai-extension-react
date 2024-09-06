@@ -8,6 +8,7 @@ import PageLayout from "@/components/ui/PageLayout";
 import Button from "@/components/ui/Button";
 import { useMutation } from 'react-query';
 import { sendFeedback } from '@/api';
+import { QueryClient, QueryClientProvider } from 'react-query';
 
 const FeedbackPage: React.FC = () => {
   const { t } = useTranslation();

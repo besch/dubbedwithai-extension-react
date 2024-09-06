@@ -1,12 +1,7 @@
 import { parseSrt } from "./utils";
 import { DubbingMessage, Subtitle } from "@/types";
 import { IconManager } from "./content/IconManager";
-import {
-  checkAudioFileExists,
-  generateAudio,
-  fetchAudioFile,
-  fetchSubtitlesFromGoogleStorage
-} from "@/api";
+import * as api from "../api";
 
 class BackgroundService {
   private subtitlesCache: { [key: string]: string } = {};
@@ -106,7 +101,7 @@ class BackgroundService {
   ): Promise<void> {
     const { filePath } = message;
     try {
-      const exists = await checkAudioFileExists(filePath);
+      const exists = await api.checkAudioFileExists(filePath);
       sendResponse({ exists });
     } catch (e) {
       console.error("Error checking if audio file exists:", e);
@@ -135,7 +130,7 @@ class BackgroundService {
     }
 
     try {
-      const result = await generateAudio(text, filePath);
+      const result = await api.generateAudio(text, filePath);
       sendResponse({ success: true, message: result.message });
     } catch (e: unknown) {
       console.error("Error generating audio:", e);
@@ -242,7 +237,7 @@ class BackgroundService {
 
   private async fetchAudioFile(filePath: string): Promise<ArrayBuffer | null> {
     try {
-      return await fetchAudioFile(filePath);
+      return await api.fetchAudioFile(filePath);
     } catch (e) {
       console.error("There was a problem fetching the audio file:", e);
       return null;
@@ -327,7 +322,7 @@ class BackgroundService {
     subtitleId: string
   ): Promise<Subtitle[] | null> {
     try {
-      return await fetchSubtitlesFromGoogleStorage(movieId, subtitleId);
+      return await api.fetchSubtitlesFromGoogleStorage(movieId, subtitleId);
     } catch (error) {
       console.error("Error fetching subtitles from Google Storage:", error);
       return null;

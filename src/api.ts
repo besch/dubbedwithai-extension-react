@@ -2,59 +2,58 @@ import { Movie, Subtitle } from "@/types";
 
 const API_BASE_URL = process.env.REACT_APP_BASE_API_URL;
 
-export const fetchMovies = async (query: string): Promise<Movie[]> => {
-  const response = await fetch(`${API_BASE_URL}/api/search-movies`, {
-    method: "POST",
+// Common fetch function
+const apiFetch = async <T>(endpoint: string, method: string, body?: object): Promise<T> => {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method,
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ text: query }),
+    body: body ? JSON.stringify(body) : undefined,
   });
+
   if (!response.ok) {
-    throw new Error("Failed to search movies");
+    throw new Error(`API call failed: ${response.statusText}`);
   }
-  const data = await response.json();
-  return data.Search as Movie[];
+
+  return await response.json();
 };
 
-export const fetchSubtitles = async (params: {
+// Update existing functions to use apiFetch
+export const fetchMovies = (query: string): Promise<Movie[]> =>
+  apiFetch<{ Search: Movie[] }>("/api/search-movies", "POST", { text: query })
+    .then(data => data.Search);
+
+export const fetchSubtitles = (params: {
   imdbID: string;
   languageCode: string;
   seasonNumber?: number;
   episodeNumber?: number;
-}): Promise<{ srtContent: string; subtitleInfo: any }> => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/opensubtitles/fetch-subtitles`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(params),
-    }
-  );
-  if (!response.ok) {
-    throw new Error("No subtitles found for the selected language.");
-  }
-  return await response.json();
-};
+}): Promise<{ srtContent: string; subtitleInfo: any }> =>
+  apiFetch("/api/opensubtitles/fetch-subtitles", "POST", params);
 
-export const checkAudioFileExists = async (filePath: string): Promise<boolean> => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/google-storage/check-file-exists`,
-    {
-      method: "POST",
-      body: JSON.stringify({ filePath }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-  const data = await response.json();
-  return data.exists;
-};
+export const checkAudioFileExists = (filePath: string): Promise<boolean> =>
+  apiFetch<{ exists: boolean }>("/api/google-storage/check-file-exists", "POST", { filePath })
+    .then(data => data.exists);
 
-export const fetchAudioFile = async (filePath: string): Promise<ArrayBuffer | null> => {
+export const fetchSubtitlesFromGoogleStorage = (
+  movieId: string,
+  subtitleId: string
+): Promise<Subtitle[]> =>
+  apiFetch<{ subtitles: Subtitle[] }>("/api/google-storage/fetch-subtitles", "POST", { movieId, subtitleId })
+    .then(data => data.subtitles);
+
+export const sendFeedback = (values: {
+  email: string;
+  subject: string;
+  message: string;
+}): Promise<void> =>
+  apiFetch("/api/send-feedback", "POST", values);
+
+export const generateAudio = (text: string, filePath: string): Promise<any> =>
+  apiFetch("/api/openai/generate-audio", "POST", { text, filePath });
+
+export const fetchAudioFile = async (filePath: string): Promise<ArrayBuffer> => {
   const response = await fetch(
     `${API_BASE_URL}/api/google-storage/fetch-audio-file`,
     {
@@ -69,54 +68,4 @@ export const fetchAudioFile = async (filePath: string): Promise<ArrayBuffer | nu
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   return await response.arrayBuffer();
-};
-
-export const fetchSubtitlesFromGoogleStorage = async (
-  movieId: string,
-  subtitleId: string
-): Promise<Subtitle[]> => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/google-storage/fetch-subtitles`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ movieId, subtitleId }),
-    }
-  );
-  if (!response.ok) {
-    throw new Error("Failed to fetch subtitles from Google Storage");
-  }
-  const data = await response.json();
-  return data.subtitles;
-};
-
-export const sendFeedback = async (values: {
-  email: string;
-  subject: string;
-  message: string;
-}): Promise<void> => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/send-feedback`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    }
-  );
-  if (!response.ok) {
-    throw new Error("Failed to send feedback");
-  }
-};
-
-export const generateAudio = async (text: string, filePath: string): Promise<any> => {
-  const response = await fetch(`${API_BASE_URL}/api/openai/generate-audio`, {
-    method: "POST",
-    body: JSON.stringify({ text, filePath }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  return await response.json();
 };

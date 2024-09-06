@@ -1,7 +1,7 @@
 import { parseSrt } from "./utils";
 import { DubbingMessage, Subtitle } from "@/types";
 import { IconManager } from "./content/IconManager";
-import * as api from "../api";
+import * as api from "@/api";
 
 class BackgroundService {
   private subtitlesCache: { [key: string]: string } = {};

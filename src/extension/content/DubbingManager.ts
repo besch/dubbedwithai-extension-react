@@ -636,7 +636,7 @@ export class DubbingManager {
     const filePath = this.getAudioFilePath(subtitle);
     try {
       const exists = await this.audioFileManager.checkFileExists(filePath);
-      if (!exists) {
+      if (!exists && !this.audioFileManager.isGenerating(filePath)) {
         await this.audioFileManager.generateAudio(filePath, subtitle.text);
       }
 

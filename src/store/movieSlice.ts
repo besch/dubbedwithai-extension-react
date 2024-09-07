@@ -225,6 +225,7 @@ export const searchMovies = createAsyncThunk(
     try {
       return await fetchMovies(query);
     } catch (error) {
+      toast.error((error as Error).message);
       return rejectWithValue((error as Error).message);
     }
   }
@@ -343,9 +344,6 @@ const movieSlice = createSlice({
       state.selectedEpisodeNumber = action.payload;
       chrome.storage.local.set({ movieState: { ...state } });
     },
-    clearMovieErrors: (state) => {
-      state.error = null;
-    },
   },
   extraReducers: (builder) => {
     builder
@@ -354,7 +352,6 @@ const movieSlice = createSlice({
       })
       .addCase(searchMovies.pending, (state) => {
         state.isLoading = true;
-        state.error = null;
       })
       .addCase(
         searchMovies.fulfilled,
@@ -363,9 +360,8 @@ const movieSlice = createSlice({
           state.searchResults = action.payload;
         }
       )
-      .addCase(searchMovies.rejected, (state, action) => {
+      .addCase(searchMovies.rejected, (state) => {
         state.isLoading = false;
-        state.error = action.payload as string;
       })
       .addCase(toggleDubbingProcess.rejected, (state, action) => {
         state.error =
@@ -410,7 +406,6 @@ export const {
   updateLastSelectedLanguage,
   setSelectedSeasonNumber,
   setSelectedEpisodeNumber,
-  clearMovieErrors,
 } = movieSlice.actions;
 
 export default movieSlice.reducer;

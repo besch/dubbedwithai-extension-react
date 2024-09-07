@@ -15,6 +15,15 @@ export class SubtitleManager {
     return SubtitleManager.instance;
   }
 
+  public setActiveSubtitles(subtitles: Subtitle[]): void {
+    const uniqueId = this.generateUniqueId();
+    this.sortedSubtitles = subtitles.map((subtitle) => ({
+      ...subtitle,
+      uniqueId,
+    }));
+    this.sortedSubtitles.sort((a, b) => a.start - b.start);
+  }
+
   async getSubtitles(
     movieId: string,
     languageCode: string,
@@ -170,5 +179,9 @@ export class SubtitleManager {
       return `${movieId}-${languageCode}-S${seasonNumber}E${episodeNumber}`;
     }
     return `${movieId}-${languageCode}`;
+  }
+
+  private generateUniqueId(): string {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 }

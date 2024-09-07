@@ -5,7 +5,7 @@ import { Movie } from "@/types";
 import MovieItem from "@/components/MovieItem";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Search, X } from "lucide-react";
-import { searchMovies, setSelectedMovie } from "@/store/movieSlice";
+import { searchMovies, setSearchResults, setSelectedMovie } from "@/store/movieSlice";
 import { useTranslation } from "react-i18next";
 
 interface MovieSearchProps {
@@ -48,6 +48,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
   const handleClearSearch = () => {
     setMovieQuery("");
     setSelectedIndex(-1);
+    dispatch(setSearchResults([]));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

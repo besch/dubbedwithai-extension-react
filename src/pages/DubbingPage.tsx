@@ -7,7 +7,7 @@ import {
   updateDubbingState,
   checkDubbingStatus,
   loadSubtitles,
-  toggleDubbingProcess
+  toggleDubbingProcess,
 } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
 import PageLayout from "@/components/ui/PageLayout";
@@ -27,6 +27,7 @@ const DubbingPage: React.FC = () => {
     subtitlesLoaded,
     selectedSeasonNumber,
     selectedEpisodeNumber,
+    srtContent,
   } = useSelector((state: RootState) => state.movie);
   const [isLoadingSubtitles, setIsLoadingSubtitles] = useState(false);
 
@@ -67,6 +68,20 @@ const DubbingPage: React.FC = () => {
     };
   }, [selectedMovie, selectedLanguage, subtitlesLoaded, dispatch, navigate, t]);
 
+  useEffect(() => {
+    const handleDubbingStateChange = (message: any) => {
+      if (message.action === "updateDubbingState") {
+        dispatch(updateDubbingState(message.payload));
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(handleDubbingStateChange);
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(handleDubbingStateChange);
+    };
+  }, [dispatch]);
+
   const handleDubbingToggle = async () => {
     if (isLoadingSubtitles) {
       toast.warning(t("waitForSubtitlesToLoad"));
@@ -81,7 +96,9 @@ const DubbingPage: React.FC = () => {
     try {
       await dispatch(toggleDubbingProcess());
       dispatch(updateDubbingState(!isDubbingActive));
-      toast.success(isDubbingActive ? t("dubbingStopped") : t("dubbingStarted"));
+      toast.success(
+        isDubbingActive ? t("dubbingStopped") : t("dubbingStarted")
+      );
     } catch (error) {
       console.error("Failed to toggle dubbing:", error);
       toast.error(t("failedToToggleDubbing"));
@@ -91,10 +108,10 @@ const DubbingPage: React.FC = () => {
   const getFullLanguageName = (languageCode: string): string =>
     languageCodes[languageCode] || languageCode;
 
-  if (!selectedMovie || !selectedLanguage) {
+  if (!selectedMovie && !selectedLanguage && !srtContent) {
     return (
       <PageLayout title={t("dubbingControls")}>
-        {toast.error(t("noMovieOrLanguageSelected"))}
+        {toast.error(t("noMovieOrLanguageSelectedOrSubtitlesUploaded"))}
       </PageLayout>
     );
   }
@@ -102,12 +119,14 @@ const DubbingPage: React.FC = () => {
   return (
     <PageLayout title={t("dubbingControls")}>
       <div className="space-y-4">
-        <MovieCard movie={selectedMovie} />
-        <p className="text-sm text-muted-foreground">
-          {t("language")}:{" "}
-          {getFullLanguageName(selectedLanguage.attributes.language)}
-        </p>
-        {selectedMovie.Type === "series" &&
+        {selectedMovie && <MovieCard movie={selectedMovie} />}
+        {selectedLanguage && (
+          <p className="text-sm text-muted-foreground">
+            {t("language")}:{" "}
+            {getFullLanguageName(selectedLanguage.attributes.language)}
+          </p>
+        )}
+        {selectedMovie?.Type === "series" &&
           selectedSeasonNumber &&
           selectedEpisodeNumber && (
             <p className="text-sm text-muted-foreground">
@@ -117,6 +136,11 @@ const DubbingPage: React.FC = () => {
               })}
             </p>
           )}
+        {srtContent && !selectedMovie && !selectedLanguage && (
+          <p className="text-sm text-muted-foreground">
+            {t("usingUploadedSubtitles")}
+          </p>
+        )}
         {isLoadingSubtitles ? (
           <LoadingSpinner size="lg" />
         ) : (

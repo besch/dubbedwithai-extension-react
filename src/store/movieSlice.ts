@@ -102,9 +102,12 @@ export const selectSubtitle = createAsyncThunk(
       seasonNumber?: number;
       episodeNumber?: number;
     },
-    { dispatch }
+    { dispatch, getState }
   ) => {
     try {
+      const state = getState() as RootState;
+      const currentSrtContent = state.movie.srtContent;
+
       const data = await fetchSubtitles(params);
 
       if (!data.srtContent) {
@@ -131,7 +134,8 @@ export const selectSubtitle = createAsyncThunk(
         );
       });
 
-      if (data.srtContent) {
+      // Update srtContent only if it's different from the current one
+      if (data.srtContent !== currentSrtContent) {
         dispatch(setSrtContent(data.srtContent));
         await chrome.storage.local.set({ srtContent: data.srtContent });
       }
@@ -178,10 +182,10 @@ export const toggleDubbingProcess = createAsyncThunk(
   "movie/toggleDubbingProcess",
   async (_, { getState, dispatch }) => {
     const state = getState() as RootState;
-    const { selectedMovie, selectedLanguage, isDubbingActive } = state.movie;
+    const { selectedMovie, selectedLanguage, isDubbingActive, srtContent } = state.movie;
 
-    if (!selectedMovie || !selectedLanguage) {
-      throw new Error("No movie or language selected");
+    if (!srtContent && (!selectedMovie || !selectedLanguage)) {
+      throw new Error("No subtitles uploaded and no movie or language selected");
     }
 
     return new Promise<void>((resolve, reject) => {
@@ -189,9 +193,9 @@ export const toggleDubbingProcess = createAsyncThunk(
         if (tabs[0]?.id) {
           const message: DubbingMessage = {
             action: isDubbingActive ? "stopDubbing" : "initializeDubbing",
-            movieId: selectedMovie.imdbID,
-            languageCode: selectedLanguage.attributes.language,
-            srtContent: state.movie.srtContent,
+            movieId: selectedMovie?.imdbID || "uploaded",
+            languageCode: selectedLanguage?.attributes.language || "uploaded",
+            srtContent: srtContent,
             seasonNumber: state.movie.selectedSeasonNumber || undefined,
             episodeNumber: state.movie.selectedEpisodeNumber || undefined,
           };
@@ -254,8 +258,9 @@ const movieSlice = createSlice({
   name: "movie",
   initialState,
   reducers: {
-    setSrtContent: (state, action: PayloadAction<string>) => {
+    setSrtContent: (state, action: PayloadAction<string | null>) => {
       state.srtContent = action.payload;
+      state.subtitlesLoaded = !!action.payload;
     },
     updateVideoVolumeWhilePlayingDubbing: (
       state,

@@ -26,6 +26,16 @@ class BackgroundService {
     chrome.tabs.onRemoved.addListener(this.onTabRemoved.bind(this));
   }
 
+  private handleUpdateVideoPlaybackState(message: any): void {
+    if (message.isDubbingActive) {
+      this.updateStorageDubbingState(true);
+      chrome.runtime.sendMessage({
+        action: "updateDubbingState",
+        payload: true,
+      });
+    }
+  }
+
   private async onInstalled(): Promise<void> {
     await this.iconManager.preloadIcons();
     await this.initializeStorage();
@@ -41,35 +51,43 @@ class BackgroundService {
     sendResponse: (response?: any) => void
   ): boolean {
     console.log("Background script received message:", message);
-    const handlers: Record<
-      string,
-      (msg: any, res: (response?: any) => void) => void
-    > = {
-      requestSubtitles: this.handleSubtitlesRequest.bind(this),
-      requestAudioFile: this.handleAudioFileRequest.bind(this),
-      updateDubbingState: (msg) => {
-        console.log("Updating dubbing state:", msg.payload);
+    switch (message.action) {
+      case "requestSubtitles":
+        this.handleSubtitlesRequest(message, sendResponse);
+        break;
+      case "requestAudioFile":
+        this.handleAudioFileRequest(message, sendResponse);
+        break;
+      case "updateDubbingState":
+        console.log("Updating dubbing state:", message.payload);
         if (sender.tab?.id) {
-          this.updateDubbingState(msg.payload, sender.tab.id);
+          this.updateDubbingState(message.payload, sender.tab.id);
         }
         sendResponse({ status: "updated" });
-      },
-      updateCurrentTime: (msg) => chrome.runtime.sendMessage(msg),
-      checkAudioFileExists: this.handleCheckAudioFileExists.bind(this),
-      generateAudio: this.handleGenerateAudio.bind(this),
-      setSubtitles: this.handleSetSubtitles.bind(this),
-      fetchSubtitlesFromGoogleStorage:
-        this.handleFetchSubtitlesFromGoogleStorage.bind(this),
-      updateVideoPlaybackState: this.handleVideoPlaybackStateUpdate.bind(this),
-    };
-
-    const handler = handlers[message.action];
-    if (handler) {
-      handler(message, sendResponse);
-      return true;
+        break;
+      case "updateCurrentTime":
+        chrome.runtime.sendMessage(message);
+        break;
+      case "checkAudioFileExists":
+        this.handleCheckAudioFileExists(message, sendResponse);
+        break;
+      case "generateAudio":
+        this.handleGenerateAudio(message, sendResponse);
+        break;
+      case "setSubtitles":
+        this.handleSetSubtitles(message, sendResponse);
+        break;
+      case "fetchSubtitlesFromGoogleStorage":
+        this.handleFetchSubtitlesFromGoogleStorage(message, sendResponse);
+        break;
+      case "updateVideoPlaybackState":
+        this.handleUpdateVideoPlaybackState(message);
+        break;
+      default:
+        console.warn("No handler found for message:", message);
+        break;
     }
-    console.warn("No handler found for message:", message);
-    return false;
+    return true;
   }
 
   private handleSetSubtitles(

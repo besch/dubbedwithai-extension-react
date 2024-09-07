@@ -77,7 +77,9 @@ export class DubbingManager {
     });
 
     if (this.currentState.isDubbingActive) {
-      console.log("DubbingManager is already active. Stopping current dubbing...");
+      console.log(
+        "DubbingManager is already active. Stopping current dubbing..."
+      );
       await this.stop();
     }
 
@@ -102,6 +104,8 @@ export class DubbingManager {
           `No subtitles found for movie ${movieId}, language ${languageCode}, season ${seasonNumber}, episode ${episodeNumber}`
         );
       }
+
+      this.subtitleManager.setActiveSubtitles(subtitles);
 
       this.findAndStoreVideoElement();
       if (this.videoElement) {
@@ -139,6 +143,7 @@ export class DubbingManager {
         seasonNumber,
         episodeNumber
       );
+      this.audioFileManager.clearCache();
     } else {
       const fetchedSubtitles = await this.subtitleManager.getSubtitles(
         movieId,
@@ -153,6 +158,15 @@ export class DubbingManager {
       }
       subtitles = fetchedSubtitles;
     }
+
+    this.subtitleManager.cacheSubtitles(
+      movieId,
+      languageCode,
+      subtitles,
+      seasonNumber,
+      episodeNumber
+    );
+
     console.log("Subtitles loaded:", subtitles.length);
     return subtitles;
   }
@@ -172,10 +186,10 @@ export class DubbingManager {
     this.precisionTimer.pause();
     this.audioPlayer.pauseAllAudio();
     this.restoreVideoVolume();
-  
+
     chrome.runtime.sendMessage({
       action: "updateDubbingState",
-      payload: false
+      payload: false,
     });
   }
 
@@ -187,16 +201,16 @@ export class DubbingManager {
       console.error("No video element found");
       return;
     }
-  
+
     const currentVideoTime = this.videoElement.currentTime;
     this.precisionTimer.start(currentVideoTime);
     this.adjustVolume(this.videoElement);
     this.playCurrentSubtitles(currentVideoTime * 1000);
     this.checkAndGenerateUpcomingAudio(currentVideoTime * 1000);
-  
+
     chrome.runtime.sendMessage({
       action: "updateDubbingState",
-      payload: true
+      payload: true,
     });
   }
 
@@ -426,7 +440,7 @@ export class DubbingManager {
     chrome.runtime.sendMessage({
       action: "updateVideoPlaybackState",
       isPlaying: isPlaying,
-      isDubbingActive: this.currentState.isDubbingActive
+      isDubbingActive: this.currentState.isDubbingActive,
     });
   }
 
@@ -440,6 +454,7 @@ export class DubbingManager {
 
     if (this.currentState.isDubbingActive) {
       this.playCurrentSubtitles(newTime * 1000);
+      this.notifyBackgroundScript(true);
     }
 
     this.checkAndGenerateUpcomingAudio(newTime * 1000);
@@ -487,7 +502,7 @@ export class DubbingManager {
     this.preloadUpcomingSubtitles(currentTimeMs);
     this.sendCurrentSubtitleInfo(
       adjustedTimeMs,
-            this.subtitleManager.getCurrentSubtitles(adjustedTimeMs)
+      this.subtitleManager.getCurrentSubtitles(adjustedTimeMs)
     );
     this.checkAndGenerateUpcomingAudio(currentTimeMs);
 

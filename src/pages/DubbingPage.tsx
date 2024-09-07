@@ -8,6 +8,8 @@ import {
   checkDubbingStatus,
   loadSubtitles,
   toggleDubbingProcess,
+  loadMovieState,
+  setSrtContent,
 } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
 import PageLayout from "@/components/ui/PageLayout";
@@ -84,6 +86,13 @@ const DubbingPage: React.FC = () => {
     };
 
     chrome.runtime.onMessage.addListener(handleDubbingStateChange);
+    dispatch(loadMovieState());
+
+    chrome.storage.local.get(["srtContent"], (result) => {
+      if (result.srtContent) {
+        dispatch(setSrtContent(result.srtContent));
+      }
+    });
 
     return () => {
       chrome.runtime.onMessage.removeListener(handleDubbingStateChange);

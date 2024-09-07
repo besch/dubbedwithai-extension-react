@@ -130,7 +130,6 @@ export const selectSubtitle = createAsyncThunk(
         );
       });
 
-      // Update srtContent only if it's different from the current one
       if (data.srtContent !== currentSrtContent) {
         dispatch(setSrtContent(data.srtContent));
         await chrome.storage.local.set({ srtContent: data.srtContent });
@@ -160,7 +159,7 @@ export const setVideoVolumeWhilePlayingDubbing = createAsyncThunk(
 
 export const loadMovieState = createAsyncThunk("movie/loadState", async () => {
   return new Promise<Partial<MovieState>>((resolve) => {
-    chrome.storage.local.get(["movieState"], (result) => {
+    chrome.storage.local.get(["movieState", "srtContent"], (result) => {
       const movieState = result.movieState || {};
       if (typeof movieState.subtitleOffset !== "number") {
         movieState.subtitleOffset = 0;
@@ -169,6 +168,7 @@ export const loadMovieState = createAsyncThunk("movie/loadState", async () => {
         movieState.videoVolumeWhilePlayingDubbing =
           config.videoVolumeWhilePlayingDubbing;
       }
+      movieState.srtContent = result.srtContent || null;
       resolve(movieState);
     });
   });
@@ -264,7 +264,7 @@ const movieSlice = createSlice({
   reducers: {
     setSrtContent: (state, action: PayloadAction<string | null>) => {
       state.srtContent = action.payload;
-      state.subtitlesLoaded = !!action.payload;
+      chrome.storage.local.set({ srtContent: action.payload });
     },
     updateVideoVolumeWhilePlayingDubbing: (
       state,
@@ -337,7 +337,11 @@ const movieSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(loadMovieState.fulfilled, (state, action) => {
-        return { ...state, ...action.payload };
+        return {
+          ...state,
+          ...action.payload,
+          subtitlesLoaded: !!action.payload.srtContent,
+        };
       })
       .addCase(searchMovies.pending, (state) => {
         state.isLoading = true;

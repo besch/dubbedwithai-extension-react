@@ -141,16 +141,19 @@ class ContentScript {
       "episodeNumber",
     ])) as StorageData;
 
-    if (storage.isDubbingActive && storage.movieId && storage.languageCode) {
+    if (
+      storage.isDubbingActive &&
+      ((storage.movieId && storage.languageCode) || storage.srtContent)
+    ) {
       try {
         if (!this.checkForVideoElement()) {
           throw new Error("No video element found on the page");
         }
 
         await this.dubbingManager.initialize(
-          storage.movieId,
-          storage.languageCode,
-          storage.srtContent,
+          storage.movieId || "",
+          storage.languageCode || "",
+          storage.srtContent || null,
           storage.seasonNumber,
           storage.episodeNumber
         );
@@ -182,7 +185,9 @@ class ContentScript {
       await this.updateDubbingState(false);
     } else if (!document.hidden) {
       console.log("Tab became visible. Checking dubbing status.");
-      const storage = await chrome.storage.local.get("isDubbingActive") as { isDubbingActive: boolean };
+      const storage = (await chrome.storage.local.get("isDubbingActive")) as {
+        isDubbingActive: boolean;
+      };
       if (storage.isDubbingActive !== this.isDubbingActive) {
         await this.updateDubbingState(storage.isDubbingActive);
       }

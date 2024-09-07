@@ -9,7 +9,6 @@ import {
 } from "@/store/movieSlice";
 import PageLayout from "@/components/ui/PageLayout";
 import Button from "@/components/ui/Button";
-import { millisecondsToTimeString } from "@/extension/utils";
 import { toast } from "react-toastify";
 import config from "@/extension/content/config";
 import { DubbingMessage } from "@/types";
@@ -33,8 +32,6 @@ const SettingsPage: React.FC = () => {
   const [localVideoVolume, setLocalVideoVolume] = useState(
     videoVolumeWhilePlayingDubbing
   );
-  const [currentTime, setCurrentTime] = useState(0);
-  const [adjustedTime, setAdjustedTime] = useState(0);
 
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -45,18 +42,6 @@ const SettingsPage: React.FC = () => {
     setLocalDubbingVolume(dubbingVolumeMultiplier);
     setLocalVideoVolume(videoVolumeWhilePlayingDubbing);
   }, [subtitleOffset, dubbingVolumeMultiplier, videoVolumeWhilePlayingDubbing]);
-
-  useEffect(() => {
-    const messageListener = (message: any) => {
-      if (message.action === "updateCurrentTime") {
-        setCurrentTime(message.currentTime);
-        setAdjustedTime(message.adjustedTime);
-      }
-    };
-
-    chrome.runtime.onMessage.addListener(messageListener);
-    return () => chrome.runtime.onMessage.removeListener(messageListener);
-  }, []);
 
   useEffect(() => {
     if (activeTooltip && tooltipRef.current) {
@@ -188,17 +173,6 @@ const SettingsPage: React.FC = () => {
               </option>
             ))}
           </select>
-        </div>
-
-        <div className="bg-secondary p-4 rounded-lg shadow-inner">
-          <div className="flex justify-between text-sm font-medium">
-            <span>
-              {t("current")}: {millisecondsToTimeString(currentTime)}
-            </span>
-            <span>
-              {t("adjusted")}: {millisecondsToTimeString(adjustedTime)}
-            </span>
-          </div>
         </div>
 
         <div className="space-y-6">

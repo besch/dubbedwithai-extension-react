@@ -32,7 +32,7 @@ const DubbingPage: React.FC = () => {
   const [isLoadingSubtitles, setIsLoadingSubtitles] = useState(false);
 
   useEffect(() => {
-    if (!selectedMovie || !selectedLanguage) {
+    if (!selectedMovie && !selectedLanguage && !srtContent) {
       navigate("/search");
       return;
     }
@@ -66,7 +66,15 @@ const DubbingPage: React.FC = () => {
     return () => {
       document.removeEventListener("visibilitychange", visibilityChangeHandler);
     };
-  }, [selectedMovie, selectedLanguage, subtitlesLoaded, dispatch, navigate, t]);
+  }, [
+    selectedMovie,
+    selectedLanguage,
+    subtitlesLoaded,
+    dispatch,
+    navigate,
+    t,
+    srtContent,
+  ]);
 
   useEffect(() => {
     const handleDubbingStateChange = (message: any) => {

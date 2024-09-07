@@ -182,10 +182,13 @@ export const toggleDubbingProcess = createAsyncThunk(
   "movie/toggleDubbingProcess",
   async (_, { getState, dispatch }) => {
     const state = getState() as RootState;
-    const { selectedMovie, selectedLanguage, isDubbingActive, srtContent } = state.movie;
+    const { selectedMovie, selectedLanguage, isDubbingActive, srtContent } =
+      state.movie;
 
     if (!srtContent && (!selectedMovie || !selectedLanguage)) {
-      throw new Error("No subtitles uploaded and no movie or language selected");
+      throw new Error(
+        "No subtitles uploaded and no movie or language selected"
+      );
     }
 
     return new Promise<void>((resolve, reject) => {
@@ -238,13 +241,17 @@ export const checkDubbingStatus = createAsyncThunk(
         dispatch(updateDubbingState(response.isDubbingActive));
         return response.isDubbingActive;
       } else {
-        const storage = await chrome.storage.local.get("isDubbingActive") as { isDubbingActive: boolean };
+        const storage = (await chrome.storage.local.get("isDubbingActive")) as {
+          isDubbingActive: boolean;
+        };
         dispatch(updateDubbingState(storage.isDubbingActive));
         return storage.isDubbingActive;
       }
     } catch (error) {
       console.error("Failed to check dubbing status:", error);
-      const storage = await chrome.storage.local.get("isDubbingActive") as { isDubbingActive: boolean };
+      const storage = (await chrome.storage.local.get("isDubbingActive")) as {
+        isDubbingActive: boolean;
+      };
       dispatch(updateDubbingState(storage.isDubbingActive));
       return storage.isDubbingActive;
     }
@@ -361,7 +368,8 @@ const movieSlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(toggleDubbingProcess.rejected, (state, action) => {
-        state.error = action.error.message || "Failed to toggle dubbing process";
+        state.error =
+          action.error.message || "Failed to toggle dubbing process";
       })
       .addCase(checkDubbingStatus.rejected, (state) => {
         state.isDubbingActive = false;

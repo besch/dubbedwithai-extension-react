@@ -21,7 +21,7 @@ const LanguageSelectionPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const { selectedMovie, isLoading, error } = useSelector(
+  const { selectedMovie, isLoading } = useSelector(
     (state: RootState) => state.movie
   );
   const languages = useSelector(availableLanguages);
@@ -142,8 +142,6 @@ const LanguageSelectionPage: React.FC = () => {
                   {t("subtitlesGenerate")}
                 </p>
               </div>
-            ) : error ? (
-              <div className="text-red-500">{`Error: ${error}`}</div>
             ) : (
               <div className="animate-fade-in">
                 {lastSelectedLanguage && (

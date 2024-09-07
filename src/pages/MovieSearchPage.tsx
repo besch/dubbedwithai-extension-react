@@ -3,7 +3,11 @@ import { useNavigate } from "react-router-dom";
 import MovieSearch from "@/components/MovieSearch";
 import SubtitleUpload from "@/components/SubtitleUpload";
 import { useDispatch } from "react-redux";
-import { setSelectedMovie, setSearchResults } from "@/store/movieSlice";
+import {
+  setSelectedMovie,
+  setSearchResults,
+  setSelectedLanguage,
+} from "@/store/movieSlice";
 import { Movie } from "@/types";
 import PageLayout from "@/components/ui/PageLayout";
 import { useTranslation } from "react-i18next";
@@ -20,10 +24,11 @@ const MovieSearchPage: React.FC = () => {
 
   React.useEffect(() => {
     dispatch(setSearchResults([]));
+    dispatch(setSelectedLanguage(null));
   }, [dispatch]);
 
   return (
-    <PageLayout title={t("searchOrUpload")}>
+    <PageLayout title={t("subtitles")}>
       <div className="h-full overflow-visible flex flex-col space-y-8">
         <div className="bg-card p-6 rounded-lg shadow-sm">
           <h2 className="text-xl font-semibold mb-4">{t("searchForMovie")}</h2>

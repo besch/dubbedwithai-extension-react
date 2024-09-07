@@ -25,6 +25,10 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
   const [movieQuery, setMovieQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
+  useEffect(() => {
+    dispatch(setSearchResults([]));
+  }, [dispatch]);
+
   const handleSearch = useCallback(
     async (query: string) => {
       const trimmedQuery = query.trim();

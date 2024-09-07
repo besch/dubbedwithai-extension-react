@@ -72,6 +72,8 @@ i18n.use(initReactI18next).init({
         useLanguage: "Use {{language}}",
         subtitlesGenerate:
           "If subtitles do not exist in our database, it may take up to 10 seconds to generate them. Please be patient.",
+        searchOrUpload: "Search for a Movie or Upload Subtitles",
+        uploadSubtitles: "Upload Your Own Subtitles",
       },
     },
     es: {

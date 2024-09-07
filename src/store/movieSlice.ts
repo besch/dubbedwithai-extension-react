@@ -18,8 +18,6 @@ interface MovieState {
   isDubbingActive: boolean;
   searchResults: Movie[];
   subtitleOffset: number;
-  currentVideoTime: number;
-  adjustedVideoTime: number;
   dubbingVolumeMultiplier: number;
   videoVolumeWhilePlayingDubbing: number;
   subtitlesLoaded: boolean;
@@ -44,8 +42,6 @@ const initialState: MovieState = {
   isDubbingActive: false,
   searchResults: [],
   subtitleOffset: 0,
-  currentVideoTime: 0,
-  adjustedVideoTime: 0,
   dubbingVolumeMultiplier: 1.0,
   videoVolumeWhilePlayingDubbing: config.videoVolumeWhilePlayingDubbing,
   subtitlesLoaded: false,
@@ -326,13 +322,6 @@ const movieSlice = createSlice({
       state.subtitleOffset = 0;
       chrome.storage.local.set({ movieState: { ...state } });
     },
-    updateCurrentTime: (
-      state,
-      action: PayloadAction<{ currentTime: number; adjustedTime: number }>
-    ) => {
-      state.currentVideoTime = action.payload.currentTime;
-      state.adjustedVideoTime = action.payload.adjustedTime;
-    },
     updateLastSelectedLanguage: (state, action: PayloadAction<Language>) => {
       state.lastSelectedLanguage = action.payload;
     },
@@ -399,7 +388,6 @@ export const {
   updateDubbingState,
   setSubtitleOffset,
   resetSettings,
-  updateCurrentTime,
   setDubbingVolumeMultiplier,
   updateVideoVolumeWhilePlayingDubbing,
   setSrtContent,

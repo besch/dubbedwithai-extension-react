@@ -505,12 +505,6 @@ export class DubbingManager {
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs)
     );
     this.checkAndGenerateUpcomingAudio(currentTimeMs);
-
-    chrome.runtime.sendMessage({
-      action: "updateCurrentTime",
-      currentTime: currentTimeMs,
-      adjustedTime: adjustedTimeMs,
-    });
   };
 
   private async preloadUpcomingSubtitles(currentTime: number): Promise<void> {

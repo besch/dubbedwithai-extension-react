@@ -65,9 +65,6 @@ class BackgroundService {
         }
         sendResponse({ status: "updated" });
         break;
-      case "updateCurrentTime":
-        chrome.runtime.sendMessage(message);
-        break;
       case "checkAudioFileExists":
         this.handleCheckAudioFileExists(message, sendResponse);
         break;

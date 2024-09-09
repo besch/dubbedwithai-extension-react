@@ -86,7 +86,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
           onChange={(e) => setMovieQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={t("searchForMovie")}
-          className="w-full p-2 pl-10 pr-10 border rounded bg-input text-foreground border-border placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full p-2 pl-10 pr-10 border rounded bg-background text-foreground border-muted-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
           aria-label={t("searchForMovie")}
         />
         <Search
@@ -103,6 +103,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
           </button>
         )}
       </div>
+      <p className="mt-2 text-muted-foreground">{t("startTyping")}</p>
       {isLoading && (
         <div className="flex justify-center items-center mt-8">
           <LoadingSpinner size="lg" />
@@ -123,9 +124,6 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
         <>
           {movieQuery.trim().length > 2 && !isLoading && !error && (
             <p className="mt-2 text-muted-foreground">{t("noMoviesFound")}</p>
-          )}
-          {!movieQuery.trim().length && !isLoading && !error && (
-            <p className="mt-2 text-muted-foreground">{t("startTyping")}</p>
           )}
         </>
       )}

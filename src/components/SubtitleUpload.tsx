@@ -46,7 +46,9 @@ const SubtitleUpload: React.FC = () => {
         <div
           {...getRootProps()}
           className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
-            isDragActive ? "border-primary bg-primary/10" : "border-border"
+            isDragActive
+              ? "border-primary bg-primary/10"
+              : "border-muted-foreground bg-accent/20"
           }`}
         >
           <input {...getInputProps()} />

@@ -208,6 +208,8 @@ class BackgroundService {
       this.iconManager.stopPulsing();
       this.iconManager.updateIcon(false);
     }
+
+    this.updateStorageDubbingState(isActive);
   }
 
   private onTabRemoved(

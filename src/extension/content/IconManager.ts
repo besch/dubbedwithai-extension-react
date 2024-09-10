@@ -53,6 +53,7 @@ export class IconManager {
   stopPulsing(): void {
     if (!this.isPulsing) return;
     this.isPulsing = false;
+    this.pulseState = false;
     chrome.alarms.clear("iconPulse");
     this.updateIcon(false);
   }

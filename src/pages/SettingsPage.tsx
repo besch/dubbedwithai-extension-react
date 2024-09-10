@@ -158,14 +158,18 @@ const SettingsPage: React.FC = () => {
   return (
     <PageLayout title={t("dubbingSettings")}>
       <div className="space-y-6">
-        <div className="bg-secondary p-4 rounded-lg shadow-inner">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-semibold">{t("language")}</h3>
-          </div>
+        <div className="mb-4">
+          <label
+            htmlFor="language-select"
+            className="block text-sm font-medium text-foreground mb-2"
+          >
+            {t("language")}
+          </label>
           <select
+            id="language-select"
             value={i18n.language}
             onChange={handleLanguageChange}
-            className="w-full p-2 border border-border rounded bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full p-2 border rounded bg-background text-foreground border-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
           >
             {availableLanguages.map((lang) => (
               <option key={lang.code} value={lang.code}>
@@ -176,9 +180,14 @@ const SettingsPage: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-secondary p-4 rounded-lg shadow-inner">
+          <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold">{t("subtitleOffset")}</h3>
+              <label
+                htmlFor="subtitle-offset"
+                className="block text-sm font-medium text-foreground"
+              >
+                {t("subtitleOffset")}
+              </label>
               <div
                 id="subtitle-offset-info"
                 className="cursor-help"
@@ -187,76 +196,89 @@ const SettingsPage: React.FC = () => {
                 }
                 onMouseLeave={handleInfoMouseLeave}
               >
-                <Info size={20} />
+                <Info size={20} className="text-muted-foreground" />
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <input
+                id="subtitle-offset"
                 type="range"
                 min="-10"
                 max="10"
                 step="0.1"
                 value={localOffset}
                 onChange={handleOffsetChange}
-                className="flex-grow h-2 rounded-lg appearance-none cursor-pointer"
+                className="flex-grow h-2 rounded-lg appearance-none cursor-pointer bg-muted"
               />
-              <span className="w-16 text-right">{localOffset.toFixed(1)}s</span>
+              <span className="w-16 text-right text-foreground">
+                {localOffset.toFixed(1)}s
+              </span>
             </div>
           </div>
 
-          <div className="bg-secondary p-4 rounded-lg shadow-inner">
+          <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold">{t("dubbingVolume")}</h3>
+              <label
+                htmlFor="dubbing-volume"
+                className="block text-sm font-medium text-foreground"
+              >
+                {t("dubbingVolume")}
+              </label>
               <div
                 id="dubbing-volume-info"
                 className="cursor-help"
                 onMouseEnter={() => handleInfoMouseEnter("dubbing-volume-info")}
                 onMouseLeave={handleInfoMouseLeave}
               >
-                <Info size={20} />
+                <Info size={20} className="text-muted-foreground" />
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <input
+                id="dubbing-volume"
                 type="range"
                 min="0"
                 max={config.maxDubbingVolumeMultiplier}
                 step="0.1"
                 value={localDubbingVolume}
                 onChange={handleDubbingVolumeChange}
-                className="flex-grow h-2 rounded-lg appearance-none cursor-pointer"
+                className="flex-grow h-2 rounded-lg appearance-none cursor-pointer bg-muted"
               />
-              <span className="w-16 text-right">
+              <span className="w-16 text-right text-foreground">
                 {(localDubbingVolume * 100).toFixed(0)}%
               </span>
             </div>
           </div>
 
-          <div className="bg-secondary p-4 rounded-lg shadow-inner">
+          <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold">
+              <label
+                htmlFor="video-volume"
+                className="block text-sm font-medium text-foreground"
+              >
                 {t("videoVolumeDuringDubbing")}
-              </h3>
+              </label>
               <div
                 id="video-volume-info"
                 className="cursor-help"
                 onMouseEnter={() => handleInfoMouseEnter("video-volume-info")}
                 onMouseLeave={handleInfoMouseLeave}
               >
-                <Info size={20} />
+                <Info size={20} className="text-muted-foreground" />
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <input
+                id="video-volume"
                 type="range"
                 min="0"
                 max="1"
                 step="0.01"
                 value={localVideoVolume}
                 onChange={handleVideoVolumeChange}
-                className="flex-grow h-2 rounded-lg appearance-none cursor-pointer"
+                className="flex-grow h-2 rounded-lg appearance-none cursor-pointer bg-muted"
               />
-              <span className="w-16 text-right">
+              <span className="w-16 text-right text-foreground">
                 {(localVideoVolume * 100).toFixed(0)}%
               </span>
             </div>
@@ -280,7 +302,7 @@ const SettingsPage: React.FC = () => {
       {activeTooltip && (
         <div
           ref={tooltipRef}
-          className="bg-gray-800 text-white p-2 rounded-md text-sm z-10"
+          className="bg-background text-foreground p-2 rounded-md text-sm z-10 border border-muted-foreground shadow-sm"
         >
           {activeTooltip === "subtitle-offset-info" && t("subtitleOffsetInfo")}
           {activeTooltip === "dubbing-volume-info" && t("dubbingVolumeInfo")}

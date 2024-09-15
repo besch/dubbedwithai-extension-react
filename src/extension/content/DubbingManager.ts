@@ -115,13 +115,10 @@ export class DubbingManager {
         this.updateCurrentState({
           isDubbingActive: true,
         });
-        console.log("DubbingManager initialized and started successfully");
       } else {
-        console.warn("No video element found. Setting up observer.");
         this.setupVideoObserver();
       }
     } catch (error) {
-      console.warn("Error during initialization:", error);
       this.updateCurrentState({ isDubbingActive: false });
       throw error;
     }
@@ -228,7 +225,6 @@ export class DubbingManager {
     });
 
     this.videoElement = null;
-    console.log("DubbingManager stopped and reset");
   }
 
   private restoreVideoVolume(): void {
@@ -532,10 +528,6 @@ export class DubbingManager {
       video.volume = this.currentState.currentVideoPlayerVolume;
     }
 
-    console.log(
-      `Adjusting volume: Video ${video.volume}, isDubbingPlaying: ${isDubbingPlaying}, CurrentVolume: ${this.currentState.currentVideoPlayerVolume}, VVWPD: ${this.currentState.videoVolumeWhilePlayingDubbing}`
-    );
-
     setTimeout(() => {
       this.isAdjustingVolume = false;
     }, 50);
@@ -554,11 +546,9 @@ export class DubbingManager {
   }
 
   private playCurrentSubtitles(currentTimeMs: number): void {
-    console.log("Playing current subtitles at time:", currentTimeMs);
     const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
     const currentSubtitles =
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
-    console.log("Current subtitles:", currentSubtitles);
 
     if (currentSubtitles.length === 0) {
       const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
@@ -567,8 +557,6 @@ export class DubbingManager {
       );
       if (upcomingSubtitles.length > 0) {
         this.prepareAndPlaySubtitle(upcomingSubtitles[0], adjustedTimeMs);
-      } else {
-        console.log("No upcoming subtitles found.");
       }
     } else {
       for (const subtitle of currentSubtitles) {

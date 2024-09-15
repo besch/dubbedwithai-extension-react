@@ -44,7 +44,6 @@ export class AudioPlayer {
     const lastPlayedTime = this.recentlyPlayedAudio.get(filePath) || 0;
 
     if (now - lastPlayedTime < this.REPLAY_THRESHOLD_MS / 1000) {
-      console.log(`Skipping playback of ${filePath}: Too soon since last play`);
       return;
     }
 

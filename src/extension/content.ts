@@ -165,16 +165,11 @@ class ContentScript {
           storage.episodeNumber
         );
         await this.updateDubbingState(true);
-        console.log("Dubbing initialized from storage successfully");
       } catch (error) {
-        console.error("Failed to initialize dubbing from storage:", error);
         await this.updateDubbingState(false);
       }
     } else if (storage.isDubbingActive) {
       await this.updateDubbingState(false);
-      console.warn("Dubbing was active but missing necessary data");
-    } else {
-      console.log("No active dubbing session found in storage");
     }
   }
 
@@ -187,11 +182,9 @@ class ContentScript {
 
   private async handleVisibilityChange(): Promise<void> {
     if (document.hidden && this.isDubbingActive) {
-      console.log("Tab became hidden. Stopping dubbing.");
       await this.stopDubbing();
       await this.updateDubbingState(false);
     } else if (!document.hidden) {
-      console.log("Tab became visible. Checking dubbing status.");
       const storage = (await chrome.storage.local.get("isDubbingActive")) as {
         isDubbingActive: boolean;
       };
@@ -220,7 +213,4 @@ class ContentScript {
 
 const contentScript = new ContentScript();
 (window as any).dubbingManager = contentScript;
-
-console.log("Content script loaded");
-
 (window as any).__DUBBING_CONTENT_SCRIPT_LOADED__ = true;

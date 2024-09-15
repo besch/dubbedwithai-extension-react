@@ -74,6 +74,7 @@ i18n.use(initReactI18next).init({
           "If subtitles do not exist in our database, it may take up to 10 seconds to generate them. Please be patient.",
         subtitles: "Subtitles",
         uploadSubtitles: "Upload Your Own Subtitles",
+        dubbingVoice: "Dubbing Voice",
       },
     },
     es: {
@@ -151,6 +152,7 @@ i18n.use(initReactI18next).init({
           "Si los subtítulos no existen en nuestra base de datos, puede llevar hasta 10 segundos generarlos. Por favor, sea paciente.",
         subtitles: "Subtítulos",
         uploadSubtitles: "Sube tus propios subtítulos",
+        dubbingVoice: "Voz de doblaje",
       },
     },
     zh: {
@@ -218,6 +220,7 @@ i18n.use(initReactI18next).init({
           "如果我们的数据库中不存在字幕，生成可能需要最多10秒。请耐心等待。",
         subtitles: "字幕",
         uploadSubtitles: "上传您自己的字幕",
+        dubbingVoice: "配音声音",
       },
     },
     hi: {
@@ -291,6 +294,7 @@ i18n.use(initReactI18next).init({
           "यदि हमारे डेटाबेस में उपशीर्षक मौजूद नहीं हैं, तो उन्हें जनरेट करने में 10 सेकंड तक लग सकते हैं। कृपया धैर्य रखें।",
         subtitles: "उपशीर्षक",
         uploadSubtitles: "अपने खुद के उपशीर्षक अपलोड करें",
+        dubbingVoice: "डबिंग आवाज़",
       },
     },
     ar: {
@@ -360,6 +364,7 @@ i18n.use(initReactI18next).init({
           "إذا لم تكن الترجمات موجودة في قاعدة بياناتنا، فقد يستغرق إنشاؤها ما يصل إلى 10 ثوانٍ. يرجى التحلي بالصبر.",
         subtitles: "الترجمات",
         uploadSubtitles: "تحميل الترجمات الخاصة بك",
+        dubbingVoice: "صوت الدبلجة",
       },
     },
     pt: {
@@ -434,6 +439,7 @@ i18n.use(initReactI18next).init({
           "Se as legendas não existirem em nosso banco de dados, pode levar até 10 segundos para gerá-las. Por favor, seja paciente.",
         subtitles: "Legendas",
         uploadSubtitles: "Carregar suas próprias legendas",
+        dubbingVoice: "Voz de dublagem",
       },
     },
     bn: {
@@ -509,6 +515,7 @@ i18n.use(initReactI18next).init({
           "যদি আমাদের ডাটাবেসে সাবটাইটেল না থাকে, তবে সেগুলি তৈরি করতে 10 সেকেন্ড পর্যন্ত সময় লাগতে পারে। অনুগ্রহ করে ধৈর্য ধরুন।",
         subtitles: "সাবটাইটেল",
         uploadSubtitles: "আপনার নিজস্ব সাবটাইটেল আপলোড করুন",
+        dubbingVoice: "ডাবিং ভয়েস",
       },
     },
     ru: {
@@ -584,6 +591,7 @@ i18n.use(initReactI18next).init({
           "Если субтитры отсутствуют в нашей базе данных, их создание может занять до 10 секунд. Пожалуйста, будьте терпеливы.",
         subtitles: "Субтитры",
         uploadSubtitles: "Загрузить свои субтитры",
+        dubbingVoice: "Голос дубляжа",
       },
     },
     ja: {
@@ -658,6 +666,7 @@ i18n.use(initReactI18next).init({
           "字幕が私たちのデータベースに存在しない場合、生成に最大10秒かかる場合があります。お待ちください。",
         subtitles: "字幕",
         uploadSubtitles: "独自の字幕をアップロード",
+        dubbingVoice: "吹き替え声",
       },
     },
     pa: {
@@ -732,6 +741,7 @@ i18n.use(initReactI18next).init({
           "ਜੇਕਰ ਸਾਡੇ ਡਾਟਾਬੇਸ ਵਿੱਚ ਉਪਸਿਰਲੇਖ ਮੌਜੂਦ ਨਹੀਂ ਹਨ, ਤਾਂ ਉਨ੍ਹਾਂ ਨੂੰ ਤਿਆਰ ਕਰਨ ਵਿੱਚ 10 ਸਕਿੰਟ ਤੱਕ ਦਾ ਸਮਾਂ ਲੱਗ ਸਕਦਾ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਧੀਰਜ ਰੱਖੋ।",
         subtitles: "ਉਪਸਿਰਲੇਖ",
         uploadSubtitles: "ਆਪਣੇ ਉਪਸਿਰਲੇਖ ਅਪਲੋਡ ਕਰੋ",
+        dubbingVoice: "ਡਬਿੰਗ ਆਵਾਜ਼",
       },
     },
     de: {
@@ -809,6 +819,7 @@ i18n.use(initReactI18next).init({
           "Wenn Untertitel in unserer Datenbank nicht vorhanden sind, kann es bis zu 10 Sekunden dauern, sie zu generieren. Bitte haben Sie Geduld.",
         subtitles: "Untertitel",
         uploadSubtitles: "Eigene Untertitel hochladen",
+        dubbingVoice: "Synchronstimme",
       },
     },
     jv: {
@@ -878,6 +889,7 @@ i18n.use(initReactI18next).init({
           "Yen subtitel ora ana ing basis data kita, bisa butuh nganti 10 detik kanggo nggawe. Tulung sabar.",
         subtitles: "Subtitel",
         uploadSubtitles: "Unggah Subtitel Sampeyan Dhewe",
+        dubbingVoice: "Swara Dubbing",
       },
     },
     ko: {
@@ -949,6 +961,7 @@ i18n.use(initReactI18next).init({
           "자막이 우리 데이터베이스에 존재하지 않는 경우, 생성하는 데 최대 10초가 소요될 수 있습니다. 잠시만 기다려 주세요.",
         subtitles: "자막",
         uploadSubtitles: "자신의 자막 업로드",
+        dubbingVoice: "더빙 목소리",
       },
     },
     fr: {
@@ -1024,6 +1037,7 @@ i18n.use(initReactI18next).init({
           "Si les sous-titres n'existent pas dans notre base de données, cela pourrait prendre jusqu'à 10 secondes pour les générer. Veuillez patienter.",
         subtitles: "Sous-titres",
         uploadSubtitles: "Télécharger vos propres sous-titres",
+        dubbingVoice: "Voix de doublage",
       },
     },
     te: {
@@ -1099,6 +1113,7 @@ i18n.use(initReactI18next).init({
           "మా డేటాబేస్‌లో ఉపశీర్షికలు లేకపోతే, వాటిని రూపొందించడానికి 10 సెకన్ల వరకు పట్టవచ్చు. దయచేసి ఓపిక పట్టండి.",
         subtitles: "ఉపశీర్షికలు",
         uploadSubtitles: "మీ స్వంత ఉపశీర్షికలను అప్‌లోడ్ చేయండి",
+        dubbingVoice: "డబ్బింగ్ గొంతు",
       },
     },
     mr: {
@@ -1173,6 +1188,7 @@ i18n.use(initReactI18next).init({
           "जर आमच्या डेटाबेसमध्ये उपशीर्षके अस्तित्वात नसतील, तर त्यांना तयार करण्यासाठी 10 सेकंदांपर्यंत वेळ लागू शकतो. कृपया धीर धरा.",
         subtitles: "उपशीर्षके",
         uploadSubtitles: "स्वतःची उपशीर्षके अपलोड करा",
+        dubbingVoice: "डबिंग आवाज",
       },
     },
     tr: {
@@ -1245,6 +1261,7 @@ i18n.use(initReactI18next).init({
           "Eğer altyazılar veritabanımızda mevcut değilse, oluşturulması 10 saniye kadar sürebilir. Lütfen sabırlı olun.",
         subtitles: "Altyazılar",
         uploadSubtitles: "Kendi Altyazılarınızı Yükleyin",
+        dubbingVoice: "Dublaj Sesi",
       },
     },
   },

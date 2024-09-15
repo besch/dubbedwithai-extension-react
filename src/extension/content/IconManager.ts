@@ -42,7 +42,6 @@ export class IconManager {
   }
 
   startPulsing(): void {
-    console.log("IconManager: Starting pulsing");
     if (this.isPulsing) return;
     this.isPulsing = true;
     chrome.alarms.create("iconPulse", { periodInMinutes: 1 / 120 });

@@ -217,7 +217,7 @@ export const toggleDubbingProcess = createAsyncThunk(
         if (tabs[0]?.id) {
           const message: DubbingMessage = {
             action: isDubbingActive ? "stopDubbing" : "initializeDubbing",
-            movieId: selectedMovie?.imdbID || "uploaded",
+            movieId: selectedMovie?.imdbID || null,
             languageCode: selectedLanguage?.attributes.language || "uploaded",
             srtContent: srtContent,
             seasonNumber: state.movie.selectedSeasonNumber || undefined,

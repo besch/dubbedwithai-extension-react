@@ -23,7 +23,6 @@ interface MovieState {
   videoVolumeWhilePlayingDubbing: number;
   subtitlesLoaded: boolean;
   lastSelectedLanguage: Language | null;
-  error: string | null;
   isLoading: boolean;
 }
 
@@ -48,7 +47,6 @@ const initialState: MovieState = {
   videoVolumeWhilePlayingDubbing: config.videoVolumeWhilePlayingDubbing,
   subtitlesLoaded: false,
   lastSelectedLanguage: null,
-  error: null,
   isLoading: false,
 };
 
@@ -318,9 +316,9 @@ const movieSlice = createSlice({
       state.selectedLanguage = null;
       state.isDubbingActive = false;
       state.subtitleOffset = 0;
-      chrome.storage.local.set({ movieState: { ...state } });
       state.subtitlesLoaded = false;
       state.srtContent = null;
+      chrome.storage.local.set({ movieState: { ...state } });
     },
     setSelectedLanguage: (state, action: PayloadAction<Language | null>) => {
       if (state.isDubbingActive) {
@@ -381,16 +379,11 @@ const movieSlice = createSlice({
       .addCase(searchMovies.rejected, (state) => {
         state.isLoading = false;
       })
-      .addCase(toggleDubbingProcess.rejected, (state, action) => {
-        state.error =
-          action.error.message || "Failed to toggle dubbing process";
-      })
       .addCase(checkDubbingStatus.rejected, (state) => {
         state.isDubbingActive = false;
       })
       .addCase(selectSubtitle.pending, (state) => {
         state.isLoading = true;
-        state.error = null;
       })
       .addCase(selectSubtitle.fulfilled, (state, action) => {
         state.isLoading = false;
@@ -399,7 +392,6 @@ const movieSlice = createSlice({
       })
       .addCase(selectSubtitle.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || "Failed to select subtitle";
       })
       .addCase(setLastSelectedLanguage.fulfilled, (state, action) => {
         state.lastSelectedLanguage = action.payload;

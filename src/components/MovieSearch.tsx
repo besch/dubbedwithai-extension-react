@@ -11,6 +11,7 @@ import {
   setSelectedMovie,
 } from "@/store/movieSlice";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 
 interface MovieSearchProps {
   onSelectMovie: (movie: Movie) => void;
@@ -19,7 +20,7 @@ interface MovieSearchProps {
 const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
-  const { searchResults, isLoading, error } = useSelector(
+  const { searchResults, isLoading } = useSelector(
     (state: RootState) => state.movie
   );
   const [movieQuery, setMovieQuery] = useState("");
@@ -33,10 +34,13 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
     async (query: string) => {
       const trimmedQuery = query.trim();
       if (trimmedQuery.length > 2) {
-        dispatch(searchMovies(trimmedQuery));
+        const results = await dispatch(searchMovies(trimmedQuery)).unwrap();
+        if (results.length === 0) {
+          toast.error(t("noMoviesFound"));
+        }
       }
     },
-    [dispatch]
+    [dispatch, t]
   );
 
   useEffect(() => {
@@ -109,7 +113,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
           <LoadingSpinner size="lg" />
         </div>
       )}
-      {searchResults && searchResults.length > 0 ? (
+      {searchResults && searchResults.length > 0 && (
         <ul className="mt-2">
           {searchResults.map((movie, index) => (
             <MovieItem
@@ -120,12 +124,6 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
             />
           ))}
         </ul>
-      ) : (
-        <>
-          {movieQuery.trim().length > 2 && !isLoading && !error && (
-            <p className="mt-2 text-muted-foreground">{t("noMoviesFound")}</p>
-          )}
-        </>
       )}
     </div>
   );

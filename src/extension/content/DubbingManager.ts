@@ -440,9 +440,7 @@ export class DubbingManager {
   };
 
   private handlePreciseTime = (time: number): void => {
-    console.log("Precise time update:", time);
     if (!this.currentState.isDubbingActive) {
-      console.log("Dubbing is paused, skipping update");
       return;
     }
 

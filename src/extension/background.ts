@@ -92,10 +92,6 @@ class BackgroundService {
     const cacheKey = `${movieId}_${languageCode}`;
     this.subtitlesCache[cacheKey] = subtitles;
     this.clearOldSubtitlesCache();
-    console.log("Subtitles set in background script:", {
-      movieId,
-      languageCode,
-    });
     sendResponse({ status: "success" });
   }
 

@@ -1,5 +1,5 @@
 import { DubbingManager } from "./content/DubbingManager";
-import { DubbingMessage, StorageData } from "@/types";
+import { DubbingMessage, DubbingVoice, StorageData } from "@/types";
 
 class ContentScript {
   private dubbingManager: DubbingManager;
@@ -63,9 +63,16 @@ class ContentScript {
         return this.updateDubbingState(message.payload);
       case "setVideoVolumeWhilePlayingDubbing":
         return this.setVideoVolumeWhilePlayingDubbing(message.payload);
+      case "setDubbingVoice":
+        return this.setDubbingVoice(message.payload);
       default:
         throw new Error(`Unknown action: ${(message as any).action}`);
     }
+  }
+
+  private setDubbingVoice(voice: DubbingVoice): { status: string } {
+    this.dubbingManager.setDubbingVoice(voice);
+    return { status: "updated" };
   }
 
   private async setVideoVolumeWhilePlayingDubbing(

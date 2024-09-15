@@ -50,7 +50,8 @@ export type DubbingMessage =
   | { action: "checkDubbingStatus" }
   | { action: "updateDubbingState"; payload: boolean }
   | { action: "setDubbingVolumeMultiplier"; payload: number }
-  | { action: "setVideoVolumeWhilePlayingDubbing"; payload: number };
+  | { action: "setVideoVolumeWhilePlayingDubbing"; payload: number }
+  | { action: "setDubbingVoice"; payload: DubbingVoice };
 
 export interface StorageData {
   isDubbingActive?: boolean;
@@ -60,3 +61,11 @@ export interface StorageData {
   seasonNumber?: number;
   episodeNumber?: number;
 }
+
+export type DubbingVoice =
+  | "alloy"
+  | "echo"
+  | "fable"
+  | "onyx"
+  | "nova"
+  | "shimmer";

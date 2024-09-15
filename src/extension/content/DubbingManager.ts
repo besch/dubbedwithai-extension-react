@@ -2,7 +2,7 @@ import { AudioFileManager } from "./AudioFileManager";
 import { SubtitleManager } from "./SubtitleManager";
 import { AudioPlayer } from "./AudioPlayer";
 import { PrecisionTimer } from "./PrecisionTimer";
-import { DubbingMessage, Subtitle } from "@/types";
+import { DubbingMessage, DubbingVoice, Subtitle } from "@/types";
 import config from "./config";
 import { parseSrt } from "../utils";
 
@@ -21,6 +21,7 @@ export class DubbingManager {
     languageCode: string | null;
     seasonNumber: number | null;
     episodeNumber: number | null;
+    dubbingVoice: DubbingVoice;
     subtitleOffset: number;
     isDubbingActive: boolean;
     lastSentSubtitle: Subtitle | null;
@@ -42,6 +43,7 @@ export class DubbingManager {
       languageCode: null,
       seasonNumber: null,
       episodeNumber: null,
+      dubbingVoice: "alloy",
       subtitleOffset: 0,
       isDubbingActive: false,
       lastSentSubtitle: null,
@@ -398,6 +400,10 @@ export class DubbingManager {
             this.setDubbingVolumeMultiplier(message.payload);
             sendResponse({ status: "updated" });
             break;
+          case "setDubbingVoice":
+            this.setDubbingVoice(message.payload);
+            sendResponse({ status: "updated" });
+            break;
         }
         return true;
       }
@@ -540,10 +546,10 @@ export class DubbingManager {
       this.currentState.episodeNumber !== null
     ) {
       // TV series
-      return `${this.currentState.movieId}/${this.currentState.seasonNumber}/${this.currentState.episodeNumber}/${this.currentState.languageCode}/${subtitle.start}-${subtitle.end}.mp3`;
+      return `${this.currentState.movieId}/${this.currentState.seasonNumber}/${this.currentState.episodeNumber}/${this.currentState.languageCode}/${this.currentState.dubbingVoice}/${subtitle.start}-${subtitle.end}.mp3`;
     } else {
       // Movie
-      return `${this.currentState.movieId}/${this.currentState.languageCode}/${subtitle.start}-${subtitle.end}.mp3`;
+      return `${this.currentState.movieId}/${this.currentState.languageCode}/${this.currentState.dubbingVoice}/${subtitle.start}-${subtitle.end}.mp3`;
     }
   }
 
@@ -714,5 +720,9 @@ export class DubbingManager {
 
   public hasVideoElement(): boolean {
     return !!this.videoElement;
+  }
+
+  public setDubbingVoice(voice: DubbingVoice): void {
+    this.updateCurrentState({ dubbingVoice: voice });
   }
 }

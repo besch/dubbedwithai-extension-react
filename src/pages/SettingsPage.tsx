@@ -6,12 +6,13 @@ import {
   resetSettings,
   setDubbingVolumeMultiplier,
   setVideoVolumeWhilePlayingDubbing,
+  setDubbingVoice,
 } from "@/store/movieSlice";
 import PageLayout from "@/components/ui/PageLayout";
 import Button from "@/components/ui/Button";
 import { toast } from "react-toastify";
 import config from "@/extension/content/config";
-import { DubbingMessage } from "@/types";
+import { DubbingMessage, DubbingVoice } from "@/types";
 import { createPopper, Instance as PopperInstance } from "@popperjs/core";
 import { Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -24,6 +25,7 @@ const SettingsPage: React.FC = () => {
     subtitleOffset,
     dubbingVolumeMultiplier,
     videoVolumeWhilePlayingDubbing,
+    dubbingVoice,
   } = useSelector((state: RootState) => state.movie);
   const [localOffset, setLocalOffset] = useState(subtitleOffset);
   const [localDubbingVolume, setLocalDubbingVolume] = useState(
@@ -32,6 +34,8 @@ const SettingsPage: React.FC = () => {
   const [localVideoVolume, setLocalVideoVolume] = useState(
     videoVolumeWhilePlayingDubbing
   );
+  const [localDubbingVoice, setLocalDubbingVoice] =
+    useState<DubbingVoice>(dubbingVoice);
 
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -41,7 +45,13 @@ const SettingsPage: React.FC = () => {
     setLocalOffset(subtitleOffset);
     setLocalDubbingVolume(dubbingVolumeMultiplier);
     setLocalVideoVolume(videoVolumeWhilePlayingDubbing);
-  }, [subtitleOffset, dubbingVolumeMultiplier, videoVolumeWhilePlayingDubbing]);
+    setLocalDubbingVoice(dubbingVoice);
+  }, [
+    subtitleOffset,
+    dubbingVolumeMultiplier,
+    videoVolumeWhilePlayingDubbing,
+    dubbingVoice,
+  ]);
 
   useEffect(() => {
     if (activeTooltip && tooltipRef.current) {
@@ -97,10 +107,19 @@ const SettingsPage: React.FC = () => {
     setLocalVideoVolume(parseFloat(event.target.value));
   };
 
+  const handleDubbingVoiceChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const newVoice = event.target.value as DubbingVoice;
+    setLocalDubbingVoice(newVoice);
+    dispatch(setDubbingVoice(newVoice));
+  };
+
   const handleApplyChanges = () => {
     dispatch(setSubtitleOffset(localOffset));
     dispatch(setDubbingVolumeMultiplier(localDubbingVolume));
     dispatch(setVideoVolumeWhilePlayingDubbing(localVideoVolume));
+    dispatch(setDubbingVoice(localDubbingVoice));
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
         chrome.tabs.sendMessage(tabs[0].id, {
@@ -110,6 +129,10 @@ const SettingsPage: React.FC = () => {
         chrome.tabs.sendMessage(tabs[0].id, {
           action: "setVideoVolumeWhilePlayingDubbing",
           payload: localVideoVolume,
+        } as DubbingMessage);
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: "setDubbingVoice",
+          payload: localDubbingVoice,
         } as DubbingMessage);
       }
     });
@@ -122,9 +145,11 @@ const SettingsPage: React.FC = () => {
     dispatch(
       setVideoVolumeWhilePlayingDubbing(config.videoVolumeWhilePlayingDubbing)
     );
+    dispatch(setDubbingVoice("echo"));
     setLocalOffset(0);
     setLocalDubbingVolume(1);
     setLocalVideoVolume(config.videoVolumeWhilePlayingDubbing);
+    setLocalDubbingVoice("echo");
     toast.success(t("settingsReset"));
   };
 
@@ -176,6 +201,28 @@ const SettingsPage: React.FC = () => {
                 {lang.name}
               </option>
             ))}
+          </select>
+        </div>
+
+        <div className="mb-4">
+          <label
+            htmlFor="dubbing-voice-select"
+            className="block text-sm font-medium text-foreground mb-2"
+          >
+            {t("dubbingVoice")}
+          </label>
+          <select
+            id="dubbing-voice-select"
+            value={localDubbingVoice}
+            onChange={handleDubbingVoiceChange}
+            className="w-full p-2 border rounded bg-background text-foreground border-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+          >
+            <option value="alloy">Alloy</option>
+            <option value="echo">Echo</option>
+            <option value="fable">Fable</option>
+            <option value="onyx">Onyx</option>
+            <option value="nova">Nova</option>
+            <option value="shimmer">Shimmer</option>
           </select>
         </div>
 

@@ -5,7 +5,7 @@ import { RootState } from "@/store/index";
 import { sendMessageToActiveTab } from "@/lib/messaging";
 import config from "@/extension/content/config";
 import languageCodes from "@/lib/languageCodes";
-import { DubbingMessage } from "@/types";
+import { DubbingMessage, DubbingVoice } from "@/types";
 import { fetchMovies, fetchSubtitles } from "@/api";
 
 interface MovieState {
@@ -15,6 +15,7 @@ interface MovieState {
   selectedEpisodeNumber: number | null;
   srtContent: string | null;
   languages: Language[];
+  dubbingVoice: DubbingVoice;
   isDubbingActive: boolean;
   searchResults: Movie[];
   subtitleOffset: number;
@@ -32,6 +33,7 @@ const initialState: MovieState = {
   selectedSeasonNumber: null,
   selectedEpisodeNumber: null,
   srtContent: null,
+  dubbingVoice: "alloy",
   languages: Object.entries(languageCodes).map(([code, name]) => ({
     id: code,
     attributes: {
@@ -49,6 +51,29 @@ const initialState: MovieState = {
   error: null,
   isLoading: false,
 };
+
+export const setDubbingVoice = createAsyncThunk(
+  "movie/setDubbingVoice",
+  async (voice: DubbingVoice, { dispatch, getState }) => {
+    const state = getState() as RootState;
+    const updatedMovieState = {
+      ...state.movie,
+      dubbingVoice: voice,
+    };
+    await chrome.storage.local.set({ movieState: updatedMovieState });
+
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: "setDubbingVoice",
+          payload: voice,
+        });
+      }
+    });
+
+    return voice;
+  }
+);
 
 export const setLastSelectedLanguage = createAsyncThunk(
   "movie/setLastSelectedLanguage",
@@ -381,6 +406,9 @@ const movieSlice = createSlice({
       })
       .addCase(loadLastSelectedLanguage.fulfilled, (state, action) => {
         state.lastSelectedLanguage = action.payload;
+      })
+      .addCase(setDubbingVoice.fulfilled, (state, action) => {
+        state.dubbingVoice = action.payload;
       });
   },
 });

@@ -2,8 +2,11 @@ import { Movie, Subtitle } from "@/types";
 
 const API_BASE_URL = process.env.REACT_APP_BASE_API_URL;
 
-// Common fetch function
-const apiFetch = async <T>(endpoint: string, method: string, body?: object): Promise<T> => {
+const apiFetch = async <T>(
+  endpoint: string,
+  method: string,
+  body?: object
+): Promise<T> => {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method,
     headers: {
@@ -19,10 +22,10 @@ const apiFetch = async <T>(endpoint: string, method: string, body?: object): Pro
   return await response.json();
 };
 
-// Update existing functions to use apiFetch
 export const fetchMovies = (query: string): Promise<Movie[]> =>
-  apiFetch<{ Search: Movie[] }>("/api/search-movies", "POST", { text: query })
-    .then(data => data.Search);
+  apiFetch<{ Search: Movie[] }>("/api/search-movies", "POST", {
+    text: query,
+  }).then((data) => data.Search);
 
 export const fetchSubtitles = (params: {
   imdbID: string;
@@ -33,27 +36,34 @@ export const fetchSubtitles = (params: {
   apiFetch("/api/opensubtitles/fetch-subtitles", "POST", params);
 
 export const checkAudioFileExists = (filePath: string): Promise<boolean> =>
-  apiFetch<{ exists: boolean }>("/api/google-storage/check-file-exists", "POST", { filePath })
-    .then(data => data.exists);
+  apiFetch<{ exists: boolean }>(
+    "/api/google-storage/check-file-exists",
+    "POST",
+    { filePath }
+  ).then((data) => data.exists);
 
 export const fetchSubtitlesFromGoogleStorage = (
   movieId: string,
   subtitleId: string
 ): Promise<Subtitle[]> =>
-  apiFetch<{ subtitles: Subtitle[] }>("/api/google-storage/fetch-subtitles", "POST", { movieId, subtitleId })
-    .then(data => data.subtitles);
+  apiFetch<{ subtitles: Subtitle[] }>(
+    "/api/google-storage/fetch-subtitles",
+    "POST",
+    { movieId, subtitleId }
+  ).then((data) => data.subtitles);
 
 export const sendFeedback = (values: {
   email: string;
   subject: string;
   message: string;
-}): Promise<void> =>
-  apiFetch("/api/send-feedback", "POST", values);
+}): Promise<void> => apiFetch("/api/send-feedback", "POST", values);
 
 export const generateAudio = (text: string, filePath: string): Promise<any> =>
   apiFetch("/api/openai/generate-audio", "POST", { text, filePath });
 
-export const fetchAudioFile = async (filePath: string): Promise<ArrayBuffer> => {
+export const fetchAudioFile = async (
+  filePath: string
+): Promise<ArrayBuffer> => {
   const response = await fetch(
     `${API_BASE_URL}/api/google-storage/fetch-audio-file`,
     {

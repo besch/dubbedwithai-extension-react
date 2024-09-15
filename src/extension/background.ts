@@ -192,7 +192,6 @@ class BackgroundService {
     isActive: boolean,
     tabId: number
   ): Promise<void> {
-    console.log(`Updating dubbing state: isActive=${isActive}, tabId=${tabId}`);
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tabs[0]?.id === tabId) {
       if (isActive) {

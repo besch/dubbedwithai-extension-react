@@ -16,7 +16,6 @@ export class IconManager {
         await this.preloadIcon(size, state);
       }
     }
-    console.log("Icons preloaded and cached");
   }
 
   private async preloadIcon(size: IconSize, state: IconState): Promise<void> {

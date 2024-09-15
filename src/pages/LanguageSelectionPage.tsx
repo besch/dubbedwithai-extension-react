@@ -11,6 +11,7 @@ import {
   loadLastSelectedLanguage,
   setSelectedSeasonNumber,
   setSelectedEpisodeNumber,
+  setSelectedLanguage,
 } from "@/store/movieSlice";
 import PageLayout from "@/components/ui/PageLayout";
 import MovieCard from "@/components/MovieCard";
@@ -38,7 +39,6 @@ const LanguageSelectionPage: React.FC = () => {
 
   const handleLanguageSelect = (languageCode: string) => {
     if (selectedMovie) {
-      console.log("Selecting subtitle for language:", languageCode);
       const params: any = {
         imdbID: selectedMovie.imdbID,
         languageCode,
@@ -51,24 +51,21 @@ const LanguageSelectionPage: React.FC = () => {
         dispatch(setSelectedEpisodeNumber(episodeNumber));
       }
 
+      const selectedLanguage = languages.find(
+        (lang) => lang.id === languageCode
+      );
+
+      if (selectedLanguage) {
+        dispatch(setSelectedLanguage(selectedLanguage));
+        dispatch(setLastSelectedLanguage(selectedLanguage));
+      }
+
       dispatch(selectSubtitle(params))
         .unwrap()
         .then((result) => {
           if (result) {
-            console.log("Subtitle selected successfully");
-            const selectedLanguage = languages.find(
-              (lang) => lang.id === languageCode
-            );
-            if (selectedLanguage) {
-              dispatch(setLastSelectedLanguage(selectedLanguage));
-            }
             navigate("/dubbing");
-          } else {
-            console.log("No subtitles found or an error occurred");
           }
-        })
-        .catch((error) => {
-          console.error("Failed to select subtitle:", error);
         });
     }
   };

@@ -52,7 +52,6 @@ const App: React.FC = () => {
           currentWindow: true,
         });
         if (!tab.id) {
-          console.error("No active tab found");
           return;
         }
 
@@ -68,9 +67,6 @@ const App: React.FC = () => {
             target: { tabId: tab.id, allFrames: true },
             files: ["content.js"],
           });
-          console.log("Content script injected");
-        } else {
-          console.log("Content script already loaded");
         }
       } catch (error) {
         console.error("Error handling content script:", error);

@@ -50,7 +50,6 @@ class BackgroundService {
     sender: chrome.runtime.MessageSender,
     sendResponse: (response?: any) => void
   ): boolean {
-    console.log("Background script received message:", message);
     switch (message.action) {
       case "requestSubtitles":
         this.handleSubtitlesRequest(message, sendResponse);
@@ -59,7 +58,6 @@ class BackgroundService {
         this.handleAudioFileRequest(message, sendResponse);
         break;
       case "updateDubbingState":
-        console.log("Updating dubbing state:", message.payload);
         if (sender.tab?.id) {
           this.updateDubbingState(message.payload, sender.tab.id);
         }
@@ -81,7 +79,6 @@ class BackgroundService {
         this.handleUpdateVideoPlaybackState(message);
         break;
       default:
-        console.warn("No handler found for message:", message);
         break;
     }
     return true;

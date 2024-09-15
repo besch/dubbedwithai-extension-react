@@ -64,12 +64,16 @@ export class DubbingManager {
   }
 
   public async initialize(
-    movieId: string,
-    languageCode: string,
-    srtContent: string | null | undefined,
+    movieId: string | null,
+    languageCode: string | null,
+    srtContent: string,
     seasonNumber?: number,
     episodeNumber?: number
   ): Promise<void> {
+    if (!srtContent) {
+      throw new Error("No subtitles");
+    }
+
     console.log("Initializing DubbingManager:", {
       movieId,
       languageCode,
@@ -94,13 +98,8 @@ export class DubbingManager {
     });
 
     try {
-      const subtitles = await this.loadSubtitles(
-        movieId,
-        languageCode,
-        srtContent,
-        seasonNumber,
-        episodeNumber
-      );
+      const subtitles = parseSrt(srtContent);
+
       if (subtitles.length === 0) {
         throw new Error(
           `No subtitles found for movie ${movieId}, language ${languageCode}, season ${seasonNumber}, episode ${episodeNumber}`
@@ -126,51 +125,6 @@ export class DubbingManager {
       this.updateCurrentState({ isDubbingActive: false });
       throw error;
     }
-  }
-
-  private async loadSubtitles(
-    movieId: string,
-    languageCode: string,
-    srtContent: string | null | undefined,
-    seasonNumber?: number,
-    episodeNumber?: number
-  ): Promise<Subtitle[]> {
-    let subtitles: Subtitle[];
-    if (srtContent) {
-      subtitles = parseSrt(srtContent);
-      this.subtitleManager.cacheSubtitles(
-        movieId,
-        languageCode,
-        subtitles,
-        seasonNumber,
-        episodeNumber
-      );
-      this.audioFileManager.clearCache();
-    } else {
-      const fetchedSubtitles = await this.subtitleManager.getSubtitles(
-        movieId,
-        languageCode,
-        seasonNumber,
-        episodeNumber
-      );
-      if (!fetchedSubtitles) {
-        throw new Error(
-          `Failed to fetch subtitles for movie ${movieId}, language ${languageCode}, season ${seasonNumber}, episode ${episodeNumber}`
-        );
-      }
-      subtitles = fetchedSubtitles;
-    }
-
-    this.subtitleManager.cacheSubtitles(
-      movieId,
-      languageCode,
-      subtitles,
-      seasonNumber,
-      episodeNumber
-    );
-
-    console.log("Subtitles loaded:", subtitles.length);
-    return subtitles;
   }
 
   private setupAudioContext(): void {

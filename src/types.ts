@@ -39,9 +39,9 @@ export interface Subtitle {
 export type DubbingMessage =
   | {
       action: "initializeDubbing";
-      movieId: string;
-      languageCode: string;
-      srtContent: string | null;
+      movieId: string | null;
+      languageCode: string | null;
+      srtContent: string;
       seasonNumber?: number;
       episodeNumber?: number;
     }
@@ -55,9 +55,9 @@ export type DubbingMessage =
 
 export interface StorageData {
   isDubbingActive?: boolean;
-  movieId?: string;
-  languageCode?: string;
-  srtContent?: string | null;
+  movieId?: string | null;
+  languageCode?: string | null;
+  srtContent: string;
   seasonNumber?: number;
   episodeNumber?: number;
 }

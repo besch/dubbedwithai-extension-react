@@ -206,7 +206,7 @@ export const toggleDubbingProcess = createAsyncThunk(
     const { selectedMovie, selectedLanguage, isDubbingActive, srtContent } =
       state.movie;
 
-    if (!srtContent && (!selectedMovie || !selectedLanguage)) {
+    if (!srtContent) {
       throw new Error(
         "No subtitles uploaded and no movie or language selected"
       );

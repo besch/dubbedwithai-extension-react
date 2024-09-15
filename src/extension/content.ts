@@ -83,9 +83,9 @@ class ContentScript {
   }
 
   private async initializeDubbing(
-    movieId: string,
-    languageCode: string,
-    srtContent: string | null,
+    movieId: string | null,
+    languageCode: string | null,
+    srtContent: string,
     seasonNumber?: number,
     episodeNumber?: number
   ): Promise<any> {
@@ -160,7 +160,7 @@ class ContentScript {
         await this.dubbingManager.initialize(
           storage.movieId || "",
           storage.languageCode || "",
-          storage.srtContent || null,
+          storage.srtContent,
           storage.seasonNumber,
           storage.episodeNumber
         );

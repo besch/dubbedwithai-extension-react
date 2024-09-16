@@ -75,6 +75,7 @@ i18n.use(initReactI18next).init({
         subtitles: "Subtitles",
         uploadSubtitles: "Upload Your Own Subtitles",
         dubbingVoice: "Dubbing Voice",
+        usingUploadedSubtitles: "Using uploaded subtitles",
       },
     },
     es: {
@@ -153,6 +154,7 @@ i18n.use(initReactI18next).init({
         subtitles: "Subtítulos",
         uploadSubtitles: "Sube tus propios subtítulos",
         dubbingVoice: "Voz de doblaje",
+        usingUploadedSubtitles: "Usando subtítulos cargados",
       },
     },
     zh: {
@@ -221,6 +223,7 @@ i18n.use(initReactI18next).init({
         subtitles: "字幕",
         uploadSubtitles: "上传您自己的字幕",
         dubbingVoice: "配音声音",
+        usingUploadedSubtitles: "使用已上传的字幕",
       },
     },
     hi: {
@@ -295,6 +298,7 @@ i18n.use(initReactI18next).init({
         subtitles: "उपशीर्षक",
         uploadSubtitles: "अपने खुद के उपशीर्षक अपलोड करें",
         dubbingVoice: "डबिंग आवाज़",
+        usingUploadedSubtitles: "अपलोड किए गए उपशीर्षकों का उपयोग करना",
       },
     },
     ar: {
@@ -365,6 +369,7 @@ i18n.use(initReactI18next).init({
         subtitles: "الترجمات",
         uploadSubtitles: "تحميل الترجمات الخاصة بك",
         dubbingVoice: "صوت الدبلجة",
+        usingUploadedSubtitles: "استخدام الترجمات المحملة",
       },
     },
     pt: {
@@ -440,6 +445,7 @@ i18n.use(initReactI18next).init({
         subtitles: "Legendas",
         uploadSubtitles: "Carregar suas próprias legendas",
         dubbingVoice: "Voz de dublagem",
+        usingUploadedSubtitles: "Usando legendas carregadas",
       },
     },
     bn: {
@@ -516,6 +522,7 @@ i18n.use(initReactI18next).init({
         subtitles: "সাবটাইটেল",
         uploadSubtitles: "আপনার নিজস্ব সাবটাইটেল আপলোড করুন",
         dubbingVoice: "ডাবিং ভয়েস",
+        usingUploadedSubtitles: "আপলোড করা সাবটাইটেল ব্যবহার করা হচ্ছে",
       },
     },
     ru: {
@@ -592,6 +599,7 @@ i18n.use(initReactI18next).init({
         subtitles: "Субтитры",
         uploadSubtitles: "Загрузить свои субтитры",
         dubbingVoice: "Голос дубляжа",
+        usingUploadedSubtitles: "Использование загруженных субтитров",
       },
     },
     ja: {
@@ -667,6 +675,7 @@ i18n.use(initReactI18next).init({
         subtitles: "字幕",
         uploadSubtitles: "独自の字幕をアップロード",
         dubbingVoice: "吹き替え声",
+        usingUploadedSubtitles: "アップロードした字幕を使用中",
       },
     },
     pa: {
@@ -742,6 +751,7 @@ i18n.use(initReactI18next).init({
         subtitles: "ਉਪਸਿਰਲੇਖ",
         uploadSubtitles: "ਆਪਣੇ ਉਪਸਿਰਲੇਖ ਅਪਲੋਡ ਕਰੋ",
         dubbingVoice: "ਡਬਿੰਗ ਆਵਾਜ਼",
+        usingUploadedSubtitles: "ਅਪਲੋਡ ਕੀਤੇ ਉਪਸਿਰਲੇਖਾਂ ਦੀ ਵਰਤੋਂ ਕਰ ਰਿਹਾ ਹੈ",
       },
     },
     de: {
@@ -820,6 +830,7 @@ i18n.use(initReactI18next).init({
         subtitles: "Untertitel",
         uploadSubtitles: "Eigene Untertitel hochladen",
         dubbingVoice: "Synchronstimme",
+        usingUploadedSubtitles: "Verwendung hochgeladener Untertitel",
       },
     },
     jv: {
@@ -890,6 +901,7 @@ i18n.use(initReactI18next).init({
         subtitles: "Subtitel",
         uploadSubtitles: "Unggah Subtitel Sampeyan Dhewe",
         dubbingVoice: "Swara Dubbing",
+        usingUploadedSubtitles: "Nggunakake subtitel sing diunggah",
       },
     },
     ko: {
@@ -962,6 +974,7 @@ i18n.use(initReactI18next).init({
         subtitles: "자막",
         uploadSubtitles: "자신의 자막 업로드",
         dubbingVoice: "더빙 목소리",
+        usingUploadedSubtitles: "업로드된 자막 사용 중",
       },
     },
     fr: {
@@ -1038,6 +1051,7 @@ i18n.use(initReactI18next).init({
         subtitles: "Sous-titres",
         uploadSubtitles: "Télécharger vos propres sous-titres",
         dubbingVoice: "Voix de doublage",
+        usingUploadedSubtitles: "Utilisation des sous-titres téléchargés",
       },
     },
     te: {
@@ -1114,6 +1128,7 @@ i18n.use(initReactI18next).init({
         subtitles: "ఉపశీర్షికలు",
         uploadSubtitles: "మీ స్వంత ఉపశీర్షికలను అప్‌లోడ్ చేయండి",
         dubbingVoice: "డబ్బింగ్ గొంతు",
+        usingUploadedSubtitles: "అప్‌లోడ్ చేసిన ఉపశీర్షికలను ఉపయోగిస్తోంది",
       },
     },
     mr: {
@@ -1189,6 +1204,7 @@ i18n.use(initReactI18next).init({
         subtitles: "उपशीर्षके",
         uploadSubtitles: "स्वतःची उपशीर्षके अपलोड करा",
         dubbingVoice: "डबिंग आवाज",
+        usingUploadedSubtitles: "अपलोड केलेली उपशीर्षके वापरत आहे",
       },
     },
     tr: {
@@ -1262,6 +1278,7 @@ i18n.use(initReactI18next).init({
         subtitles: "Altyazılar",
         uploadSubtitles: "Kendi Altyazılarınızı Yükleyin",
         dubbingVoice: "Dublaj Sesi",
+        usingUploadedSubtitles: "Yüklenen altyazılar kullanılıyor",
       },
     },
   },

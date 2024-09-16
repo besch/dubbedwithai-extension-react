@@ -268,7 +268,6 @@ export const checkDubbingStatus = createAsyncThunk(
         return storage.isDubbingActive;
       }
     } catch (error) {
-      console.error("Failed to check dubbing status:", error);
       const storage = (await chrome.storage.local.get("isDubbingActive")) as {
         isDubbingActive: boolean;
       };
@@ -281,13 +280,25 @@ export const checkDubbingStatus = createAsyncThunk(
 export const availableLanguages = (state: RootState) =>
   Array.isArray(state.movie.languages) ? state.movie.languages : [];
 
+export const setSrtContentAndSave = createAsyncThunk(
+  "movie/setSrtContentAndSave",
+  async (content: string | null, { dispatch }) => {
+    await dispatch(setSrtContent(content));
+    await new Promise<void>((resolve) => {
+      chrome.storage.local.set({ srtContent: content }, () => {
+        resolve();
+      });
+    });
+    return content;
+  }
+);
+
 const movieSlice = createSlice({
   name: "movie",
   initialState,
   reducers: {
     setSrtContent: (state, action: PayloadAction<string | null>) => {
       state.srtContent = action.payload;
-      chrome.storage.local.set({ srtContent: action.payload });
     },
     updateVideoVolumeWhilePlayingDubbing: (
       state,
@@ -317,7 +328,6 @@ const movieSlice = createSlice({
       state.isDubbingActive = false;
       state.subtitleOffset = 0;
       state.subtitlesLoaded = false;
-      state.srtContent = null;
       chrome.storage.local.set({ movieState: { ...state } });
     },
     setSelectedLanguage: (state, action: PayloadAction<Language | null>) => {
@@ -328,7 +338,6 @@ const movieSlice = createSlice({
       state.isDubbingActive = false;
       state.subtitleOffset = 0;
       chrome.storage.local.set({ movieState: { ...state } });
-      state.srtContent = null;
     },
     setSearchResults: (state, action: PayloadAction<Movie[]>) => {
       state.searchResults = action.payload;

@@ -3,24 +3,30 @@ import { useDropzone } from "react-dropzone";
 import { X, Upload } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { useDispatch } from "react-redux";
-import { setSrtContent } from "@/store/movieSlice";
-import { useTranslation } from "react-i18next";
+import { AppDispatch } from "@/store";
+import {
+  setSelectedLanguage,
+  setSelectedMovie,
+  setSrtContent,
+  setSrtContentAndSave,
+} from "@/store/movieSlice";
 import { useNavigate } from "react-router-dom";
 
 const SubtitleUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { t } = useTranslation();
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
         setFile(acceptedFiles[0]);
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
           const content = e.target?.result as string;
-          dispatch(setSrtContent(content));
+          await dispatch(setSrtContentAndSave(content));
+          dispatch(setSelectedMovie(null));
+          dispatch(setSelectedLanguage(null));
           navigate("/dubbing");
         };
         reader.readAsText(acceptedFiles[0]);

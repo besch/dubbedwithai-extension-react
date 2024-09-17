@@ -64,7 +64,7 @@ const App: React.FC = () => {
         if (!result) {
           // If not loaded, inject the script
           await chrome.scripting.executeScript({
-            target: { tabId: tab.id },
+            target: { tabId: tab.id, allFrames: true },
             files: ["content.js"],
           });
         }

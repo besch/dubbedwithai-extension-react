@@ -163,11 +163,6 @@ export class DubbingManager {
     this.precisionTimer.start(currentVideoTime);
     this.adjustVolume(this.videoElement);
 
-    if (!this.videoElement.paused) {
-      this.playCurrentSubtitles(currentVideoTime * 1000);
-      this.checkAndGenerateUpcomingAudio(currentVideoTime * 1000);
-    }
-
     chrome.runtime.sendMessage({
       action: "updateDubbingState",
       payload: true,

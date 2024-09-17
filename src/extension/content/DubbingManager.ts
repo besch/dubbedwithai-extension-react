@@ -37,6 +37,7 @@ export class DubbingManager {
     this.subtitleManager = SubtitleManager.getInstance();
     this.audioPlayer = new AudioPlayer(this.audioContext);
     this.precisionTimer = new PrecisionTimer(this.handlePreciseTime);
+    window.addEventListener("message", this.handleMessage.bind(this));
 
     this.currentState = {
       movieId: null,
@@ -74,6 +75,12 @@ export class DubbingManager {
       throw new Error("No subtitles");
     }
 
+    const isDubbingActive = await this.isDubbingActiveInAnyFrame();
+    if (isDubbingActive) {
+      console.log("Dubbing is already active in another frame");
+      return;
+    }
+
     console.log("Initializing DubbingManager:", {
       movieId,
       languageCode,
@@ -108,7 +115,7 @@ export class DubbingManager {
 
       this.subtitleManager.setActiveSubtitles(subtitles);
 
-      this.findAndStoreVideoElement();
+      await this.findAndStoreVideoElement();
       if (this.videoElement) {
         this.setupAudioContext();
         this.startDubbing();
@@ -125,6 +132,24 @@ export class DubbingManager {
     } catch (error) {
       this.updateCurrentState({ isDubbingActive: false });
       throw error;
+    }
+  }
+
+  private handleMessage(event: MessageEvent): void {
+    if (event.data.type === "CHECK_DUBBING_ACTIVE") {
+      (event.source as Window)?.postMessage(
+        {
+          type: "DUBBING_ACTIVE_STATUS",
+          isActive: this.currentState.isDubbingActive,
+        },
+        { targetOrigin: event.origin }
+      );
+    } else if (event.data.type === "SET_DUBBING_ACTIVE") {
+      this.updateCurrentState({ isDubbingActive: true });
+    } else if (event.data.type === "DUBBING_ACTIVE_STATUS") {
+      if (event.data.isActive) {
+        this.updateCurrentState({ isDubbingActive: false });
+      }
     }
   }
 
@@ -242,11 +267,18 @@ export class DubbingManager {
     );
   }
 
-  public findAndStoreVideoElement(): void {
+  public async findAndStoreVideoElement(): Promise<void> {
+    const isDubbingActive = await this.isDubbingActiveInAnyFrame();
+    if (isDubbingActive) {
+      console.log("Dubbing is already active in another frame");
+      return;
+    }
+
     this.videoElement = document.querySelector("video");
 
     if (this.videoElement) {
       this.handleVideo(this.videoElement);
+      this.setDubbingActiveFlag();
       return;
     }
 
@@ -260,6 +292,7 @@ export class DubbingManager {
           this.videoElement = iframeDocument.querySelector("video");
           if (this.videoElement) {
             this.handleVideo(this.videoElement);
+            this.setDubbingActiveFlag();
             return;
           }
         }
@@ -269,6 +302,29 @@ export class DubbingManager {
     }
 
     this.setupVideoObserver();
+  }
+
+  private isDubbingActiveInAnyFrame(): Promise<boolean> {
+    return new Promise((resolve) => {
+      const checkDubbingActive = (event: MessageEvent) => {
+        if (event.data.type === "DUBBING_ACTIVE_STATUS") {
+          window.removeEventListener("message", checkDubbingActive);
+          resolve(event.data.isActive);
+        }
+      };
+
+      window.addEventListener("message", checkDubbingActive);
+      window.top?.postMessage({ type: "CHECK_DUBBING_ACTIVE" }, "*");
+
+      setTimeout(() => {
+        window.removeEventListener("message", checkDubbingActive);
+        resolve(false);
+      }, 1000);
+    });
+  }
+
+  private setDubbingActiveFlag(): void {
+    window.top?.postMessage({ type: "SET_DUBBING_ACTIVE" }, "*");
   }
 
   private removeVideoEventListeners(): void {

@@ -65,6 +65,8 @@ class ContentScript {
         return this.setVideoVolumeWhilePlayingDubbing(message.payload);
       case "setDubbingVoice":
         return this.setDubbingVoice(message.payload);
+      case "checkDubbingStatus":
+        return { status: "checked", isDubbingActive: this.isDubbingActive };
       default:
         throw new Error(`Unknown action: ${(message as any).action}`);
     }

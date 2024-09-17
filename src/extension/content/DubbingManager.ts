@@ -111,12 +111,16 @@ export class DubbingManager {
       this.findAndStoreVideoElement();
       if (this.videoElement) {
         this.setupAudioContext();
-        await this.startDubbing();
+        this.startDubbing();
         this.updateCurrentState({
           isDubbingActive: true,
         });
       } else {
         this.setupVideoObserver();
+      }
+
+      if (this.videoElement && !this.videoElement.paused) {
+        this.handleVideoPlay();
       }
     } catch (error) {
       this.updateCurrentState({ isDubbingActive: false });
@@ -158,8 +162,11 @@ export class DubbingManager {
     const currentVideoTime = this.videoElement.currentTime;
     this.precisionTimer.start(currentVideoTime);
     this.adjustVolume(this.videoElement);
-    this.playCurrentSubtitles(currentVideoTime * 1000);
-    this.checkAndGenerateUpcomingAudio(currentVideoTime * 1000);
+
+    if (!this.videoElement.paused) {
+      this.playCurrentSubtitles(currentVideoTime * 1000);
+      this.checkAndGenerateUpcomingAudio(currentVideoTime * 1000);
+    }
 
     chrome.runtime.sendMessage({
       action: "updateDubbingState",
@@ -373,6 +380,7 @@ export class DubbingManager {
   private handleVideo(video: HTMLVideoElement): void {
     this.videoElement = video;
     this.updateCurrentState({ currentVideoPlayerVolume: video.volume });
+    this.removeVideoEventListeners();
     video.addEventListener("play", this.handleVideoPlay);
     video.addEventListener("pause", this.handleVideoPause);
     video.addEventListener("seeking", this.handleVideoSeeking);
@@ -381,13 +389,15 @@ export class DubbingManager {
   }
 
   private handleVideoPlay = (): void => {
+    const currentTime = this.videoElement?.currentTime || 0;
+
     if (this.currentState.isDubbingActive) {
-      const currentTime = this.videoElement?.currentTime || 0;
       this.precisionTimer.start(currentTime);
       this.playCurrentSubtitles(currentTime * 1000);
       this.checkAndGenerateUpcomingAudio(currentTime * 1000);
       this.notifyBackgroundScript(true);
     }
+
     if (this.videoElement) {
       this.adjustVolume(this.videoElement);
     }

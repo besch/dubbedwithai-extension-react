@@ -58,8 +58,22 @@ export const sendFeedback = (values: {
   message: string;
 }): Promise<void> => apiFetch("/api/send-feedback", "POST", values);
 
-export const generateAudio = (text: string, filePath: string): Promise<any> =>
-  apiFetch("/api/openai/generate-audio", "POST", { text, filePath });
+export const generateAudio = async (
+  text: string,
+  filePath: string
+): Promise<ArrayBuffer> => {
+  const response = await fetch(`${API_BASE_URL}/api/openai/generate-audio`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text, filePath }),
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return await response.arrayBuffer();
+};
 
 export const fetchAudioFile = async (
   filePath: string

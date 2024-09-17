@@ -138,8 +138,9 @@ class BackgroundService {
     }
 
     try {
-      const result = await api.generateAudio(text, filePath);
-      sendResponse({ success: true, message: result.message });
+      const audioBuffer = await api.generateAudio(text, filePath);
+      const base64Audio = this.arrayBufferToBase64(audioBuffer);
+      sendResponse({ success: true, audioData: base64Audio });
     } catch (e: unknown) {
       console.error("Error generating audio:", e);
       sendResponse({

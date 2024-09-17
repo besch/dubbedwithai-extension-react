@@ -301,12 +301,22 @@ export class DubbingManager {
         timeUntilPlay <= config.preloadAudioGenerationTime &&
         timeUntilPlay > 0
       ) {
-        const exists = await this.audioFileManager.checkFileExists(filePath);
-        if (!exists) {
+        if (this.isUploadedSubtitle(filePath)) {
+          // For uploaded subtitles, generate audio without checking existence
           await this.audioFileManager.generateAudio(filePath, subtitle.text);
+        } else {
+          // For regular subtitles, check existence before generating
+          const exists = await this.audioFileManager.checkFileExists(filePath);
+          if (!exists) {
+            await this.audioFileManager.generateAudio(filePath, subtitle.text);
+          }
         }
       }
     }
+  }
+
+  private isUploadedSubtitle(filePath: string): boolean {
+    return filePath.includes("uploaded");
   }
 
   private setupMessageListener(): void {
@@ -475,9 +485,15 @@ export class DubbingManager {
           continue;
         }
 
-        const exists = await this.audioFileManager.checkFileExists(filePath);
-        if (exists) {
-          await this.audioFileManager.getAudioBuffer(filePath);
+        if (this.isUploadedSubtitle(filePath)) {
+          // For uploaded subtitles, generate audio without checking existence
+          await this.audioFileManager.generateAudio(filePath, subtitle.text);
+        } else {
+          // For regular subtitles, check existence before generating
+          const exists = await this.audioFileManager.checkFileExists(filePath);
+          if (exists) {
+            await this.audioFileManager.getAudioBuffer(filePath);
+          }
         }
       } catch (error) {
         console.error(
@@ -489,7 +505,9 @@ export class DubbingManager {
   }
 
   private getAudioFilePath(subtitle: Subtitle): string {
-    if (
+    if (this.currentState.movieId === null) {
+      return `uploaded/${this.currentState.dubbingVoice}/${subtitle.start}-${subtitle.end}.mp3`;
+    } else if (
       this.currentState.seasonNumber !== null &&
       this.currentState.episodeNumber !== null
     ) {

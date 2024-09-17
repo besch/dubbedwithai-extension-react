@@ -100,7 +100,7 @@ export const loadSubtitles = createAsyncThunk(
     const { selectedMovie, selectedLanguage } = state.movie;
 
     if (!selectedMovie || !selectedLanguage) {
-      return console.error("No movie or language selected");
+      return;
     }
 
     return dispatch(
@@ -205,9 +205,7 @@ export const toggleDubbingProcess = createAsyncThunk(
       state.movie;
 
     if (!srtContent) {
-      throw new Error(
-        "No subtitles uploaded and no movie or language selected"
-      );
+      throw new Error("No subtitles found");
     }
 
     return new Promise<void>((resolve, reject) => {

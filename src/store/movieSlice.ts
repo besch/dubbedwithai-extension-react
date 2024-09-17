@@ -224,6 +224,9 @@ export const toggleDubbingProcess = createAsyncThunk(
             if (response && response.status === "success") {
               dispatch(updateDubbingState(!isDubbingActive));
               resolve();
+            } else if (response && response.status === "alreadyInitialized") {
+              console.log("Dubbing is already initialized");
+              resolve();
             } else {
               reject(new Error("Failed to toggle dubbing"));
             }

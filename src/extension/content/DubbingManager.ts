@@ -473,46 +473,11 @@ export class DubbingManager {
 
     this.playCurrentSubtitles(currentTimeMs);
     this.audioPlayer.fadeOutExpiredAudio(adjustedTimeMs);
-    this.preloadUpcomingSubtitles(currentTimeMs);
     this.sendCurrentSubtitleInfo(
       adjustedTimeMs,
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs)
     );
-    this.checkAndGenerateUpcomingAudio(currentTimeMs);
   };
-
-  private async preloadUpcomingSubtitles(currentTime: number): Promise<void> {
-    const adjustedTime = currentTime - this.currentState.subtitleOffset;
-    const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
-      adjustedTime,
-      config.preloadAudioTime
-    );
-
-    for (const subtitle of upcomingSubtitles) {
-      const filePath = this.getAudioFilePath(subtitle);
-      try {
-        if (this.audioFileManager.isGenerating(filePath)) {
-          continue;
-        }
-
-        if (this.isUploadedSubtitle(filePath)) {
-          // For uploaded subtitles, generate audio without checking existence
-          await this.audioFileManager.generateAudio(filePath, subtitle.text);
-        } else {
-          // For regular subtitles, check existence before generating
-          const exists = await this.audioFileManager.checkFileExists(filePath);
-          if (exists) {
-            await this.audioFileManager.getAudioBuffer(filePath);
-          }
-        }
-      } catch (error) {
-        console.error(
-          `Failed to preload audio for subtitle: ${subtitle.text}`,
-          error
-        );
-      }
-    }
-  }
 
   private getAudioFilePath(subtitle: Subtitle): string {
     if (this.currentState.movieId === null) {
@@ -590,6 +555,8 @@ export class DubbingManager {
       }
     }
 
+    this.checkAndGenerateUpcomingAudio(currentTimeMs);
+
     if (this.videoElement) {
       this.adjustVolume(this.videoElement);
     }
@@ -618,11 +585,6 @@ export class DubbingManager {
   ): Promise<void> {
     const filePath = this.getAudioFilePath(subtitle);
     try {
-      const exists = await this.audioFileManager.checkFileExists(filePath);
-      if (!exists && !this.audioFileManager.isGenerating(filePath)) {
-        await this.audioFileManager.generateAudio(filePath, subtitle.text);
-      }
-
       const buffer = await this.audioFileManager.getAudioBuffer(filePath);
       if (buffer) {
         await this.audioPlayer.playAudio(buffer, filePath, subtitle, offset);

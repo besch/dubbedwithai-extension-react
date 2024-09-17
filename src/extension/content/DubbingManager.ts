@@ -394,7 +394,6 @@ export class DubbingManager {
     if (this.currentState.isDubbingActive) {
       this.precisionTimer.start(currentTime);
       this.playCurrentSubtitles(currentTime * 1000);
-      this.checkAndGenerateUpcomingAudio(currentTime * 1000);
       this.notifyBackgroundScript(true);
     }
 
@@ -432,8 +431,6 @@ export class DubbingManager {
       this.playCurrentSubtitles(newTime * 1000);
       this.notifyBackgroundScript(true);
     }
-
-    this.checkAndGenerateUpcomingAudio(newTime * 1000);
   };
 
   private handleVolumeChange = (event: Event): void => {
@@ -477,6 +474,7 @@ export class DubbingManager {
       adjustedTimeMs,
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs)
     );
+    this.checkAndGenerateUpcomingAudio(currentTimeMs);
   };
 
   private getAudioFilePath(subtitle: Subtitle): string {
@@ -554,8 +552,6 @@ export class DubbingManager {
         this.prepareAndPlaySubtitle(subtitle, adjustedTimeMs);
       }
     }
-
-    this.checkAndGenerateUpcomingAudio(currentTimeMs);
 
     if (this.videoElement) {
       this.adjustVolume(this.videoElement);

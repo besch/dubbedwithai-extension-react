@@ -96,6 +96,7 @@ class ContentScript {
     }
 
     try {
+      console.log("try dubbingManager.initialize");
       await this.dubbingManager.initialize(
         movieId,
         languageCode,

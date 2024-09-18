@@ -55,21 +55,16 @@ export class AudioFileManager {
 
   async getAudioBuffer(filePath: string): Promise<AudioBuffer | null> {
     if (this.notFoundFiles.has(filePath)) {
-      console.log(`Audio file not found in cache: ${filePath}`);
       return null;
     }
 
     if (this.inMemoryCache.has(filePath)) {
-      console.log(`Audio file found in memory cache: ${filePath}`);
       return this.inMemoryCache.get(filePath)!;
     }
 
     if (!this.ongoingFetchRequests.has(filePath)) {
-      console.log(`Fetching audio file: ${filePath}`);
       const request = this.fetchAndProcessAudio(filePath);
       this.ongoingFetchRequests.set(filePath, request);
-    } else {
-      console.log(`Ongoing fetch request for audio file: ${filePath}`);
     }
 
     return this.ongoingFetchRequests.get(filePath)!;

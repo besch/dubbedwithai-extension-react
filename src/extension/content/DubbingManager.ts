@@ -104,8 +104,17 @@ export class DubbingManager {
       isDubbingActive: false,
     });
 
+    console.log("updateCurrentState", {
+      movieId,
+      languageCode,
+      seasonNumber: seasonNumber || null,
+      episodeNumber: episodeNumber || null,
+      isDubbingActive: false,
+    });
+
     try {
       const subtitles = parseSrt(srtContent);
+      console.log("subtitles", subtitles);
 
       if (subtitles.length === 0) {
         throw new Error(
@@ -117,6 +126,7 @@ export class DubbingManager {
 
       await this.findAndStoreVideoElement();
       if (this.videoElement) {
+        console.log("videoElement");
         this.setupAudioContext();
         this.startDubbing();
         this.updateCurrentState({
@@ -529,11 +539,11 @@ export class DubbingManager {
   };
 
   private getAudioFilePath(subtitle: Subtitle): string {
-    if (this.currentState.movieId === null) {
+    if (!this.currentState.movieId) {
       return `uploaded/${this.currentState.dubbingVoice}/${subtitle.start}-${subtitle.end}.mp3`;
     } else if (
-      this.currentState.seasonNumber !== null &&
-      this.currentState.episodeNumber !== null
+      this.currentState.seasonNumber &&
+      this.currentState.episodeNumber
     ) {
       // TV series
       return `${this.currentState.movieId}/${this.currentState.seasonNumber}/${this.currentState.episodeNumber}/${this.currentState.languageCode}/${this.currentState.dubbingVoice}/${subtitle.start}-${subtitle.end}.mp3`;

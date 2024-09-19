@@ -274,22 +274,6 @@ export const setSrtContentAndSave = createAsyncThunk(
         resolve();
       });
     });
-
-    // await new Promise<void>((resolve, reject) => {
-    //   chrome.runtime.sendMessage(
-    //     {
-    //       action: "setSubtitles",
-    //       subtitles: content,
-    //     },
-    //     (response) => {
-    //       if (response && response.status === "success") {
-    //         resolve();
-    //       } else {
-    //         reject(new Error("Failed to set subtitles in background script"));
-    //       }
-    //     }
-    //   );
-    // });
   }
 );
 

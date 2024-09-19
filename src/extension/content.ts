@@ -92,8 +92,6 @@ class ContentScript {
     seasonNumber?: number,
     episodeNumber?: number
   ): Promise<any> {
-    console.warn("srtContent", !!srtContent);
-
     if (!this.checkForVideoElement()) {
       throw new Error("No video element found on the page");
     }

@@ -134,25 +134,6 @@ export const selectSubtitle = createAsyncThunk(
         return null;
       }
 
-      // // Send subtitles to background script
-      // await new Promise<void>((resolve, reject) => {
-      //   chrome.runtime.sendMessage(
-      //     {
-      //       action: "setSubtitles",
-      //       movieId: params.imdbID,
-      //       languageCode: params.languageCode,
-      //       subtitles: data.srtContent,
-      //     },
-      //     (response) => {
-      //       if (response && response.status === "success") {
-      //         resolve();
-      //       } else {
-      //         reject(new Error("Failed to set subtitles in background script"));
-      //       }
-      //     }
-      //   );
-      // });
-
       if (data.srtContent !== currentSrtContent) {
         dispatch(setSrtContent(data.srtContent));
         await chrome.storage.local.set({ srtContent: data.srtContent });

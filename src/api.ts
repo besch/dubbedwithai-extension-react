@@ -42,16 +42,6 @@ export const checkAudioFileExists = (filePath: string): Promise<boolean> =>
     { filePath }
   ).then((data) => data.exists);
 
-export const fetchSubtitlesFromGoogleStorage = (
-  movieId: string,
-  subtitleId: string
-): Promise<Subtitle[]> =>
-  apiFetch<{ subtitles: Subtitle[] }>(
-    "/api/google-storage/fetch-subtitles",
-    "POST",
-    { movieId, subtitleId }
-  ).then((data) => data.subtitles);
-
 export const sendFeedback = (values: {
   email: string;
   subject: string;

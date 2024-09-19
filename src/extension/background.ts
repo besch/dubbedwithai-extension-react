@@ -165,15 +165,6 @@ class BackgroundService {
     chrome.storage.local.set({ isDubbingActive });
   }
 
-  private async fetchAudioFile(filePath: string): Promise<ArrayBuffer | null> {
-    try {
-      return await api.fetchAudioFile(filePath);
-    } catch (e) {
-      console.error("There was a problem fetching the audio file:", e);
-      return null;
-    }
-  }
-
   arrayBufferToBase64(buffer: ArrayBuffer): string {
     const uint8Array = new Uint8Array(buffer);
     const chunkSize = 0x8000; // 32KB chunks

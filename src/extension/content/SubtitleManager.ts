@@ -74,41 +74,9 @@ export class SubtitleManager {
           seasonNumber,
           episodeNumber,
         },
-        async (response: any) => {
+        (response: any) => {
           if (response?.action === "subtitlesData" && response.data) {
             resolve(response.data);
-          } else {
-            const googleStorageSubtitles = await this.fetchFromGoogleStorage(
-              movieId,
-              languageCode,
-              seasonNumber,
-              episodeNumber
-            );
-            resolve(googleStorageSubtitles);
-          }
-        }
-      );
-    });
-  }
-
-  private async fetchFromGoogleStorage(
-    movieId: string,
-    languageCode: string,
-    seasonNumber?: number,
-    episodeNumber?: number
-  ): Promise<Subtitle[] | null> {
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage(
-        {
-          action: "fetchSubtitlesFromGoogleStorage",
-          movieId,
-          languageCode,
-          seasonNumber,
-          episodeNumber,
-        },
-        (response: any) => {
-          if (response && response.subtitles) {
-            resolve(response.subtitles);
           } else {
             resolve(null);
           }

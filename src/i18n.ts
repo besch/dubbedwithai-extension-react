@@ -76,6 +76,8 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "Upload Your Own Subtitles",
         dubbingVoice: "Dubbing Voice",
         usingUploadedSubtitles: "Using uploaded subtitles",
+        noSubtitlesFound: "No subtitles found for the selected language.",
+        subtitlesFetchError: "An error occurred while fetching subtitles.",
       },
     },
     es: {
@@ -155,6 +157,9 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "Sube tus propios subtítulos",
         dubbingVoice: "Voz de doblaje",
         usingUploadedSubtitles: "Usando subtítulos cargados",
+        noSubtitlesFound:
+          "No se encontraron subtítulos para el idioma seleccionado.",
+        subtitlesFetchError: "Ocurrió un error al obtener los subtítulos.",
       },
     },
     zh: {
@@ -224,6 +229,8 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "上传您自己的字幕",
         dubbingVoice: "配音声音",
         usingUploadedSubtitles: "使用已上传的字幕",
+        noSubtitlesFound: "未找到所选语言的字幕。",
+        subtitlesFetchError: "获取字幕时发生错误。",
       },
     },
     hi: {
@@ -299,6 +306,8 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "अपने खुद के उपशीर्षक अपलोड करें",
         dubbingVoice: "डबिंग आवाज़",
         usingUploadedSubtitles: "अपलोड किए गए उपशीर्षकों का उपयोग करना",
+        noSubtitlesFound: "चयनित भाषा के लिए कोई उपशीर्षक नहीं मिला।",
+        subtitlesFetchError: "उपशीर्षक प्राप्त करते समय एक त्रुटि हुई।",
       },
     },
     ar: {
@@ -370,6 +379,8 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "تحميل الترجمات الخاصة بك",
         dubbingVoice: "صوت الدبلجة",
         usingUploadedSubtitles: "استخدام الترجمات المحملة",
+        noSubtitlesFound: "لم يتم العثور على ترجمات للغة المحددة.",
+        subtitlesFetchError: "حدث خطأ أثناء جلب الترجمات.",
       },
     },
     pt: {
@@ -446,6 +457,9 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "Carregar suas próprias legendas",
         dubbingVoice: "Voz de dublagem",
         usingUploadedSubtitles: "Usando legendas carregadas",
+        noSubtitlesFound:
+          "Nenhuma legenda encontrada para o idioma selecionado.",
+        subtitlesFetchError: "Ocorreu um erro ao buscar as legendas.",
       },
     },
     bn: {
@@ -523,6 +537,8 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "আপনার নিজস্ব সাবটাইটেল আপলোড করুন",
         dubbingVoice: "ডাবিং ভয়েস",
         usingUploadedSubtitles: "আপলোড করা সাবটাইটেল ব্যবহার করা হচ্ছে",
+        noSubtitlesFound: "নির্বাচিত ভাষার জন্য কোনো সাবটাইটেল পাওয়া যায়নি।",
+        subtitlesFetchError: "সাবটাইটেল আনতে একটি ত্রুটি ঘটেছে।",
       },
     },
     ru: {
@@ -600,6 +616,8 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "Загрузить свои субтитры",
         dubbingVoice: "Голос дубляжа",
         usingUploadedSubtitles: "Использование загруженных субтитров",
+        noSubtitlesFound: "Субтитры для выбранного языка не найдены.",
+        subtitlesFetchError: "Произошла ошибка при получении субтитров.",
       },
     },
     ja: {
@@ -676,6 +694,8 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "独自の字幕をアップロード",
         dubbingVoice: "吹き替え声",
         usingUploadedSubtitles: "アップロードした字幕を使用中",
+        noSubtitlesFound: "選択した言語の字幕が見つかりません。",
+        subtitlesFetchError: "字幕の取得中にエラーが発生しました。",
       },
     },
     pa: {
@@ -752,6 +772,8 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "ਆਪਣੇ ਉਪਸਿਰਲੇਖ ਅਪਲੋਡ ਕਰੋ",
         dubbingVoice: "ਡਬਿੰਗ ਆਵਾਜ਼",
         usingUploadedSubtitles: "ਅਪਲੋਡ ਕੀਤੇ ਉਪਸਿਰਲੇਖਾਂ ਦੀ ਵਰਤੋਂ ਕਰ ਰਿਹਾ ਹੈ",
+        noSubtitlesFound: "ਚੁਣੀ ਗਈ ਭਾਸ਼ਾ ਲਈ ਕੋਈ ਉਪਸਿਰਲੇਖ ਨਹੀਂ ਮਿਲੇ।",
+        subtitlesFetchError: "ਉਪਸਿਰਲੇਖ ਪ੍ਰਾਪਤ ਕਰਨ ਦੌਰਾਨ ਇੱਕ ਤਰੁੱਟੀ ਆਈ।",
       },
     },
     de: {
@@ -831,6 +853,10 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "Eigene Untertitel hochladen",
         dubbingVoice: "Synchronstimme",
         usingUploadedSubtitles: "Verwendung hochgeladener Untertitel",
+        noSubtitlesFound:
+          "Keine Untertitel für die ausgewählte Sprache gefunden.",
+        subtitlesFetchError:
+          "Beim Abrufen der Untertitel ist ein Fehler aufgetreten.",
       },
     },
     jv: {
@@ -902,6 +928,9 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "Unggah Subtitel Sampeyan Dhewe",
         dubbingVoice: "Swara Dubbing",
         usingUploadedSubtitles: "Nggunakake subtitel sing diunggah",
+        noSubtitlesFound:
+          "Ora ana subtitel sing ditemokake kanggo basa sing dipilih.",
+        subtitlesFetchError: "Ana kesalahan nalika njupuk subtitel.",
       },
     },
     ko: {
@@ -975,6 +1004,8 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "자신의 자막 업로드",
         dubbingVoice: "더빙 목소리",
         usingUploadedSubtitles: "업로드된 자막 사용 중",
+        noSubtitlesFound: "선택한 언어에 대한 자막을 찾을 수 없습니다.",
+        subtitlesFetchError: "자막을 가져오는 중 오류가 발생했습니다.",
       },
     },
     fr: {
@@ -1052,6 +1083,10 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "Télécharger vos propres sous-titres",
         dubbingVoice: "Voix de doublage",
         usingUploadedSubtitles: "Utilisation des sous-titres téléchargés",
+        noSubtitlesFound:
+          "Aucun sous-titre trouvé pour la langue sélectionnée.",
+        subtitlesFetchError:
+          "Une erreur s'est produite lors de la récupération des sous-titres.",
       },
     },
     te: {
@@ -1129,6 +1164,8 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "మీ స్వంత ఉపశీర్షికలను అప్‌లోడ్ చేయండి",
         dubbingVoice: "డబ్బింగ్ గొంతు",
         usingUploadedSubtitles: "అప్‌లోడ్ చేసిన ఉపశీర్షికలను ఉపయోగిస్తోంది",
+        noSubtitlesFound: "ఎంచుకున్న భాష కోసం ఉపశీర్షికలు కనుగొనబడలేదు.",
+        subtitlesFetchError: "ఉపశీర్షికలను పొందడంలో లోపం సంభవించింది.",
       },
     },
     mr: {
@@ -1205,6 +1242,8 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "स्वतःची उपशीर्षके अपलोड करा",
         dubbingVoice: "डबिंग आवाज",
         usingUploadedSubtitles: "अपलोड केलेली उपशीर्षके वापरत आहे",
+        noSubtitlesFound: "निवडलेल्या भाषेसाठी उपशीर्षके सापडली नाहीत.",
+        subtitlesFetchError: "उपशीर्षके आणताना एक त्रुटी आली.",
       },
     },
     tr: {
@@ -1279,6 +1318,8 @@ i18n.use(initReactI18next).init({
         uploadSubtitles: "Kendi Altyazılarınızı Yükleyin",
         dubbingVoice: "Dublaj Sesi",
         usingUploadedSubtitles: "Yüklenen altyazılar kullanılıyor",
+        noSubtitlesFound: "Seçilen dil için altyazı bulunamadı.",
+        subtitlesFetchError: "Altyazılar alınırken bir hata oluştu.",
       },
     },
   },

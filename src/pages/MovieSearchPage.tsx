@@ -24,7 +24,7 @@ const MovieSearchPage: React.FC = () => {
 
   return (
     <PageLayout title={t("subtitles")}>
-      <div className="h-full overflow-visible flex flex-col space-y-3">
+      <div className="h-full overflow-visible flex flex-col space-y-2">
         <div className="bg-card hover:bg-accent transition-colors duration-200 p-6 rounded-lg shadow-sm">
           <h2 className="text-xl font-semibold mb-4">{t("searchForMovie")}</h2>
           <MovieSearch onSelectMovie={handleMovieSelect} />

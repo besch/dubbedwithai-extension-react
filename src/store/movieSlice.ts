@@ -7,6 +7,7 @@ import config from "@/extension/content/config";
 import languageCodes from "@/lib/languageCodes";
 import { DubbingMessage, DubbingVoice } from "@/types";
 import { fetchMovies, fetchSubtitles } from "@/api";
+import { t } from "i18next";
 
 interface MovieState {
   selectedMovie: Movie | null;
@@ -130,7 +131,7 @@ export const selectSubtitle = createAsyncThunk(
       const data = await fetchSubtitles(params);
 
       if (!data.srtContent) {
-        toast.error("No subtitles found for the selected language.");
+        toast.error(t("noSubtitlesFound"));
         return null;
       }
 
@@ -141,7 +142,7 @@ export const selectSubtitle = createAsyncThunk(
 
       return data.subtitleInfo;
     } catch (error) {
-      toast.error("An error occurred while fetching subtitles.");
+      toast.error(t("subtitlesFetchError"));
       throw error;
     }
   }

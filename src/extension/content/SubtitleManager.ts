@@ -2,9 +2,7 @@ import { Subtitle } from "@/types";
 
 export class SubtitleManager {
   private static instance: SubtitleManager | null = null;
-  private subtitlesCache: Map<string, Subtitle[]> = new Map();
   private sortedSubtitles: Subtitle[] = [];
-  private pendingRequests: Map<string, Promise<Subtitle[] | null>> = new Map();
 
   private constructor() {}
 
@@ -30,39 +28,16 @@ export class SubtitleManager {
     seasonNumber?: number,
     episodeNumber?: number
   ): Promise<Subtitle[] | null> {
-    const cacheKey = this.getCacheKey(
+    const subtitles = await this.fetchSubtitles(
       movieId,
       languageCode,
       seasonNumber,
       episodeNumber
     );
-
-    if (this.subtitlesCache.has(cacheKey)) {
-      return this.subtitlesCache.get(cacheKey)!;
+    if (subtitles) {
+      this.setActiveSubtitles(subtitles);
     }
-
-    if (this.pendingRequests.has(cacheKey)) {
-      return this.pendingRequests.get(cacheKey)!;
-    }
-
-    const subtitlesPromise = this.fetchSubtitles(
-      movieId,
-      languageCode,
-      seasonNumber,
-      episodeNumber
-    );
-    this.pendingRequests.set(cacheKey, subtitlesPromise);
-
-    try {
-      const subtitles = await subtitlesPromise;
-      if (subtitles) {
-        this.subtitlesCache.set(cacheKey, subtitles);
-        this.sortSubtitles(subtitles);
-      }
-      return subtitles;
-    } finally {
-      this.pendingRequests.delete(cacheKey);
-    }
+    return subtitles;
   }
 
   getUpcomingSubtitles(adjustedTime: number, preloadTime: number): Subtitle[] {
@@ -82,7 +57,6 @@ export class SubtitleManager {
 
   reset(): void {
     this.sortedSubtitles = [];
-    this.subtitlesCache.clear();
   }
 
   private async fetchSubtitles(
@@ -104,18 +78,13 @@ export class SubtitleManager {
           if (response?.action === "subtitlesData" && response.data) {
             resolve(response.data);
           } else {
-            // If subtitles are not available, try fetching from Google Storage
             const googleStorageSubtitles = await this.fetchFromGoogleStorage(
               movieId,
               languageCode,
               seasonNumber,
               episodeNumber
             );
-            if (googleStorageSubtitles) {
-              resolve(googleStorageSubtitles);
-            } else {
-              resolve(null);
-            }
+            resolve(googleStorageSubtitles);
           }
         }
       );
@@ -146,39 +115,6 @@ export class SubtitleManager {
         }
       );
     });
-  }
-
-  private sortSubtitles(subtitles: Subtitle[]): void {
-    this.sortedSubtitles = [...subtitles].sort((a, b) => a.start - b.start);
-  }
-
-  public cacheSubtitles(
-    movieId: string,
-    languageCode: string,
-    subtitles: Subtitle[],
-    seasonNumber?: number,
-    episodeNumber?: number
-  ): void {
-    const cacheKey = this.getCacheKey(
-      movieId,
-      languageCode,
-      seasonNumber,
-      episodeNumber
-    );
-    this.subtitlesCache.set(cacheKey, subtitles);
-    this.sortSubtitles(subtitles);
-  }
-
-  private getCacheKey(
-    movieId: string,
-    languageCode: string,
-    seasonNumber?: number,
-    episodeNumber?: number
-  ): string {
-    if (seasonNumber !== undefined && episodeNumber !== undefined) {
-      return `${movieId}-${languageCode}-S${seasonNumber}E${episodeNumber}`;
-    }
-    return `${movieId}-${languageCode}`;
   }
 
   private generateUniqueId(): string {

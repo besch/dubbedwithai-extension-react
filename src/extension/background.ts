@@ -1,10 +1,8 @@
-import { parseSrt } from "./utils";
-import { DubbingMessage, Subtitle } from "@/types";
+import { DubbingMessage } from "@/types";
 import { IconManager } from "./content/IconManager";
 import * as api from "@/api";
 
 class BackgroundService {
-  private subtitlesCache: { [key: string]: string } = {};
   private iconManager: IconManager;
 
   constructor() {
@@ -51,12 +49,6 @@ class BackgroundService {
     sendResponse: (response?: any) => void
   ): boolean {
     switch (message.action) {
-      case "requestSubtitles":
-        this.handleSubtitlesRequest(message, sendResponse);
-        break;
-      case "requestAudioFile":
-        this.handleAudioFileRequest(message, sendResponse);
-        break;
       case "updateDubbingState":
         if (sender.tab?.id) {
           this.updateDubbingState(message.payload, sender.tab.id);
@@ -69,12 +61,6 @@ class BackgroundService {
       case "generateAudio":
         this.handleGenerateAudio(message, sendResponse);
         break;
-      // case "setSubtitles":
-      //   this.handleSetSubtitles(message, sendResponse);
-      //   break;
-      case "fetchSubtitlesFromGoogleStorage":
-        this.handleFetchSubtitlesFromGoogleStorage(message, sendResponse);
-        break;
       case "updateVideoPlaybackState":
         this.handleUpdateVideoPlaybackState(message);
         break;
@@ -82,85 +68,6 @@ class BackgroundService {
         break;
     }
     return true;
-  }
-
-  // private handleSetSubtitles(
-  //   message: {
-  //     subtitles: string;
-  //     movieId?: string;
-  //     languageCode?: string;
-  //   },
-  //   sendResponse: (response?: any) => void
-  // ): void {
-  //   console.log("Handling set subtitles:", message);
-  //   const { movieId, languageCode, subtitles } = message;
-
-  //   if (movieId && languageCode) {
-  //     const cacheKey = `${movieId}_${languageCode}`;
-  //     this.subtitlesCache[cacheKey] = subtitles;
-  //   } else {
-  //     // Handle uploaded subtitles without movieId and languageCode
-  //     const uploadedCacheKey = "uploaded_subtitles";
-  //     this.subtitlesCache[uploadedCacheKey] = subtitles;
-  //   }
-
-  //   this.clearOldSubtitlesCache();
-  //   sendResponse({ status: "success" });
-  // }
-
-  private clearOldSubtitlesCache(maxEntries: number = 3) {
-    const cacheKeys = Object.keys(this.subtitlesCache);
-    if (cacheKeys.length > maxEntries) {
-      const keysToRemove = cacheKeys.slice(0, cacheKeys.length - maxEntries);
-      keysToRemove.forEach((key) => delete this.subtitlesCache[key]);
-    }
-  }
-
-  private async handleCheckAudioFileExists(
-    message: any,
-    sendResponse: (response: any) => void
-  ): Promise<void> {
-    const { filePath } = message;
-    try {
-      const exists = await api.checkAudioFileExists(filePath);
-      sendResponse({ exists });
-    } catch (e) {
-      console.error("Error checking if audio file exists:", e);
-      sendResponse({
-        exists: false,
-        error: e instanceof Error ? e.message : "Unknown error",
-      });
-    }
-  }
-
-  private async handleGenerateAudio(
-    message: any,
-    sendResponse: (response: any) => void
-  ): Promise<void> {
-    const { text, filePath } = message;
-
-    if (!text || !filePath) {
-      sendResponse({
-        error: "Missing required parameters",
-        details: {
-          text: text ? "provided" : "missing",
-          filePath: filePath ? "provided" : "missing",
-        },
-      });
-      return;
-    }
-
-    try {
-      const audioBuffer = await api.generateAudio(text, filePath);
-      const base64Audio = this.arrayBufferToBase64(audioBuffer);
-      sendResponse({ success: true, audioData: base64Audio });
-    } catch (e: unknown) {
-      console.error("Error generating audio:", e);
-      sendResponse({
-        error: "Failed to generate audio",
-        details: e instanceof Error ? e.message : "An unknown error occurred",
-      });
-    }
   }
 
   private onSuspend(): void {
@@ -280,112 +187,51 @@ class BackgroundService {
     return btoa(result);
   }
 
-  private async handleSubtitlesRequest(
+  private async handleCheckAudioFileExists(
     message: any,
     sendResponse: (response: any) => void
   ): Promise<void> {
-    console.warn("!!!!!!!!!!!!!!message", message);
-    const { movieId, subtitleId } = message;
-    const cacheKey = `${movieId}_${subtitleId}`;
-
-    console.log("Handling subtitles request:", { movieId, subtitleId });
+    const { filePath } = message;
     try {
-      let subtitles: string | null;
-
-      if (this.subtitlesCache[cacheKey]) {
-        subtitles = this.subtitlesCache[cacheKey];
-      } else {
-        // Instead of fetching, wait for subtitles to be set
-        subtitles = await new Promise((resolve) => {
-          const listener = (request: any) => {
-            if (request.action === "setSubtitles") {
-              console.warn("!!!!!!!!!!!!!!request", request);
-              chrome.runtime.onMessage.removeListener(listener);
-              resolve(request.subtitles);
-            }
-          };
-          chrome.runtime.onMessage.addListener(listener);
-        });
-
-        if (subtitles) {
-          this.subtitlesCache[cacheKey] = subtitles;
-          this.clearOldSubtitlesCache();
-        }
-      }
-
-      console.warn("subtitles", subtitles ? parseSrt(subtitles) : null);
-
+      const exists = await api.checkAudioFileExists(filePath);
+      sendResponse({ exists });
+    } catch (e) {
+      console.error("Error checking if audio file exists:", e);
       sendResponse({
-        action: "subtitlesData",
-        data: subtitles ? parseSrt(subtitles) : null,
-      });
-    } catch (error) {
-      console.error("Error handling subtitles request:", error);
-      sendResponse({
-        action: "subtitlesData",
-        data: null,
-        error: "Failed to handle subtitles request",
+        exists: false,
+        error: e instanceof Error ? e.message : "Unknown error",
       });
     }
   }
 
-  private async handleAudioFileRequest(
+  private async handleGenerateAudio(
     message: any,
     sendResponse: (response: any) => void
   ): Promise<void> {
-    const audioData = await this.fetchAudioFile(message.filePath);
-    sendResponse({
-      action: "audioFileData",
-      data: audioData ? this.arrayBufferToBase64(audioData) : null,
-    });
-  }
+    const { text, filePath } = message;
 
-  private async fetchSubtitlesFromGoogleStorage(
-    movieId: string,
-    subtitleId: string
-  ): Promise<Subtitle[] | null> {
-    try {
-      return await api.fetchSubtitlesFromGoogleStorage(movieId, subtitleId);
-    } catch (error) {
-      console.error("Error fetching subtitles from Google Storage:", error);
-      return null;
-    }
-  }
-
-  private async handleFetchSubtitlesFromGoogleStorage(
-    message: { movieId: string; subtitleId: string },
-    sendResponse: (response: any) => void
-  ): Promise<void> {
-    const { movieId, subtitleId } = message;
-    try {
-      const subtitles = await this.fetchSubtitlesFromGoogleStorage(
-        movieId,
-        subtitleId
-      );
-      sendResponse({ subtitles });
-    } catch (error) {
-      console.error("Error in handleFetchSubtitlesFromGoogleStorage:", error);
+    if (!text || !filePath) {
       sendResponse({
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: "Missing required parameters",
+        details: {
+          text: text ? "provided" : "missing",
+          filePath: filePath ? "provided" : "missing",
+        },
+      });
+      return;
+    }
+
+    try {
+      const audioBuffer = await api.generateAudio(text, filePath);
+      const base64Audio = this.arrayBufferToBase64(audioBuffer);
+      sendResponse({ success: true, audioData: base64Audio });
+    } catch (e: unknown) {
+      console.error("Error generating audio:", e);
+      sendResponse({
+        error: "Failed to generate audio",
+        details: e instanceof Error ? e.message : "An unknown error occurred",
       });
     }
-  }
-
-  private handleVideoPlaybackStateUpdate(
-    message: { isPlaying: boolean; isDubbingActive: boolean },
-    sendResponse: (response?: any) => void
-  ): void {
-    const { isPlaying, isDubbingActive } = message;
-    if (isDubbingActive) {
-      if (isPlaying) {
-        this.iconManager.startPulsing();
-      } else {
-        this.iconManager.stopPulsing();
-      }
-    } else {
-      this.iconManager.stopPulsing();
-    }
-    sendResponse({ status: "updated" });
   }
 }
 

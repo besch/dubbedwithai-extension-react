@@ -37,7 +37,6 @@ export class DubbingManager {
     this.subtitleManager = SubtitleManager.getInstance();
     this.audioPlayer = new AudioPlayer(this.audioContext);
     this.precisionTimer = new PrecisionTimer(this.handlePreciseTime);
-    window.addEventListener("message", this.handleMessage.bind(this));
 
     this.currentState = {
       movieId: null,
@@ -74,13 +73,6 @@ export class DubbingManager {
     if (!srtContent) {
       throw new Error("No subtitles");
     }
-    console.warn("srtContent", !!srtContent);
-
-    const isDubbingActive = await this.isDubbingActiveInAnyFrame();
-    if (isDubbingActive) {
-      console.log("Dubbing is already active in another frame");
-      return;
-    }
 
     console.log("Initializing DubbingManager:", {
       movieId,
@@ -107,7 +99,6 @@ export class DubbingManager {
 
     try {
       const subtitles = parseSrt(srtContent);
-      console.log("subtitles", subtitles);
 
       if (subtitles.length === 0) {
         throw new Error(
@@ -117,9 +108,8 @@ export class DubbingManager {
 
       this.subtitleManager.setActiveSubtitles(subtitles);
 
-      await this.findAndStoreVideoElement();
+      this.findAndStoreVideoElement();
       if (this.videoElement) {
-        console.log("videoElement");
         this.setupAudioContext();
         this.startDubbing();
         this.updateCurrentState({
@@ -135,24 +125,6 @@ export class DubbingManager {
     } catch (error) {
       this.updateCurrentState({ isDubbingActive: false });
       throw error;
-    }
-  }
-
-  private handleMessage(event: MessageEvent): void {
-    if (event.data.type === "CHECK_DUBBING_ACTIVE") {
-      (event.source as Window)?.postMessage(
-        {
-          type: "DUBBING_ACTIVE_STATUS",
-          isActive: this.currentState.isDubbingActive,
-        },
-        { targetOrigin: event.origin }
-      );
-    } else if (event.data.type === "SET_DUBBING_ACTIVE") {
-      this.updateCurrentState({ isDubbingActive: true });
-    } else if (event.data.type === "DUBBING_ACTIVE_STATUS") {
-      if (event.data.isActive) {
-        this.updateCurrentState({ isDubbingActive: false });
-      }
     }
   }
 
@@ -270,18 +242,11 @@ export class DubbingManager {
     );
   }
 
-  public async findAndStoreVideoElement(): Promise<void> {
-    const isDubbingActive = await this.isDubbingActiveInAnyFrame();
-    if (isDubbingActive) {
-      console.log("Dubbing is already active in another frame");
-      return;
-    }
-
+  public findAndStoreVideoElement(): void {
     this.videoElement = document.querySelector("video");
 
     if (this.videoElement) {
       this.handleVideo(this.videoElement);
-      this.setDubbingActiveFlag();
       return;
     }
 
@@ -295,7 +260,6 @@ export class DubbingManager {
           this.videoElement = iframeDocument.querySelector("video");
           if (this.videoElement) {
             this.handleVideo(this.videoElement);
-            this.setDubbingActiveFlag();
             return;
           }
         }
@@ -305,29 +269,6 @@ export class DubbingManager {
     }
 
     this.setupVideoObserver();
-  }
-
-  private isDubbingActiveInAnyFrame(): Promise<boolean> {
-    return new Promise((resolve) => {
-      const checkDubbingActive = (event: MessageEvent) => {
-        if (event.data.type === "DUBBING_ACTIVE_STATUS") {
-          window.removeEventListener("message", checkDubbingActive);
-          resolve(event.data.isActive);
-        }
-      };
-
-      window.addEventListener("message", checkDubbingActive);
-      window.top?.postMessage({ type: "CHECK_DUBBING_ACTIVE" }, "*");
-
-      setTimeout(() => {
-        window.removeEventListener("message", checkDubbingActive);
-        resolve(false);
-      }, 1000);
-    });
-  }
-
-  private setDubbingActiveFlag(): void {
-    window.top?.postMessage({ type: "SET_DUBBING_ACTIVE" }, "*");
   }
 
   private removeVideoEventListeners(): void {
@@ -532,11 +473,11 @@ export class DubbingManager {
   };
 
   private getAudioFilePath(subtitle: Subtitle): string {
-    if (!this.currentState.movieId) {
+    if (this.currentState.movieId === null) {
       return `uploaded/${this.currentState.dubbingVoice}/${subtitle.start}-${subtitle.end}.mp3`;
     } else if (
-      this.currentState.seasonNumber &&
-      this.currentState.episodeNumber
+      this.currentState.seasonNumber !== null &&
+      this.currentState.episodeNumber !== null
     ) {
       // TV series
       return `${this.currentState.movieId}/${this.currentState.seasonNumber}/${this.currentState.episodeNumber}/${this.currentState.languageCode}/${this.currentState.dubbingVoice}/${subtitle.start}-${subtitle.end}.mp3`;

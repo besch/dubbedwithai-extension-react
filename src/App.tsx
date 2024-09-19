@@ -57,7 +57,7 @@ const App: React.FC = () => {
 
         // Check if the content script is already loaded
         const [{ result }] = await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
+          target: { tabId: tab.id, allFrames: true },
           func: () => (window as any).__DUBBING_CONTENT_SCRIPT_LOADED__,
         });
 

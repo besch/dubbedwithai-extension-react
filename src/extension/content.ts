@@ -50,6 +50,7 @@ class ContentScript {
   private async processDubbingMessage(message: DubbingMessage): Promise<any> {
     switch (message.action) {
       case "initializeDubbing":
+        console.log("initializeDubbing", message);
         return this.initializeDubbing(
           message.movieId,
           message.languageCode,
@@ -91,12 +92,15 @@ class ContentScript {
     seasonNumber?: number,
     episodeNumber?: number
   ): Promise<any> {
+    console.warn("srtContent", !!srtContent);
+
     if (!this.checkForVideoElement()) {
       throw new Error("No video element found on the page");
     }
 
+    console.warn("checkForVideoElement", true);
+
     try {
-      console.log("try dubbingManager.initialize");
       await this.dubbingManager.initialize(
         movieId,
         languageCode,

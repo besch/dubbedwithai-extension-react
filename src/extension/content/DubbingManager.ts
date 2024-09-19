@@ -74,6 +74,7 @@ export class DubbingManager {
     if (!srtContent) {
       throw new Error("No subtitles");
     }
+    console.warn("srtContent", !!srtContent);
 
     const isDubbingActive = await this.isDubbingActiveInAnyFrame();
     if (isDubbingActive) {
@@ -97,14 +98,6 @@ export class DubbingManager {
     }
 
     this.updateCurrentState({
-      movieId,
-      languageCode,
-      seasonNumber: seasonNumber || null,
-      episodeNumber: episodeNumber || null,
-      isDubbingActive: false,
-    });
-
-    console.log("updateCurrentState", {
       movieId,
       languageCode,
       seasonNumber: seasonNumber || null,

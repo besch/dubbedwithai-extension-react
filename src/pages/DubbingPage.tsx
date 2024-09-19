@@ -8,7 +8,6 @@ import {
   checkDubbingStatus,
   loadSubtitles,
   toggleDubbingProcess,
-  setSrtContent,
 } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
 import PageLayout from "@/components/ui/PageLayout";

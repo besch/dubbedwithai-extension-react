@@ -69,9 +69,9 @@ class BackgroundService {
       case "generateAudio":
         this.handleGenerateAudio(message, sendResponse);
         break;
-      case "setSubtitles":
-        this.handleSetSubtitles(message, sendResponse);
-        break;
+      // case "setSubtitles":
+      //   this.handleSetSubtitles(message, sendResponse);
+      //   break;
       case "fetchSubtitlesFromGoogleStorage":
         this.handleFetchSubtitlesFromGoogleStorage(message, sendResponse);
         break;
@@ -84,16 +84,29 @@ class BackgroundService {
     return true;
   }
 
-  private handleSetSubtitles(
-    message: { movieId: string; languageCode: string; subtitles: string },
-    sendResponse: (response?: any) => void
-  ): void {
-    const { movieId, languageCode, subtitles } = message;
-    const cacheKey = `${movieId}_${languageCode}`;
-    this.subtitlesCache[cacheKey] = subtitles;
-    this.clearOldSubtitlesCache();
-    sendResponse({ status: "success" });
-  }
+  // private handleSetSubtitles(
+  //   message: {
+  //     subtitles: string;
+  //     movieId?: string;
+  //     languageCode?: string;
+  //   },
+  //   sendResponse: (response?: any) => void
+  // ): void {
+  //   console.log("Handling set subtitles:", message);
+  //   const { movieId, languageCode, subtitles } = message;
+
+  //   if (movieId && languageCode) {
+  //     const cacheKey = `${movieId}_${languageCode}`;
+  //     this.subtitlesCache[cacheKey] = subtitles;
+  //   } else {
+  //     // Handle uploaded subtitles without movieId and languageCode
+  //     const uploadedCacheKey = "uploaded_subtitles";
+  //     this.subtitlesCache[uploadedCacheKey] = subtitles;
+  //   }
+
+  //   this.clearOldSubtitlesCache();
+  //   sendResponse({ status: "success" });
+  // }
 
   private clearOldSubtitlesCache(maxEntries: number = 3) {
     const cacheKeys = Object.keys(this.subtitlesCache);
@@ -271,6 +284,7 @@ class BackgroundService {
     message: any,
     sendResponse: (response: any) => void
   ): Promise<void> {
+    console.warn("!!!!!!!!!!!!!!message", message);
     const { movieId, subtitleId } = message;
     const cacheKey = `${movieId}_${subtitleId}`;
 
@@ -284,11 +298,8 @@ class BackgroundService {
         // Instead of fetching, wait for subtitles to be set
         subtitles = await new Promise((resolve) => {
           const listener = (request: any) => {
-            if (
-              request.action === "setSubtitles" &&
-              request.movieId === movieId &&
-              request.subtitleId === subtitleId
-            ) {
+            if (request.action === "setSubtitles") {
+              console.warn("!!!!!!!!!!!!!!request", request);
               chrome.runtime.onMessage.removeListener(listener);
               resolve(request.subtitles);
             }
@@ -301,6 +312,8 @@ class BackgroundService {
           this.clearOldSubtitlesCache();
         }
       }
+
+      console.warn("subtitles", subtitles ? parseSrt(subtitles) : null);
 
       sendResponse({
         action: "subtitlesData",

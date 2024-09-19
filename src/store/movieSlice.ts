@@ -134,24 +134,24 @@ export const selectSubtitle = createAsyncThunk(
         return null;
       }
 
-      // Send subtitles to background script
-      await new Promise<void>((resolve, reject) => {
-        chrome.runtime.sendMessage(
-          {
-            action: "setSubtitles",
-            movieId: params.imdbID,
-            languageCode: params.languageCode,
-            subtitles: data.srtContent,
-          },
-          (response) => {
-            if (response && response.status === "success") {
-              resolve();
-            } else {
-              reject(new Error("Failed to set subtitles in background script"));
-            }
-          }
-        );
-      });
+      // // Send subtitles to background script
+      // await new Promise<void>((resolve, reject) => {
+      //   chrome.runtime.sendMessage(
+      //     {
+      //       action: "setSubtitles",
+      //       movieId: params.imdbID,
+      //       languageCode: params.languageCode,
+      //       subtitles: data.srtContent,
+      //     },
+      //     (response) => {
+      //       if (response && response.status === "success") {
+      //         resolve();
+      //       } else {
+      //         reject(new Error("Failed to set subtitles in background script"));
+      //       }
+      //     }
+      //   );
+      // });
 
       if (data.srtContent !== currentSrtContent) {
         dispatch(setSrtContent(data.srtContent));
@@ -221,8 +221,11 @@ export const toggleDubbingProcess = createAsyncThunk(
           };
 
           chrome.tabs.sendMessage(tabs[0].id, message, (response) => {
-            if (response && response.status === "success") {
-              dispatch(updateDubbingState(!isDubbingActive));
+            if (response && response.status === "initialized") {
+              dispatch(updateDubbingState(true));
+              resolve();
+            } else if (response && response.status === "stopped") {
+              dispatch(updateDubbingState(false));
               resolve();
             } else if (response && response.status === "alreadyInitialized") {
               console.log("Dubbing is already initialized");
@@ -284,13 +287,28 @@ export const availableLanguages = (state: RootState) =>
 export const setSrtContentAndSave = createAsyncThunk(
   "movie/setSrtContentAndSave",
   async (content: string | null, { dispatch }) => {
-    await dispatch(setSrtContent(content));
+    dispatch(setSrtContent(content));
     await new Promise<void>((resolve) => {
       chrome.storage.local.set({ srtContent: content }, () => {
         resolve();
       });
     });
-    return content;
+
+    // await new Promise<void>((resolve, reject) => {
+    //   chrome.runtime.sendMessage(
+    //     {
+    //       action: "setSubtitles",
+    //       subtitles: content,
+    //     },
+    //     (response) => {
+    //       if (response && response.status === "success") {
+    //         resolve();
+    //       } else {
+    //         reject(new Error("Failed to set subtitles in background script"));
+    //       }
+    //     }
+    //   );
+    // });
   }
 );
 

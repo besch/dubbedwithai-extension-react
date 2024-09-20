@@ -183,8 +183,14 @@ export const toggleDubbingProcess = createAsyncThunk(
   "movie/toggleDubbingProcess",
   async (_, { getState, dispatch }) => {
     const state = getState() as RootState;
-    const { selectedMovie, selectedLanguage, isDubbingActive, srtContent } =
-      state.movie;
+    const {
+      selectedMovie,
+      selectedLanguage,
+      isDubbingActive,
+      srtContent,
+      selectedSeasonNumber,
+      selectedEpisodeNumber,
+    } = state.movie;
 
     if (!srtContent) {
       throw new Error("No subtitles found");
@@ -198,9 +204,11 @@ export const toggleDubbingProcess = createAsyncThunk(
             movieId: selectedMovie?.imdbID || null,
             languageCode: selectedLanguage?.attributes.language || null,
             srtContent: srtContent,
-            seasonNumber: state.movie.selectedSeasonNumber || undefined,
-            episodeNumber: state.movie.selectedEpisodeNumber || undefined,
+            seasonNumber: selectedSeasonNumber || undefined,
+            episodeNumber: selectedEpisodeNumber || undefined,
           };
+
+          console.log("message", message);
 
           chrome.tabs.sendMessage(tabs[0].id, message, (response) => {
             if (response && response.status === "initialized") {

@@ -50,7 +50,6 @@ class ContentScript {
   private async processDubbingMessage(message: DubbingMessage): Promise<any> {
     switch (message.action) {
       case "initializeDubbing":
-        console.log("initializeDubbing", message);
         return this.initializeDubbing(
           message.movieId,
           message.languageCode,
@@ -93,10 +92,8 @@ class ContentScript {
     episodeNumber?: number
   ): Promise<any> {
     if (!this.checkForVideoElement()) {
-      throw new Error("No video element found on the page");
+      return;
     }
-
-    console.warn("checkForVideoElement", true);
 
     try {
       await this.dubbingManager.initialize(
@@ -159,7 +156,7 @@ class ContentScript {
     ) {
       try {
         if (!this.checkForVideoElement()) {
-          throw new Error("No video element found on the page");
+          return;
         }
 
         await this.dubbingManager.initialize(

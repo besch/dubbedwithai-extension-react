@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import config from "@/extension/content/config";
 import { DubbingMessage, DubbingVoice } from "@/types";
 import { createPopper, Instance as PopperInstance } from "@popperjs/core";
-import { Info } from "lucide-react";
+import { Info, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { changeLanguage } from "@/store/languageSlice";
 
@@ -182,25 +182,23 @@ const SettingsPage: React.FC = () => {
   return (
     <PageLayout title={t("dubbingSettings")}>
       <div className="space-y-6">
-        <div className="mb-4">
-          <label
-            htmlFor="language-select"
-            className="block text-sm font-medium text-foreground mb-2"
-          >
-            {t("language")}
-          </label>
-          <select
-            id="language-select"
-            value={i18n.language}
-            onChange={handleLanguageChange}
-            className="w-full p-2 border rounded bg-background text-foreground border-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
-          >
-            {availableLanguages.map((lang) => (
-              <option key={lang.code} value={lang.code}>
-                {lang.name}
-              </option>
-            ))}
-          </select>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">{t("settings")}</h2>
+          <div className="flex items-center">
+            <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
+            <select
+              id="language-select"
+              value={i18n.language}
+              onChange={handleLanguageChange}
+              className="p-1 text-sm border rounded bg-background text-foreground border-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+            >
+              {availableLanguages.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="mb-4">

@@ -4,6 +4,7 @@ import * as api from "@/api";
 
 class BackgroundService {
   private iconManager: IconManager;
+  private isDubbingActive: boolean = false;
 
   constructor() {
     this.iconManager = new IconManager();
@@ -41,6 +42,16 @@ class BackgroundService {
 
   private async onStartup(): Promise<void> {
     await this.iconManager.preloadIcons();
+    await this.retrieveDubbingState();
+  }
+
+  private async retrieveDubbingState(): Promise<void> {
+    const { isDubbingActive } = await chrome.storage.local.get(
+      "isDubbingActive"
+    );
+    if (isDubbingActive) {
+      this.checkDubbingStatusOnActiveTab();
+    }
   }
 
   private onMessage(
@@ -72,6 +83,11 @@ class BackgroundService {
 
   private onSuspend(): void {
     this.iconManager.stopPulsing();
+    this.saveDubbingState();
+  }
+
+  private saveDubbingState(): void {
+    chrome.storage.local.set({ isDubbingActive: this.isDubbingActive });
   }
 
   private onAlarm(alarm: chrome.alarms.Alarm): void {
@@ -143,13 +159,16 @@ class BackgroundService {
               this.iconManager.stopPulsing();
               this.iconManager.updateIcon(false);
               this.updateStorageDubbingState(false);
+              this.isDubbingActive = false;
             } else if (response?.isDubbingActive !== undefined) {
               this.updateDubbingState(response.isDubbingActive, tabs[0].id!);
               this.updateStorageDubbingState(response.isDubbingActive);
+              this.isDubbingActive = response.isDubbingActive;
             } else {
               this.iconManager.stopPulsing();
               this.iconManager.updateIcon(false);
               this.updateStorageDubbingState(false);
+              this.isDubbingActive = false;
             }
           }
         );
@@ -157,6 +176,7 @@ class BackgroundService {
         this.iconManager.stopPulsing();
         this.iconManager.updateIcon(false);
         this.updateStorageDubbingState(false);
+        this.isDubbingActive = false;
       }
     });
   }

@@ -17,7 +17,6 @@ const initialState: LanguageState = {
 export const changeLanguage = createAsyncThunk(
   "language/changeLanguage",
   async (language: string, { rejectWithValue }) => {
-    console.log("ehere");
     try {
       await i18n.changeLanguage(language);
       await chrome.storage.local.set({ appLanguage: language });

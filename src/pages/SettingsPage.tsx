@@ -112,7 +112,6 @@ const SettingsPage: React.FC = () => {
   ) => {
     const newVoice = event.target.value as DubbingVoice;
     setLocalDubbingVoice(newVoice);
-    dispatch(setDubbingVoice(newVoice));
   };
 
   const handleApplyChanges = () => {

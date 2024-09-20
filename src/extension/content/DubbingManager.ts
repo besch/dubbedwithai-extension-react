@@ -385,10 +385,7 @@ export class DubbingManager {
             break;
           case "checkDubbingStatus":
             sendResponse({
-              isDubbingActive:
-                !!this.currentState.movieId &&
-                !!this.currentState.languageCode &&
-                this.currentState.isDubbingActive,
+              isDubbingActive: this.currentState.isDubbingActive,
             });
             break;
           case "updateDubbingState":

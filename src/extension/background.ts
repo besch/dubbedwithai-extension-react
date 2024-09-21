@@ -66,9 +66,6 @@ class BackgroundService {
         }
         sendResponse({ status: "updated" });
         break;
-      // case "checkAudioFileExists":
-      //   this.handleCheckAudioFileExists(message, sendResponse);
-      //   break;
       case "fetchAudioFile":
         this.handleFetchAudioFile(message, sendResponse);
         break;
@@ -218,23 +215,6 @@ class BackgroundService {
 
     return btoa(result);
   }
-
-  // private async handleCheckAudioFileExists(
-  //   message: any,
-  //   sendResponse: (response: any) => void
-  // ): Promise<void> {
-  //   const { filePath } = message;
-  //   try {
-  //     const exists = await api.checkAudioFileExists(filePath);
-  //     sendResponse({ exists });
-  //   } catch (e) {
-  //     console.error("Error checking if audio file exists:", e);
-  //     sendResponse({
-  //       exists: false,
-  //       error: e instanceof Error ? e.message : "Unknown error",
-  //     });
-  //   }
-  // }
 
   private async handleGenerateAudio(
     message: any,

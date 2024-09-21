@@ -351,15 +351,22 @@ export class DubbingManager {
         timeUntilPlay <= config.preloadAudioGenerationTime &&
         timeUntilPlay > 0
       ) {
-        if (this.isUploadedSubtitle(filePath)) {
-          // For uploaded subtitles, generate audio without checking existence
-          await this.audioFileManager.generateAudio(filePath, subtitle.text);
-        } else {
-          // For regular subtitles, check existence before generating
-          const exists = await this.audioFileManager.checkFileExists(filePath);
-          if (!exists) {
+        try {
+          const audioBuffer = await this.audioFileManager.fetchAudioFile(
+            filePath
+          );
+          if (audioBuffer) {
+            // Cache the audio buffer for later use
+            await this.audioFileManager.cacheAudioBuffer(filePath, audioBuffer);
+          } else {
+            // If audio file not found, generate it
             await this.audioFileManager.generateAudio(filePath, subtitle.text);
           }
+        } catch (error) {
+          console.error(
+            `Error fetching or generating audio for ${filePath}:`,
+            error
+          );
         }
       }
     }

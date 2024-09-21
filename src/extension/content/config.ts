@@ -3,6 +3,7 @@ export interface Config {
   maxDubbingVolumeMultiplier: number;
   preloadAudioTime: number; // in milliseconds
   preloadAudioGenerationTime: number; // in milliseconds
+  audioFileFetchCacheTimeout: number; // in milliseconds
   subtitleUpdateInterval: number; // in seconds
   audioFileExistenceCacheTimeout: number; // in milliseconds
   audioFileGenerationCacheTimeout: number; // in milliseconds
@@ -17,6 +18,7 @@ const config: Config = {
   maxDubbingVolumeMultiplier: 2.0,
   preloadAudioTime: 5000,
   preloadAudioGenerationTime: 15000,
+  audioFileFetchCacheTimeout: 5 * 60 * 1000, // 5 minutes in milliseconds
   subtitleUpdateInterval: 0.5,
   audioFileExistenceCacheTimeout: 60000,
   audioFileGenerationCacheTimeout: 300000,

@@ -66,8 +66,11 @@ class BackgroundService {
         }
         sendResponse({ status: "updated" });
         break;
-      case "checkAudioFileExists":
-        this.handleCheckAudioFileExists(message, sendResponse);
+      // case "checkAudioFileExists":
+      //   this.handleCheckAudioFileExists(message, sendResponse);
+      //   break;
+      case "fetchAudioFile":
+        this.handleFetchAudioFile(message, sendResponse);
         break;
       case "generateAudio":
         this.handleGenerateAudio(message, sendResponse);
@@ -79,6 +82,24 @@ class BackgroundService {
         break;
     }
     return true;
+  }
+
+  private async handleFetchAudioFile(
+    message: any,
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    const { filePath } = message;
+    try {
+      const audioBuffer = await api.fetchAudioFile(filePath);
+      const base64Audio = this.arrayBufferToBase64(audioBuffer);
+      sendResponse({ success: true, audioData: base64Audio });
+    } catch (e: unknown) {
+      console.error("Error fetching audio file:", e);
+      sendResponse({
+        error: "Failed to fetch audio file",
+        details: e instanceof Error ? e.message : "An unknown error occurred",
+      });
+    }
   }
 
   private onSuspend(): void {
@@ -198,22 +219,22 @@ class BackgroundService {
     return btoa(result);
   }
 
-  private async handleCheckAudioFileExists(
-    message: any,
-    sendResponse: (response: any) => void
-  ): Promise<void> {
-    const { filePath } = message;
-    try {
-      const exists = await api.checkAudioFileExists(filePath);
-      sendResponse({ exists });
-    } catch (e) {
-      console.error("Error checking if audio file exists:", e);
-      sendResponse({
-        exists: false,
-        error: e instanceof Error ? e.message : "Unknown error",
-      });
-    }
-  }
+  // private async handleCheckAudioFileExists(
+  //   message: any,
+  //   sendResponse: (response: any) => void
+  // ): Promise<void> {
+  //   const { filePath } = message;
+  //   try {
+  //     const exists = await api.checkAudioFileExists(filePath);
+  //     sendResponse({ exists });
+  //   } catch (e) {
+  //     console.error("Error checking if audio file exists:", e);
+  //     sendResponse({
+  //       exists: false,
+  //       error: e instanceof Error ? e.message : "Unknown error",
+  //     });
+  //   }
+  // }
 
   private async handleGenerateAudio(
     message: any,

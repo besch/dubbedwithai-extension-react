@@ -620,15 +620,9 @@ export class DubbingManager {
     offset: number = 0
   ): Promise<void> {
     const filePath = this.getAudioFilePath(subtitle);
-    try {
-      const buffer = await this.audioFileManager.getAudioBuffer(filePath);
-      if (buffer) {
-        await this.audioPlayer.playAudio(buffer, filePath, subtitle, offset);
-      } else {
-        console.warn(`Audio buffer not available for file: ${filePath}`);
-      }
-    } catch (error) {
-      console.error(`Error playing audio for file: ${filePath}`, error);
+    const buffer = await this.audioFileManager.getAudioBuffer(filePath);
+    if (buffer) {
+      await this.audioPlayer.playAudio(buffer, filePath, subtitle, offset);
     }
   }
 

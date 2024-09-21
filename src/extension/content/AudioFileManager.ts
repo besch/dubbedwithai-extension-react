@@ -125,7 +125,6 @@ export class AudioFileManager {
       }
       return result;
     } catch (error) {
-      console.error(`Failed to fetch audio for ${filePath}:`, error);
       return null;
     } finally {
       this.notFoundFiles.delete(filePath);

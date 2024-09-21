@@ -8,11 +8,8 @@ export class AudioFileManager {
   private inMemoryCache: Map<string, AudioBuffer> = new Map();
   private ongoingFetchRequests: Map<string, Promise<ArrayBuffer | null>> =
     new Map();
-  private ongoingCheckRequests: Map<string, Promise<boolean>> = new Map();
   private ongoingGenerationRequests: Map<string, Promise<void>> = new Map();
   private notFoundFiles: Set<string> = new Set();
-  private existenceCache: Map<string, boolean> = new Map();
-  private lastExistenceCheck: Map<string, number> = new Map();
   private lastGenerationAttempt: Map<string, number> = new Map();
   private lastFetchAttempt: Map<string, number> = new Map();
 
@@ -39,19 +36,13 @@ export class AudioFileManager {
     )
       return true;
 
-    const now = Date.now();
-    const lastCheck = this.lastExistenceCheck.get(filePath) || 0;
-
-    if (now - lastCheck < config.audioFileExistenceCacheTimeout) {
-      return this.existenceCache.get(filePath) || false;
+    try {
+      const audioData = await this.audioCache.getAudio(filePath);
+      return !!audioData;
+    } catch (error) {
+      console.error(`Error checking existence for ${filePath}:`, error);
+      return false;
     }
-
-    if (!this.ongoingCheckRequests.has(filePath)) {
-      const checkPromise = this.performFileCheck(filePath);
-      this.ongoingCheckRequests.set(filePath, checkPromise);
-    }
-
-    return this.ongoingCheckRequests.get(filePath)!;
   }
 
   async getAudioBuffer(filePath: string): Promise<AudioBuffer | null> {
@@ -106,44 +97,14 @@ export class AudioFileManager {
   clearCache(): void {
     this.inMemoryCache.clear();
     this.ongoingFetchRequests.clear();
-    this.ongoingCheckRequests.clear();
     this.ongoingGenerationRequests.clear();
     this.notFoundFiles.clear();
-    this.existenceCache.clear();
-    this.lastExistenceCheck.clear();
     this.lastGenerationAttempt.clear();
     this.lastFetchAttempt.clear();
   }
 
   stop(): void {
     this.clearCache();
-  }
-
-  private async performFileCheck(filePath: string): Promise<boolean> {
-    try {
-      const audioData = await this.audioCache.getAudio(filePath);
-      if (audioData) {
-        this.existenceCache.set(filePath, true);
-        this.lastExistenceCheck.set(filePath, Date.now());
-        return true;
-      }
-
-      const exists = await this.checkFileExistsInBackend(filePath);
-      this.existenceCache.set(filePath, exists);
-      this.lastExistenceCheck.set(filePath, Date.now());
-      return exists;
-    } finally {
-      this.ongoingCheckRequests.delete(filePath);
-    }
-  }
-
-  private async checkFileExistsInBackend(filePath: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage(
-        { action: "checkAudioFileExists", filePath },
-        (response) => resolve(response.exists)
-      );
-    });
   }
 
   private async fetchAndProcessAudio(
@@ -209,13 +170,8 @@ export class AudioFileManager {
         { action: "fetchAudioFile", filePath },
         (response) => {
           if (chrome.runtime.lastError) {
-            console.error(
-              "Error fetching audio file:",
-              chrome.runtime.lastError
-            );
             reject(new Error(chrome.runtime.lastError.message));
           } else if (response.error) {
-            console.error("Error fetching audio file:", response.error);
             reject(new Error(response.error));
           } else if (response.audioData) {
             resolve(base64ToArrayBuffer(response.audioData));
@@ -232,7 +188,6 @@ export class AudioFileManager {
     try {
       const result = await fetchPromise;
       if (result) {
-        // If audio data was successfully fetched, store it in the cache
         await this.audioCache.storeAudio(filePath, result);
       }
       return result;
@@ -265,18 +220,14 @@ export class AudioFileManager {
         );
       });
 
-      // Store the generated audio in the cache
       await this.audioCache.storeAudio(filePath, audioBuffer);
 
-      // Decode the audio data and store it in the in-memory cache
       const decodedBuffer = await this.audioContext.decodeAudioData(
         audioBuffer.slice(0)
       );
       this.inMemoryCache.set(filePath, decodedBuffer);
 
       this.notFoundFiles.delete(filePath);
-      this.existenceCache.set(filePath, true);
-      this.lastExistenceCheck.set(filePath, Date.now());
     } catch (error) {
       console.error(`Failed to generate audio for ${filePath}:`, error);
       this.notFoundFiles.add(filePath);

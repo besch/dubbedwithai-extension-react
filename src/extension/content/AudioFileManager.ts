@@ -6,9 +6,6 @@ export class AudioFileManager {
   private static instance: AudioFileManager | null = null;
   private audioCache: AudioCache;
   private inMemoryCache: Map<string, AudioBuffer> = new Map();
-  private ongoingFetchRequests: Map<string, Promise<ArrayBuffer | null>> =
-    new Map();
-  private ongoingGenerationRequests: Map<string, Promise<void>> = new Map();
   private notFoundFiles: Set<string> = new Set();
   private lastGenerationAttempt: Map<string, number> = new Map();
   private lastFetchAttempt: Map<string, number> = new Map();
@@ -24,27 +21,6 @@ export class AudioFileManager {
     return AudioFileManager.instance;
   }
 
-  isGenerating(filePath: string): boolean {
-    return this.ongoingGenerationRequests.has(filePath);
-  }
-
-  async checkFileExists(filePath: string): Promise<boolean> {
-    if (this.notFoundFiles.has(filePath)) return false;
-    if (
-      this.inMemoryCache.has(filePath) ||
-      this.ongoingFetchRequests.has(filePath)
-    )
-      return true;
-
-    try {
-      const audioData = await this.audioCache.getAudio(filePath);
-      return !!audioData;
-    } catch (error) {
-      console.error(`Error checking existence for ${filePath}:`, error);
-      return false;
-    }
-  }
-
   async getAudioBuffer(filePath: string): Promise<AudioBuffer | null> {
     if (this.notFoundFiles.has(filePath)) {
       return null;
@@ -54,12 +30,7 @@ export class AudioFileManager {
       return this.inMemoryCache.get(filePath)!;
     }
 
-    if (!this.ongoingFetchRequests.has(filePath)) {
-      const request = this.fetchAndProcessAudio(filePath);
-      this.ongoingFetchRequests.set(filePath, request);
-    }
-
-    const arrayBuffer = await this.ongoingFetchRequests.get(filePath)!;
+    const arrayBuffer = await this.fetchAndProcessAudio(filePath);
     if (!arrayBuffer) {
       return null;
     }
@@ -73,8 +44,6 @@ export class AudioFileManager {
     } catch (error) {
       console.error(`Failed to decode audio data for ${filePath}:`, error);
       return null;
-    } finally {
-      this.ongoingFetchRequests.delete(filePath);
     }
   }
 
@@ -86,18 +55,11 @@ export class AudioFileManager {
       return;
     }
 
-    if (!this.ongoingGenerationRequests.has(filePath)) {
-      const generationPromise = this.performAudioGeneration(filePath, text);
-      this.ongoingGenerationRequests.set(filePath, generationPromise);
-    }
-
-    return this.ongoingGenerationRequests.get(filePath);
+    return this.performAudioGeneration(filePath, text);
   }
 
   clearCache(): void {
     this.inMemoryCache.clear();
-    this.ongoingFetchRequests.clear();
-    this.ongoingGenerationRequests.clear();
     this.notFoundFiles.clear();
     this.lastGenerationAttempt.clear();
     this.lastFetchAttempt.clear();
@@ -110,40 +72,16 @@ export class AudioFileManager {
   private async fetchAndProcessAudio(
     filePath: string
   ): Promise<ArrayBuffer | null> {
-    if (this.ongoingFetchRequests.has(filePath)) {
-      return this.ongoingFetchRequests.get(filePath)!;
-    }
-
-    const fetchPromise = this.actualFetchAndProcess(filePath);
-    this.ongoingFetchRequests.set(filePath, fetchPromise);
-
-    try {
-      return await fetchPromise;
-    } finally {
-      this.ongoingFetchRequests.delete(filePath);
-    }
-  }
-
-  private async actualFetchAndProcess(
-    filePath: string
-  ): Promise<ArrayBuffer | null> {
     try {
       let audioData = await this.audioCache.getAudio(filePath);
 
       if (!audioData) {
-        if (this.ongoingGenerationRequests.has(filePath)) {
-          await this.ongoingGenerationRequests.get(filePath);
-          audioData = await this.audioCache.getAudio(filePath);
-        }
-
+        audioData = await this.fetchAudioFile(filePath);
         if (!audioData) {
-          audioData = await this.fetchAudioFile(filePath);
-          if (!audioData) {
-            this.notFoundFiles.add(filePath);
-            return null;
-          }
-          await this.audioCache.storeAudio(filePath, audioData);
+          this.notFoundFiles.add(filePath);
+          return null;
         }
+        await this.audioCache.storeAudio(filePath, audioData);
       }
 
       return audioData;
@@ -159,10 +97,6 @@ export class AudioFileManager {
 
     if (now - lastAttempt < config.audioFileFetchCacheTimeout) {
       return null;
-    }
-
-    if (this.ongoingFetchRequests.has(filePath)) {
-      return this.ongoingFetchRequests.get(filePath)!;
     }
 
     const fetchPromise = new Promise<ArrayBuffer | null>((resolve, reject) => {
@@ -182,7 +116,6 @@ export class AudioFileManager {
       );
     });
 
-    this.ongoingFetchRequests.set(filePath, fetchPromise);
     this.lastFetchAttempt.set(filePath, now);
 
     try {
@@ -195,7 +128,7 @@ export class AudioFileManager {
       console.error(`Failed to fetch audio for ${filePath}:`, error);
       return null;
     } finally {
-      this.ongoingFetchRequests.delete(filePath);
+      this.notFoundFiles.delete(filePath);
     }
   }
 
@@ -232,7 +165,7 @@ export class AudioFileManager {
       console.error(`Failed to generate audio for ${filePath}:`, error);
       this.notFoundFiles.add(filePath);
     } finally {
-      this.ongoingGenerationRequests.delete(filePath);
+      this.notFoundFiles.delete(filePath);
     }
   }
 

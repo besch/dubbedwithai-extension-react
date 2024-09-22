@@ -30,7 +30,7 @@ module.exports = {
     extensions: [".ts", ".js"],
     modules: [path.resolve(__dirname, "src", "extension"), "node_modules"],
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      "@": path.resolve(__dirname, "src"),
     },
   },
   output: {
@@ -50,6 +50,7 @@ module.exports = {
           format: {
             comments: false,
           },
+          keep_fnames: false,
         },
         extractComments: false,
       }),

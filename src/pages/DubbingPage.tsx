@@ -41,14 +41,6 @@ const DubbingPage: React.FC = () => {
 
     checkStatus();
 
-    const visibilityChangeHandler = () => {
-      if (!document.hidden) {
-        checkStatus();
-      }
-    };
-
-    document.addEventListener("visibilitychange", visibilityChangeHandler);
-
     if (!subtitlesLoaded) {
       setIsLoadingSubtitles(true);
       dispatch(loadSubtitles())
@@ -61,10 +53,6 @@ const DubbingPage: React.FC = () => {
           setIsLoadingSubtitles(false);
         });
     }
-
-    return () => {
-      document.removeEventListener("visibilitychange", visibilityChangeHandler);
-    };
   }, [
     selectedMovie,
     selectedLanguage,
@@ -74,20 +62,6 @@ const DubbingPage: React.FC = () => {
     t,
     srtContent,
   ]);
-
-  useEffect(() => {
-    const handleDubbingStateChange = (message: any) => {
-      if (message.action === "updateDubbingState") {
-        dispatch(updateDubbingState(message.payload));
-      }
-    };
-
-    chrome.runtime.onMessage.addListener(handleDubbingStateChange);
-
-    return () => {
-      chrome.runtime.onMessage.removeListener(handleDubbingStateChange);
-    };
-  }, [dispatch]);
 
   const handleDubbingToggle = async () => {
     if (isLoadingSubtitles) {

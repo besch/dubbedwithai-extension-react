@@ -4,7 +4,6 @@ import * as api from "@/api";
 
 class BackgroundService {
   private iconManager: IconManager;
-  private isDubbingActive: boolean = false;
 
   constructor() {
     this.iconManager = new IconManager();
@@ -134,16 +133,13 @@ class BackgroundService {
               this.iconManager.stopPulsing();
               this.iconManager.updateIcon(false);
               this.updateStorageDubbingState(false);
-              this.isDubbingActive = false;
             } else if (response?.isDubbingActive !== undefined) {
               this.updateDubbingState(response.isDubbingActive, tabs[0].id!);
               this.updateStorageDubbingState(response.isDubbingActive);
-              this.isDubbingActive = response.isDubbingActive;
             } else {
               this.iconManager.stopPulsing();
               this.iconManager.updateIcon(false);
               this.updateStorageDubbingState(false);
-              this.isDubbingActive = false;
             }
           }
         );
@@ -151,7 +147,6 @@ class BackgroundService {
         this.iconManager.stopPulsing();
         this.iconManager.updateIcon(false);
         this.updateStorageDubbingState(false);
-        this.isDubbingActive = false;
       }
     });
   }

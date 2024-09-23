@@ -15,14 +15,7 @@ class BackgroundService {
     chrome.runtime.onInstalled.addListener(this.onInstalled.bind(this));
     chrome.runtime.onStartup.addListener(this.onStartup.bind(this));
     chrome.runtime.onMessage.addListener(this.onMessage.bind(this));
-    chrome.runtime.onSuspend.addListener(this.onSuspend.bind(this));
     chrome.alarms.onAlarm.addListener(this.onAlarm.bind(this));
-    chrome.tabs.onActivated.addListener(this.onTabActivated.bind(this));
-    chrome.tabs.onUpdated.addListener(this.onTabUpdated.bind(this));
-    chrome.windows.onFocusChanged.addListener(
-      this.onWindowFocusChanged.bind(this)
-    );
-    chrome.tabs.onRemoved.addListener(this.onTabRemoved.bind(this));
   }
 
   private handleUpdateVideoPlaybackState(message: any): void {
@@ -99,38 +92,9 @@ class BackgroundService {
     }
   }
 
-  private onSuspend(): void {
-    this.iconManager.stopPulsing();
-    this.saveDubbingState();
-  }
-
-  private saveDubbingState(): void {
-    chrome.storage.local.set({ isDubbingActive: this.isDubbingActive });
-  }
-
   private onAlarm(alarm: chrome.alarms.Alarm): void {
     if (alarm.name === "iconPulse") {
       this.iconManager.togglePulseState();
-    }
-  }
-
-  private onTabActivated(): void {
-    this.checkDubbingStatusOnActiveTab();
-  }
-
-  private onTabUpdated(
-    tabId: number,
-    changeInfo: chrome.tabs.TabChangeInfo,
-    tab: chrome.tabs.Tab
-  ): void {
-    if (changeInfo.status === "complete" && tab.active) {
-      this.checkDubbingStatusOnActiveTab();
-    }
-  }
-
-  private onWindowFocusChanged(windowId: number): void {
-    if (windowId !== chrome.windows.WINDOW_ID_NONE) {
-      this.checkDubbingStatusOnActiveTab();
     }
   }
 
@@ -157,13 +121,6 @@ class BackgroundService {
     }
 
     this.updateStorageDubbingState(isActive);
-  }
-
-  private onTabRemoved(
-    tabId: number,
-    removeInfo: chrome.tabs.TabRemoveInfo
-  ): void {
-    this.checkDubbingStatusOnActiveTab();
   }
 
   private checkDubbingStatusOnActiveTab(): void {

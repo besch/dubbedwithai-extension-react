@@ -140,7 +140,7 @@ export const selectSubtitle = createAsyncThunk(
         await chrome.storage.local.set({ srtContent: data.srtContent });
       }
 
-      return data.subtitleInfo;
+      return true;
     } catch (error) {
       toast.error(t("subtitlesFetchError"));
       throw error;
@@ -389,7 +389,6 @@ const movieSlice = createSlice({
       })
       .addCase(selectSubtitle.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.selectedLanguage = action.payload;
         state.subtitlesLoaded = true;
       })
       .addCase(selectSubtitle.rejected, (state, action) => {

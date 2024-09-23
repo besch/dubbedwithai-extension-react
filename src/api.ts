@@ -32,7 +32,7 @@ export const fetchSubtitles = (params: {
   languageCode: string;
   seasonNumber?: number;
   episodeNumber?: number;
-}): Promise<{ srtContent: string; subtitleInfo: any }> =>
+}): Promise<{ srtContent: string }> =>
   apiFetch("/api/opensubtitles/fetch-subtitles", "POST", params);
 
 export const checkAudioFileExists = (filePath: string): Promise<boolean> =>

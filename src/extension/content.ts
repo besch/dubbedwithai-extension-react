@@ -13,7 +13,6 @@ class ContentScript {
   private initialize(): void {
     this.setupMessageListener();
     this.initializeFromStorage();
-    this.setupVisibilityChangeListener();
     this.setupUnloadListener();
   }
 
@@ -172,49 +171,6 @@ class ContentScript {
       }
     } else if (storage.isDubbingActive) {
       await this.updateDubbingState(false);
-    }
-  }
-
-  private setupVisibilityChangeListener(): void {
-    document.addEventListener(
-      "visibilitychange",
-      this.handleVisibilityChange.bind(this)
-    );
-  }
-
-  private async handleVisibilityChange(): Promise<void> {
-    if (!chrome.runtime?.id) {
-      return;
-    }
-
-    if (document.hidden && this.isDubbingActive) {
-      try {
-        await this.stopDubbing();
-        await this.updateDubbingState(false);
-      } catch (error: unknown) {
-        if (
-          error instanceof Error &&
-          error.message !== "Extension context invalidated."
-        ) {
-          console.error("Error handling visibility change:", error);
-        }
-      }
-    } else if (!document.hidden) {
-      try {
-        const storage = (await chrome.storage.local.get("isDubbingActive")) as {
-          isDubbingActive: boolean;
-        };
-        if (storage.isDubbingActive !== this.isDubbingActive) {
-          await this.updateDubbingState(storage.isDubbingActive);
-        }
-      } catch (error: unknown) {
-        if (
-          error instanceof Error &&
-          error.message !== "Extension context invalidated."
-        ) {
-          console.error("Error updating dubbing state:", error);
-        }
-      }
     }
   }
 

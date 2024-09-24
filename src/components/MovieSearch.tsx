@@ -15,9 +15,13 @@ import { toast } from "react-toastify";
 
 interface MovieSearchProps {
   onSelectMovie: (movie: Movie) => void;
+  onSearchInputChange: (input: string) => void;
 }
 
-const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
+const MovieSearch: React.FC<MovieSearchProps> = ({
+  onSelectMovie,
+  onSearchInputChange,
+}) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const { searchResults, isLoading } = useSelector(
@@ -61,6 +65,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
     setMovieQuery("");
     setSelectedIndex(-1);
     dispatch(setSearchResults([]));
+    onSearchInputChange("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -77,6 +82,12 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setMovieQuery(newValue);
+    onSearchInputChange(newValue);
+  };
+
   return (
     <div className="mb-4">
       <div className="relative">
@@ -87,7 +98,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({ onSelectMovie }) => {
           id="movie-search"
           type="text"
           value={movieQuery}
-          onChange={(e) => setMovieQuery(e.target.value)}
+          onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder={t("searchForMovie")}
           className="w-full p-2 pl-10 pr-10 border rounded bg-background text-foreground border-muted-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"

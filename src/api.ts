@@ -1,4 +1,4 @@
-import { Movie, Subtitle } from "@/types";
+import { Movie } from "@/types";
 
 const API_BASE_URL = process.env.REACT_APP_BASE_API_URL;
 
@@ -34,19 +34,6 @@ export const fetchSubtitles = (params: {
   episodeNumber?: number;
 }): Promise<{ srtContent: string }> =>
   apiFetch("/api/opensubtitles/fetch-subtitles", "POST", params);
-
-export const checkAudioFileExists = (filePath: string): Promise<boolean> =>
-  apiFetch<{ exists: boolean }>(
-    "/api/google-storage/check-file-exists",
-    "POST",
-    { filePath }
-  ).then((data) => data.exists);
-
-export const sendFeedback = (values: {
-  email: string;
-  subject: string;
-  message: string;
-}): Promise<void> => apiFetch("/api/send-feedback", "POST", values);
 
 export const generateAudio = async (
   text: string,

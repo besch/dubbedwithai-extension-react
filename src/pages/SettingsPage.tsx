@@ -182,8 +182,7 @@ const SettingsPage: React.FC = () => {
   return (
     <PageLayout title={t("dubbingSettings")}>
       <div className="space-y-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">{t("settings")}</h2>
+        <div className="flex justify-end items-center mb-4">
           <div className="flex items-center">
             <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
             <select

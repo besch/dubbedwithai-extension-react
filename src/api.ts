@@ -70,3 +70,9 @@ export const fetchAudioFile = async (
   }
   return await response.arrayBuffer();
 };
+
+export const sendFeedback = (values: {
+  email: string;
+  subject: string;
+  message: string;
+}): Promise<void> => apiFetch("/api/send-feedback", "POST", values);

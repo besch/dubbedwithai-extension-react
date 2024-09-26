@@ -113,10 +113,10 @@ class BackgroundService {
       } else {
         this.iconManager.stopPulsing();
       }
-      this.iconManager.updateIcon(isActive);
+      await this.iconManager.updateIcon(isActive);
     } else {
       this.iconManager.stopPulsing();
-      this.iconManager.updateIcon(false);
+      await this.iconManager.updateIcon(false);
     }
 
     this.updateStorageDubbingState(isActive);

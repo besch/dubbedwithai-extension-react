@@ -52,8 +52,6 @@ const languageCodes: { [key: string]: string } = {
   mn: "Mongolian",
   ne: "Nepali",
   no: "Norwegian",
-  nb: "Norwegian bokmål",
-  nn: "Norwegian nynorsk",
   fa: "Persian (Farsi)",
   pl: "Polish",
   pt: "Portuguese",

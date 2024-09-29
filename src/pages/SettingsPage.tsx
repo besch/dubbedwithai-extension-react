@@ -246,8 +246,8 @@ const SettingsPage: React.FC = () => {
               <input
                 id="subtitle-offset"
                 type="range"
-                min="-10"
-                max="10"
+                min="-15"
+                max="15"
                 step="0.1"
                 value={localOffset}
                 onChange={handleOffsetChange}

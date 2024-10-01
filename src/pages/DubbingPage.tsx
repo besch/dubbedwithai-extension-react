@@ -15,6 +15,7 @@ import MovieCard from "@/components/MovieCard";
 import { toast } from "react-toastify";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useTranslation } from "react-i18next";
+import SocialShareButtons from "@/components/SocialShareButtons";
 
 const DubbingPage: React.FC = () => {
   const { t } = useTranslation();
@@ -86,38 +87,45 @@ const DubbingPage: React.FC = () => {
 
   return (
     <PageLayout title={t("dubbingControls")}>
-      <div className="space-y-4">
-        {selectedMovie && <MovieCard movie={selectedMovie} />}
-        {selectedLanguage && (
-          <p className="text-sm text-muted-foreground">
-            {t("language")}:{" "}
-            {getFullLanguageName(selectedLanguage.attributes.language)}
-          </p>
-        )}
-        {selectedMovie?.Type === "series" &&
-          selectedSeasonNumber &&
-          selectedEpisodeNumber && (
-            <p className="text-sm text-muted-foreground">
-              {t("seasonEpisode", {
-                season: selectedSeasonNumber,
-                episode: selectedEpisodeNumber,
-              })}
-            </p>
-          )}
-        {srtContent && !selectedMovie && !selectedLanguage && (
-          <p className="text-sm text-muted-foreground">
-            {t("usingUploadedSubtitles")}
-          </p>
-        )}
-        {isLoadingSubtitles ? (
-          <LoadingSpinner size="lg" />
-        ) : (
-          <DubbingControls
-            isDubbingActive={isDubbingActive}
-            onDubbingToggle={handleDubbingToggle}
-            disabled={isLoadingSubtitles}
-          />
-        )}
+      <div className="flex flex-col h-full">
+        <div className="flex-grow overflow-y-auto">
+          <div className="space-y-4">
+            {selectedMovie && <MovieCard movie={selectedMovie} />}
+            {selectedLanguage && (
+              <p className="text-sm text-muted-foreground">
+                {t("language")}:{" "}
+                {getFullLanguageName(selectedLanguage.attributes.language)}
+              </p>
+            )}
+            {selectedMovie?.Type === "series" &&
+              selectedSeasonNumber &&
+              selectedEpisodeNumber && (
+                <p className="text-sm text-muted-foreground">
+                  {t("seasonEpisode", {
+                    season: selectedSeasonNumber,
+                    episode: selectedEpisodeNumber,
+                  })}
+                </p>
+              )}
+            {srtContent && !selectedMovie && !selectedLanguage && (
+              <p className="text-sm text-muted-foreground">
+                {t("usingUploadedSubtitles")}
+              </p>
+            )}
+            {isLoadingSubtitles ? (
+              <LoadingSpinner size="lg" />
+            ) : (
+              <DubbingControls
+                isDubbingActive={isDubbingActive}
+                onDubbingToggle={handleDubbingToggle}
+                disabled={isLoadingSubtitles}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="mt-auto pt-4">
+        <SocialShareButtons />
       </div>
     </PageLayout>
   );

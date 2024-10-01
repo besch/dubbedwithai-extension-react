@@ -16,8 +16,8 @@ const PageLayout: React.FC<PageLayoutProps> = ({
       <h1 className="text-xl font-bold text-foreground p-4 flex-shrink-0">
         {title}
       </h1>
-      <div className="flex-grow overflow-y-auto">
-        <div className="p-4 space-y-4 min-h-full">{children}</div>
+      <div className="flex-grow p-4 overflow-y-auto flex flex-col">
+        {children}
       </div>
     </div>
   );

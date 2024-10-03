@@ -54,7 +54,7 @@ class BackgroundService {
     switch (message.action) {
       case "updateDubbingState":
         if (sender.tab?.id) {
-          this.updateDubbingState(message.payload, sender.tab.id);
+          this.updateDubbingState(message.payload);
         }
         sendResponse({ status: "updated" });
         break;
@@ -102,23 +102,13 @@ class BackgroundService {
     chrome.storage.local.set({ movieState: movieState ?? {} });
   }
 
-  private async updateDubbingState(
-    isActive: boolean,
-    tabId: number
-  ): Promise<void> {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tabs[0]?.id === tabId) {
-      if (isActive) {
-        this.iconManager.startPulsing();
-      } else {
-        this.iconManager.stopPulsing();
-      }
-      await this.iconManager.updateIcon(isActive);
+  private async updateDubbingState(isActive: boolean): Promise<void> {
+    if (isActive) {
+      this.iconManager.startPulsing();
     } else {
       this.iconManager.stopPulsing();
-      await this.iconManager.updateIcon(false);
     }
-
+    await this.iconManager.updateIcon(isActive);
     this.updateStorageDubbingState(isActive);
   }
 
@@ -134,7 +124,7 @@ class BackgroundService {
               this.iconManager.updateIcon(false);
               this.updateStorageDubbingState(false);
             } else if (response?.isDubbingActive !== undefined) {
-              this.updateDubbingState(response.isDubbingActive, tabs[0].id!);
+              this.updateDubbingState(response.isDubbingActive);
               this.updateStorageDubbingState(response.isDubbingActive);
             } else {
               this.iconManager.stopPulsing();

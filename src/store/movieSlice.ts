@@ -208,8 +208,6 @@ export const toggleDubbingProcess = createAsyncThunk(
             episodeNumber: selectedEpisodeNumber || undefined,
           };
 
-          console.log("message", message);
-
           chrome.tabs.sendMessage(tabs[0].id, message, (response) => {
             if (response && response.status === "initialized") {
               dispatch(updateDubbingState(true));

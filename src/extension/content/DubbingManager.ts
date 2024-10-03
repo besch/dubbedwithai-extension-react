@@ -45,7 +45,7 @@ export class DubbingManager {
       languageCode: null,
       seasonNumber: null,
       episodeNumber: null,
-      dubbingVoice: "alloy",
+      dubbingVoice: "echo",
       subtitleOffset: 0,
       isDubbingActive: false,
       lastSentSubtitle: null,

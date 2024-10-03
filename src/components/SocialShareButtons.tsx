@@ -9,10 +9,8 @@ import {
   LinkedinIcon,
   RedditIcon,
 } from "react-share";
-import { useTranslation } from "react-i18next";
 
 const SocialShareButtons: React.FC = () => {
-  const { t } = useTranslation();
   const shareUrl =
     "https://chromewebstore.google.com/detail/onedub/cphceeehafncfeigajlnajkbddokpnbn";
   const shareTitle =
@@ -22,17 +20,17 @@ const SocialShareButtons: React.FC = () => {
     <div className="w-full">
       <div className="flex space-x-4">
         <TwitterShareButton url={shareUrl} title={shareTitle}>
-          <TwitterIcon size={32} round />
+          <TwitterIcon size={32} />
         </TwitterShareButton>
         <FacebookShareButton url={shareUrl}>
-          <FacebookIcon size={32} round />
+          <FacebookIcon size={32} />
         </FacebookShareButton>
-        <LinkedinShareButton url={shareUrl} title={shareTitle}>
-          <LinkedinIcon size={32} round />
-        </LinkedinShareButton>
         <RedditShareButton url={shareUrl} title={shareTitle}>
-          <RedditIcon size={32} round />
+          <RedditIcon size={32} />
         </RedditShareButton>
+        <LinkedinShareButton url={shareUrl} title={shareTitle}>
+          <LinkedinIcon size={32} />
+        </LinkedinShareButton>
       </div>
     </div>
   );

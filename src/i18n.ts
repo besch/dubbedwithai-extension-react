@@ -65,9 +65,6 @@ i18n.use(initReactI18next).init({
         feedbackSuccess: "Thank you for your feedback!",
         feedbackError: "Failed to submit feedback. Please try again.",
         emailPlaceholder: "your@email.com",
-        subjectPlaceholder: "Bug report or feature request",
-        messagePlaceholder:
-          "E.g. Describe the bug or feature request in detail",
         loading: "Loading...",
         useLanguage: "Use {{language}}",
         subtitlesGenerate:
@@ -147,9 +144,6 @@ i18n.use(initReactI18next).init({
         feedbackError:
           "Error al enviar los comentarios. Por favor, inténtalo de nuevo.",
         emailPlaceholder: "tu@email.com",
-        subjectPlaceholder: "Informe de error o solicitud de función",
-        messagePlaceholder:
-          "Por ejemplo, describe el error o la solicitud de función en detalle",
         loading: "Cargando...",
         useLanguage: "Usar {{language}}",
         subtitlesGenerate:
@@ -221,9 +215,6 @@ i18n.use(initReactI18next).init({
         feedbackSuccess: "感谢您的反馈！",
         feedbackError: "提交反馈失败。请重试。",
         emailPlaceholder: "your@email.com",
-        subjectPlaceholder: "错误报告或功能请求",
-        messagePlaceholder: "例如：详细描述错误或功能请求",
-        loading: "加载中...",
         useLanguage: "使用{{language}}",
         subtitlesGenerate:
           "如果我们的数据库中不存在字幕，生成可能需要最多10秒。请耐心等待。",
@@ -299,9 +290,6 @@ i18n.use(initReactI18next).init({
         feedbackError:
           "प्रतिक्रिया सबमिट करने में विफल। कृपया पुनः प्रयास करें।",
         emailPlaceholder: "आपका@ईमेल.कॉम",
-        subjectPlaceholder: "बग रिपोर्ट या सुविधा अनुरोध",
-        messagePlaceholder: "उदाहरण: बग या सुविधा अनुरोध का विस्तृत विवरण दें",
-        loading: "लोड हो रहा है...",
         useLanguage: "{{language}} का उपयोग करें",
         subtitlesGenerate:
           "यदि हमारे डेटाबेस में उपशीर्षक मौजूद नहीं हैं, तो उन्हें जनरेट करने में 10 सेकंड तक लग सकते हैं। कृपया धैर्य रखें।",
@@ -373,9 +361,6 @@ i18n.use(initReactI18next).init({
         feedbackSuccess: "شكرًا على تعليقاتك!",
         feedbackError: "فشل إرسال التعليقات. يرجى المحاولة مرة أخرى.",
         emailPlaceholder: "بريدك@الإلكتروني.كوم",
-        subjectPlaceholder: "تقرير خطأ أو طلب ميزة",
-        messagePlaceholder: "مثال: وصف مفصل للخطأ أو طلب الميزة",
-        loading: "جارٍ التحميل...",
         useLanguage: "استخدم {{language}}",
         subtitlesGenerate:
           "إذا لم تكن الترجمات موجودة في قاعدة بياناتنا، فقد يستغرق إنشاؤها ما يصل إلى 10 ثوانٍ. يرجى التحلي بالصبر.",
@@ -451,9 +436,6 @@ i18n.use(initReactI18next).init({
         feedbackSuccess: "Obrigado pelo seu feedback!",
         feedbackError: "Falha ao enviar feedback. Por favor, tente novamente.",
         emailPlaceholder: "seu@email.com",
-        subjectPlaceholder: "Relatório de bug ou solicitação de recurso",
-        messagePlaceholder:
-          "Ex: Descreva o bug ou a solicitação de recurso em detalhes",
         loading: "Carregando...",
         useLanguage: "Usar {{language}}",
         subtitlesGenerate:
@@ -532,9 +514,6 @@ i18n.use(initReactI18next).init({
         feedbackError:
           "প্রতিক্রিয়া জমা দিতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
         emailPlaceholder: "আপনার@ইমেইল.কম",
-        subjectPlaceholder: "বাগ রিপোর্ট বা ফিচার অনুরোধ",
-        messagePlaceholder:
-          "উদাহরণ: বাগ বা ফিচার অনুরোধের বিস্তারিত বর্ণনা দিন",
         loading: "লোড হচ্ছে...",
         useLanguage: "{{language}} ব্যবহার করুন",
         subtitlesGenerate:
@@ -612,9 +591,6 @@ i18n.use(initReactI18next).init({
         feedbackError:
           "Не удалось отправить отзыв. Пожалуйста, попробуйте еще раз.",
         emailPlaceholder: "ваш@email.com",
-        subjectPlaceholder: "Сообщение об ошибке или запрос функции",
-        messagePlaceholder:
-          "Например, опишите ошибку или запрос функции подробно",
         loading: "Загрузка...",
         useLanguage: "Использовать {{language}}",
         subtitlesGenerate:
@@ -691,9 +667,6 @@ i18n.use(initReactI18next).init({
         feedbackError:
           "フィードバックの送信に失敗しました。もう一度お試しください。",
         emailPlaceholder: "your@email.com",
-        subjectPlaceholder: "バグ報告または機能リクエスト",
-        messagePlaceholder:
-          "例：バグまたは機能リクエストの詳細を説明してください",
         loading: "読み込み中...",
         useLanguage: "{{language}}を使用",
         subtitlesGenerate:
@@ -771,9 +744,6 @@ i18n.use(initReactI18next).init({
         feedbackError:
           "ਫੀਡਬੈਕ ਜਮ੍ਹਾਂ ਕਰਨ ਵਿੱਚ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
         emailPlaceholder: "ਤੁਹਾਡਾ@ਈਮੇਲ.ਕਾਮ",
-        subjectPlaceholder: "ਬੱਗ ਰਿਪੋਰਟ ਜਾਂ ਫੀਚਰ ਬੇਨਤੀ",
-        messagePlaceholder: "ਉਦਾਹਰਨ: ਬੱਗ ਜਾਂ ਫੀਚਰ ਬੇਨਤੀ ਦਾ ਵਿਸਥਾਰ ਨਾਲ ਵਰਣਨ ਕਰੋ",
-        loading: "ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
         useLanguage: "{{language}} ਵਰਤੋ",
         subtitlesGenerate:
           "ਜੇਕਰ ਸਾਡੇ ਡਾਟਾਬੇਸ ਵਿੱਚ ਉਪਸਿਰਲੇਖ ਮੌਜੂਦ ਨਹੀਂ ਹਨ, ਤਾਂ ਉਨ੍ਹਾਂ ਨੂੰ ਤਿਆਰ ਕਰਨ ਵਿੱਚ 10 ਸਕਿੰਟ ਤੱਕ ਦਾ ਸਮਾਂ ਲੱਗ ਸਕਦਾ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਧੀਰਜ ਰੱਖੋ।",
@@ -852,9 +822,6 @@ i18n.use(initReactI18next).init({
         feedbackError:
           "Feedback konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
         emailPlaceholder: "ihre@email.de",
-        subjectPlaceholder: "Fehlerbericht oder Funktionswunsch",
-        messagePlaceholder:
-          "Z.B. Beschreiben Sie den Fehler oder den Funktionswunsch im Detail",
         loading: "Laden...",
         useLanguage: "{{language}} verwenden",
         subtitlesGenerate:
@@ -928,9 +895,6 @@ i18n.use(initReactI18next).init({
         feedbackSuccess: "Matur nuwun kanggo saran sampeyan!",
         feedbackError: "Gagal ngirim saran. Mangga coba maneh.",
         emailPlaceholder: "email@sampeyan.com",
-        subjectPlaceholder: "Laporan kesalahan utawa panjalukan fitur",
-        messagePlaceholder:
-          "Conto: Jelasake kesalahan utawa panjalukan fitur kanthi rinci",
         loading: "Ngemot...",
         useLanguage: "Gunakake {{language}}",
         subtitlesGenerate:
@@ -1006,9 +970,6 @@ i18n.use(initReactI18next).init({
         feedbackSuccess: "피드백을 주셔서 감사합니다!",
         feedbackError: "피드백 제출에 실패했습니다. 다시 시도해 주세요.",
         emailPlaceholder: "your@email.com",
-        subjectPlaceholder: "버그 신고 또는 기능 요청",
-        messagePlaceholder: "예: 버그나 기능 요청을 자세히 설명해주세요",
-        loading: "로딩 중...",
         useLanguage: "{{language}} 사용",
         subtitlesGenerate:
           "자막이 우리 데이터베이스에 존재하지 않는 경우, 생성하는 데 최대 10초가 소요될 수 있습니다. 잠시만 기다려 주세요.",
@@ -1085,9 +1046,6 @@ i18n.use(initReactI18next).init({
         feedbackSuccess: "Merci pour vos commentaires !",
         feedbackError: "Échec de l'envoi des commentaires. Veuillez réessayer.",
         emailPlaceholder: "votre@email.com",
-        subjectPlaceholder: "Rapport de bug ou demande de fonctionnalité",
-        messagePlaceholder:
-          "Ex : Décrivez le bug ou la demande de fonctionnalité en détail",
         loading: "Chargement...",
         useLanguage: "Utiliser {{language}}",
         subtitlesGenerate:
@@ -1168,9 +1126,6 @@ i18n.use(initReactI18next).init({
         feedbackError:
           "అభిప్రాయాన్ని సమర్పించడంలో విఫలమైంది. దయచేసి మళ్లీ ప్రయత్నించండి.",
         emailPlaceholder: "మీ@ఇమెయిల్.com",
-        subjectPlaceholder: "బగ్ నివేదిక లేదా ఫీచర్ అభ్యర్థన",
-        messagePlaceholder: "ఉదా. బగ్ లేదా ఫీచర్ అభ్యర్థనను వివరంగా వివరించండి",
-        loading: "లోడ్ అవుతోంది...",
         useLanguage: "{{language}} ఉపయోగించండి",
         subtitlesGenerate:
           "మా డేటాబేస్‌లో ఉపశీర్షికలు లేకపోతే, వాటిని రూపొందించడానికి 10 సెకన్ల వరకు పట్టవచ్చు. దయచేసి ఓపిక పట్టండి.",
@@ -1246,9 +1201,6 @@ i18n.use(initReactI18next).init({
         feedbackError:
           "अभिप्राय सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
         emailPlaceholder: "तुमचा@ईमेल.com",
-        subjectPlaceholder: "बग रिपोर्ट किंवा वैशिष्ट्य विनंती",
-        messagePlaceholder:
-          "उदा. बग किंवा वैशिष्ट्य विनंतीचे तपशीलवार वर्णन करा",
         loading: "लोड होत आहे...",
         useLanguage: "{{language}} वापरा",
         subtitlesGenerate:
@@ -1323,9 +1275,6 @@ i18n.use(initReactI18next).init({
         feedbackSuccess: "Geri bildiriminiz için teşekkür ederiz!",
         feedbackError: "Geri bildirim gönderilemedi. Lütfen tekrar deneyin.",
         emailPlaceholder: "sizin@email.com",
-        subjectPlaceholder: "Hata raporu veya özellik isteği",
-        messagePlaceholder:
-          "Örn. Hatayı veya özellik isteğini detaylı bir şekilde açıklayın",
         loading: "Yükleniyor...",
         useLanguage: "{{language}} kullan",
         subtitlesGenerate:

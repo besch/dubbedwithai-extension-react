@@ -6,9 +6,8 @@ import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import PageLayout from "@/components/ui/PageLayout";
 import Button from "@/components/ui/Button";
-import { useMutation } from 'react-query';
-import { sendFeedback } from '@/api';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { useMutation } from "react-query";
+import { sendFeedback } from "@/api";
 
 const FeedbackPage: React.FC = () => {
   const { t } = useTranslation();
@@ -49,10 +48,7 @@ const FeedbackPage: React.FC = () => {
 
   return (
     <PageLayout title={t("feedback")}>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="space-y-6 max-w-md mx-auto"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-md">
         <div>
           <label
             htmlFor="email"
@@ -84,7 +80,7 @@ const FeedbackPage: React.FC = () => {
             id="subject"
             {...register("subject")}
             className="w-full p-2 pl-3 pr-3 border rounded bg-input text-foreground border-border placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            placeholder={t("subjectPlaceholder")}
+            placeholder={t("subject")}
           />
           {errors.subject && (
             <p className="text-red-400 mt-2 text-sm">
@@ -105,7 +101,7 @@ const FeedbackPage: React.FC = () => {
             {...register("message")}
             rows={4}
             className="w-full p-2 pl-3 pr-3 border rounded bg-input text-foreground border-border placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            placeholder={t("messagePlaceholder")}
+            placeholder={t("message")}
           ></textarea>
           {errors.message && (
             <p className="text-red-400 mt-2 text-sm">

@@ -76,6 +76,8 @@ i18n.use(initReactI18next).init({
         noSubtitlesFound: "No subtitles found for the selected language.",
         subtitlesFetchError: "An error occurred while fetching subtitles.",
         dubbingStopped: "Dubbing stopped successfully.",
+        dubbingInfoTooltip:
+          "If you have any issues when starting dubbing, please try to refresh the page or update OneDub extension",
       },
     },
     es: {

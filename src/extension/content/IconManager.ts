@@ -1,3 +1,5 @@
+import { DubbingMessage } from "@/types";
+
 const ICON_BASE_PATH = chrome.runtime.getURL("icons/");
 const ICON_SIZES = [16, 48, 128] as const;
 const ICON_STATES = ["active", "active-filled", "inactive"] as const;
@@ -45,7 +47,7 @@ export class IconManager {
     if (this.isPulsing) return;
     this.isPulsing = true;
     this.pulseState = false;
-    chrome.alarms.create("iconPulse", { periodInMinutes: 1 / 120 });
+    chrome.alarms.create("iconPulse", { periodInMinutes: 1 / 60 });
     this.updateIcon(true, true);
   }
 
@@ -58,6 +60,7 @@ export class IconManager {
   }
 
   togglePulseState(): void {
+    if (!this.isPulsing) return;
     this.pulseState = !this.pulseState;
     this.updateIcon(true, this.pulseState);
   }
@@ -86,13 +89,13 @@ export class IconManager {
 
     return new Promise((resolve, reject) => {
       chrome.action.setIcon({ imageData: iconData }, () => {
-        chrome.runtime.lastError
-          ? reject(
-              new Error(
-                `Error setting icon: ${chrome.runtime.lastError.message}`
-              )
-            )
-          : resolve();
+        if (chrome.runtime.lastError) {
+          reject(
+            new Error(`Error setting icon: ${chrome.runtime.lastError.message}`)
+          );
+        } else {
+          resolve();
+        }
       });
     });
   }

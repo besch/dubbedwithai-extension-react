@@ -8,6 +8,12 @@ class BackgroundService {
   constructor() {
     this.iconManager = new IconManager();
     this.initializeListeners();
+    this.initialize();
+  }
+
+  private async initialize(): Promise<void> {
+    await this.iconManager.preloadIcons();
+    await this.initializeStorage();
   }
 
   private initializeListeners(): void {
@@ -125,7 +131,6 @@ class BackgroundService {
               this.updateStorageDubbingState(false);
             } else if (response?.isDubbingActive !== undefined) {
               this.updateDubbingState(response.isDubbingActive);
-              this.updateStorageDubbingState(response.isDubbingActive);
             } else {
               this.iconManager.stopPulsing();
               this.iconManager.updateIcon(false);

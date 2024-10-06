@@ -158,6 +158,8 @@ i18n.use(initReactI18next).init({
           "No se encontraron subtítulos para el idioma seleccionado.",
         subtitlesFetchError: "Ocurrió un error al obtener los subtítulos.",
         dubbingStopped: "Doblaje detenido con éxito.",
+        dubbingInfoTooltip:
+          "Si tiene algún problema al iniciar el doblaje, intente actualizar la página o actualizar la extensión OneDub",
       },
     },
     zh: {
@@ -227,6 +229,8 @@ i18n.use(initReactI18next).init({
         noSubtitlesFound: "未找到所选语言的字幕。",
         subtitlesFetchError: "获取字幕时发生错误。",
         dubbingStopped: "配音已成功停止。",
+        dubbingInfoTooltip:
+          "如果在开始配音时遇到任何问题，请尝试刷新页面或更新OneDub扩展",
       },
     },
     hi: {
@@ -302,6 +306,8 @@ i18n.use(initReactI18next).init({
         noSubtitlesFound: "चयनित भाषा के लिए कोई उपशीर्षक नहीं मिला।",
         subtitlesFetchError: "उपशीर्षक प्राप्त करते समय एक त्रुटि हुई।",
         dubbingStopped: "डबिंग सफलतापूर्वक रोक दी गई।",
+        dubbingInfoTooltip:
+          "यदि डबिंग शुरू करते समय आपको कोई समस्या हो, तो कृपया पेज को रीफ्रेश करने या OneDub एक्सटेंशन को अपडेट करने का प्रयास करें",
       },
     },
     ar: {
@@ -373,6 +379,8 @@ i18n.use(initReactI18next).init({
         noSubtitlesFound: "لم يتم العثور على ترجمات للغة المحددة.",
         subtitlesFetchError: "حدث خطأ أثناء جلب الترجمات.",
         dubbingStopped: "تم إيقاف الدبلجة بنجاح.",
+        dubbingInfoTooltip:
+          "إذا واجهت أي مشاكل عند بدء الدبلجة، يرجى محاولة تحديث الصفحة أو تحديث امتداد OneDub",
       },
     },
     pt: {
@@ -450,6 +458,8 @@ i18n.use(initReactI18next).init({
           "Nenhuma legenda encontrada para o idioma selecionado.",
         subtitlesFetchError: "Ocorreu um erro ao buscar as legendas.",
         dubbingStopped: "Dublagem parada com sucesso.",
+        dubbingInfoTooltip:
+          "Se você tiver algum problema ao iniciar a dublagem, tente atualizar a página ou atualizar a extensão OneDub",
       },
     },
     bn: {
@@ -527,6 +537,8 @@ i18n.use(initReactI18next).init({
         noSubtitlesFound: "নির্বাচিত ভাষার জন্য কোনো সাবটাইটেল পাওয়া যায়নি।",
         subtitlesFetchError: "সাবটাইটেল আনতে একটি ত্রুটি ঘটেছে।",
         dubbingStopped: "ডাবিং সফলভাবে বন্ধ হয়েছে।",
+        dubbingInfoTooltip:
+          "ডাবিং শুরু করার সময় আপনার কোনও সমস্যা হলে, অনুগ্রহ করে পৃষ্ঠাটি রিফ্রেশ করার চেষ্টা করুন বা OneDub এক্সটেনশন আপডেট করুন",
       },
     },
     ru: {
@@ -604,6 +616,8 @@ i18n.use(initReactI18next).init({
         noSubtitlesFound: "Субтитры для выбранного языка не найдены.",
         subtitlesFetchError: "Произошла ошибка при получении субтитров.",
         dubbingStopped: "Дубляж успешно остановлен.",
+        dubbingInfoTooltip:
+          "Если у вас возникли проблемы при запуске дубляжа, попробуйте обновить страницу или обновить расширение OneDub",
       },
     },
     ja: {
@@ -680,6 +694,8 @@ i18n.use(initReactI18next).init({
         noSubtitlesFound: "選択した言語の字幕が見つかりません。",
         subtitlesFetchError: "字幕の取得中にエラーが発生しました。",
         dubbingStopped: "吹き替えが正常に停止されました。",
+        dubbingInfoTooltip:
+          "吹き替えを開始する際に問題が発生した場合は、ページを更新するか、OneDub拡張機能を更新してみてください",
       },
     },
     pa: {
@@ -756,6 +772,8 @@ i18n.use(initReactI18next).init({
         noSubtitlesFound: "ਚੁਣੀ ਗਈ ਭਾਸ਼ਾ ਲਈ ਕੋਈ ਉਪਸਿਰਲੇਖ ਨਹੀਂ ਮਿਲੇ।",
         subtitlesFetchError: "ਉਪਸਿਰਲੇਖ ਪ੍ਰਾਪਤ ਕਰਨ ਦੌਰਾਨ ਇੱਕ ਤਰੁੱਟੀ ਆਈ।",
         dubbingStopped: "ਡਬਿੰਗ ਸਫਲਤਾਪੂਰਵਕ ਰੋਕੀ ਗਈ।",
+        dubbingInfoTooltip:
+          "ਜੇਕਰ ਤੁਹਾਨੂੰ ਡਬਿੰਗ ਸ਼ੁਰੂ ਕਰਨ ਵੇਲੇ ਕੋਈ ਸਮੱਸਿਆ ਆਉਂਦੀ ਹੈ, ਤਾਂ ਕਿਰਪਾ ਕਰਕੇ ਪੰਨੇ ਨੂੰ ਰੀਫਰੈਸ਼ ਕਰਨ ਜਾਂ OneDub ਐਕਸਟੈਂਸ਼ਨ ਨੂੰ ਅਪਡੇਟ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ",
       },
     },
     de: {
@@ -837,6 +855,8 @@ i18n.use(initReactI18next).init({
         subtitlesFetchError:
           "Beim Abrufen der Untertitel ist ein Fehler aufgetreten.",
         dubbingStopped: "Synchronisation erfolgreich gestoppt.",
+        dubbingInfoTooltip:
+          "Wenn Sie beim Starten der Synchronisation Probleme haben, versuchen Sie bitte, die Seite zu aktualisieren oder die OneDub-Erweiterung zu aktualisieren",
       },
     },
     jv: {
@@ -909,6 +929,8 @@ i18n.use(initReactI18next).init({
           "Ora ana subtitel sing ditemokake kanggo basa sing dipilih.",
         subtitlesFetchError: "Ana kesalahan nalika njupuk subtitel.",
         dubbingStopped: "Dubbing kasil mandheg.",
+        dubbingInfoTooltip:
+          "Yen sampeyan ngalami masalah nalika miwiti dubbing, coba refresh kaca utawa nganyari ekstensi OneDub",
       },
     },
     ko: {
@@ -982,6 +1004,8 @@ i18n.use(initReactI18next).init({
         noSubtitlesFound: "선택한 언어에 대한 자막을 찾을 수 없습니다.",
         subtitlesFetchError: "자막을 가져오는 중 오류가 발생했습니다.",
         dubbingStopped: "더빙이 성공적으로 중지되었습니다.",
+        dubbingInfoTooltip:
+          "더빙을 시작할 때 문제가 있으면 페이지를 새로 고치거나 OneDub 확장 프로그램을 업데이트해 보세요",
       },
     },
     fr: {
@@ -1061,6 +1085,8 @@ i18n.use(initReactI18next).init({
         subtitlesFetchError:
           "Une erreur s'est produite lors de la récupération des sous-titres.",
         dubbingStopped: "Le doublage a été arrêté avec succès.",
+        dubbingInfoTooltip:
+          "Si vous rencontrez des problèmes lors du démarrage du doublage, essayez de rafraîchir la page ou de mettre à jour l'extension OneDub",
       },
     },
     te: {
@@ -1138,6 +1164,8 @@ i18n.use(initReactI18next).init({
         noSubtitlesFound: "ఎంచుకున్న భాష కోసం ఉపశీర్షికలు కనుగొనబడలేదు.",
         subtitlesFetchError: "ఉపశీర్షికలను పొందడంలో లోపం సంభవించింది.",
         dubbingStopped: "డబ్బింగ్ విజయవంతంగా ఆపివేయబడింది.",
+        dubbingInfoTooltip:
+          "డబ్బింగ్ ప్రారంభించేటప్పుడు మీకు ఏవైనా సమస్యలు ఉంటే, దయచేసి పేజీని రిఫ్రెష్ చేయడానికి లేదా OneDub పొడిగింపును నవీకరించడానికి ప్రయత్నించండి",
       },
     },
     mr: {
@@ -1214,6 +1242,8 @@ i18n.use(initReactI18next).init({
         noSubtitlesFound: "निवडलेल्या भाषेसाठी उपशीर्षके सापडली नाहीत.",
         subtitlesFetchError: "उपशीर्षके आणताना एक त्रुटी आली.",
         dubbingStopped: "डबिंग यशस्वीरित्या थांबवले.",
+        dubbingInfoTooltip:
+          "डबिंग सुरू करताना आपल्याला काही समस्या आल्यास, कृपया पृष्ठ रीफ्रेश करण्याचा किंवा OneDub विस्तार अद्यतनित करण्याचा प्रयत्न करा",
       },
     },
     tr: {
@@ -1288,6 +1318,8 @@ i18n.use(initReactI18next).init({
         noSubtitlesFound: "Seçilen dil için altyazı bulunamadı.",
         subtitlesFetchError: "Altyazılar alınırken bir hata oluştu.",
         dubbingStopped: "Dublaj başarıyla durduruldu.",
+        dubbingInfoTooltip:
+          "Dublajı başlatırken herhangi bir sorun yaşarsanız, lütfen sayfayı yenilemeyi veya OneDub uzantısını güncellemeyi deneyin",
       },
     },
   },

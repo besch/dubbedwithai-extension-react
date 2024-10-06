@@ -73,7 +73,6 @@ const DubbingPage: React.FC = () => {
 
     try {
       await dispatch(toggleDubbingProcess());
-      dispatch(updateDubbingState(!isDubbingActive));
       toast.success(
         isDubbingActive ? t("dubbingStopped") : t("dubbingStarted")
       );

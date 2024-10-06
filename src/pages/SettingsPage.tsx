@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import {
@@ -13,10 +13,10 @@ import Button from "@/components/ui/Button";
 import { toast } from "react-toastify";
 import config from "@/extension/content/config";
 import { DubbingMessage, DubbingVoice } from "@/types";
-import { createPopper, Instance as PopperInstance } from "@popperjs/core";
-import { Info, Globe } from "lucide-react";
+import { Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { changeLanguage } from "@/store/languageSlice";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 const SettingsPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -37,10 +37,6 @@ const SettingsPage: React.FC = () => {
   const [localDubbingVoice, setLocalDubbingVoice] =
     useState<DubbingVoice>(dubbingVoice);
 
-  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
-  const tooltipRef = useRef<HTMLDivElement | null>(null);
-  const popperInstanceRef = useRef<PopperInstance | null>(null);
-
   useEffect(() => {
     setLocalOffset(subtitleOffset);
     setLocalDubbingVolume(dubbingVolumeMultiplier);
@@ -52,44 +48,6 @@ const SettingsPage: React.FC = () => {
     videoVolumeWhilePlayingDubbing,
     dubbingVoice,
   ]);
-
-  useEffect(() => {
-    if (activeTooltip && tooltipRef.current) {
-      const targetElement = document.getElementById(activeTooltip);
-      if (targetElement) {
-        popperInstanceRef.current = createPopper(
-          targetElement,
-          tooltipRef.current,
-          {
-            placement: "bottom",
-            modifiers: [
-              {
-                name: "offset",
-                options: {
-                  offset: [0, 8],
-                },
-              },
-            ],
-          }
-        );
-      }
-    }
-
-    return () => {
-      if (popperInstanceRef.current) {
-        popperInstanceRef.current.destroy();
-        popperInstanceRef.current = null;
-      }
-    };
-  }, [activeTooltip]);
-
-  const handleInfoMouseEnter = (id: string) => {
-    setActiveTooltip(id);
-  };
-
-  const handleInfoMouseLeave = () => {
-    setActiveTooltip(null);
-  };
 
   const handleOffsetChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLocalOffset(parseFloat(event.target.value));
@@ -169,7 +127,7 @@ const SettingsPage: React.FC = () => {
     { code: "bn", name: "বাংলা" },
     { code: "ru", name: "Русский" },
     { code: "ja", name: "日本語" },
-    { code: "pa", name: "ਪੰਜਾਬੀ" },
+    { code: "pa", name: "ਪੰਜਾਂਬੀ" },
     { code: "de", name: "Deutsch" },
     { code: "jv", name: "Basa Jawa" },
     { code: "ko", name: "한국어" },
@@ -231,16 +189,10 @@ const SettingsPage: React.FC = () => {
               >
                 {t("subtitleOffset")}
               </label>
-              <div
+              <InfoTooltip
                 id="subtitle-offset-info"
-                className="cursor-help"
-                onMouseEnter={() =>
-                  handleInfoMouseEnter("subtitle-offset-info")
-                }
-                onMouseLeave={handleInfoMouseLeave}
-              >
-                <Info size={20} className="text-muted-foreground" />
-              </div>
+                content={t("subtitleOffsetInfo")}
+              />
             </div>
             <div className="flex items-center space-x-4">
               <input
@@ -267,14 +219,10 @@ const SettingsPage: React.FC = () => {
               >
                 {t("dubbingVolume")}
               </label>
-              <div
+              <InfoTooltip
                 id="dubbing-volume-info"
-                className="cursor-help"
-                onMouseEnter={() => handleInfoMouseEnter("dubbing-volume-info")}
-                onMouseLeave={handleInfoMouseLeave}
-              >
-                <Info size={20} className="text-muted-foreground" />
-              </div>
+                content={t("dubbingVolumeInfo")}
+              />
             </div>
             <div className="flex items-center space-x-4">
               <input
@@ -301,14 +249,10 @@ const SettingsPage: React.FC = () => {
               >
                 {t("videoVolumeDuringDubbing")}
               </label>
-              <div
+              <InfoTooltip
                 id="video-volume-info"
-                className="cursor-help"
-                onMouseEnter={() => handleInfoMouseEnter("video-volume-info")}
-                onMouseLeave={handleInfoMouseLeave}
-              >
-                <Info size={20} className="text-muted-foreground" />
-              </div>
+                content={t("videoVolumeInfo")}
+              />
             </div>
             <div className="flex items-center space-x-4">
               <input
@@ -341,17 +285,6 @@ const SettingsPage: React.FC = () => {
           </Button>
         </div>
       </div>
-
-      {activeTooltip && (
-        <div
-          ref={tooltipRef}
-          className="bg-background text-foreground p-2 rounded-md text-sm z-10 border border-muted-foreground shadow-sm"
-        >
-          {activeTooltip === "subtitle-offset-info" && t("subtitleOffsetInfo")}
-          {activeTooltip === "dubbing-volume-info" && t("dubbingVolumeInfo")}
-          {activeTooltip === "video-volume-info" && t("videoVolumeInfo")}
-        </div>
-      )}
     </PageLayout>
   );
 };

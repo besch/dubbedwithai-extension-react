@@ -16,8 +16,7 @@ import { toast } from "react-toastify";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useTranslation } from "react-i18next";
 import SocialShareButtons from "@/components/SocialShareButtons";
-import { Info } from "lucide-react";
-import { createPopper, Instance as PopperInstance } from "@popperjs/core";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 const DubbingPage: React.FC = () => {
   const { t } = useTranslation();
@@ -33,9 +32,6 @@ const DubbingPage: React.FC = () => {
     srtContent,
   } = useSelector((state: RootState) => state.movie);
   const [isLoadingSubtitles, setIsLoadingSubtitles] = useState(false);
-  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
-  const tooltipRef = useRef<HTMLDivElement | null>(null);
-  const popperInstanceRef = useRef<PopperInstance | null>(null);
 
   useEffect(() => {
     if (!srtContent) {
@@ -69,36 +65,6 @@ const DubbingPage: React.FC = () => {
     srtContent,
   ]);
 
-  useEffect(() => {
-    if (activeTooltip && tooltipRef.current) {
-      const targetElement = document.getElementById(activeTooltip);
-      if (targetElement) {
-        popperInstanceRef.current = createPopper(
-          targetElement,
-          tooltipRef.current,
-          {
-            placement: "bottom",
-            modifiers: [
-              {
-                name: "offset",
-                options: {
-                  offset: [0, 8],
-                },
-              },
-            ],
-          }
-        );
-      }
-    }
-
-    return () => {
-      if (popperInstanceRef.current) {
-        popperInstanceRef.current.destroy();
-        popperInstanceRef.current = null;
-      }
-    };
-  }, [activeTooltip]);
-
   const handleDubbingToggle = async () => {
     if (isLoadingSubtitles) {
       toast.warning(t("waitForSubtitlesToLoad"));
@@ -118,14 +84,6 @@ const DubbingPage: React.FC = () => {
 
   const getFullLanguageName = (languageCode: string): string =>
     languageCodes[languageCode] || languageCode;
-
-  const handleInfoMouseEnter = (id: string) => {
-    setActiveTooltip(id);
-  };
-
-  const handleInfoMouseLeave = () => {
-    setActiveTooltip(null);
-  };
 
   return (
     <PageLayout title={t("dubbingControls")}>
@@ -163,13 +121,11 @@ const DubbingPage: React.FC = () => {
                   onDubbingToggle={handleDubbingToggle}
                   disabled={isLoadingSubtitles}
                 />
-                <div
-                  id="dubbing-info"
-                  className="ml-2 cursor-help"
-                  onMouseEnter={() => handleInfoMouseEnter("dubbing-info")}
-                  onMouseLeave={handleInfoMouseLeave}
-                >
-                  <Info size={20} className="text-muted-foreground" />
+                <div className="ml-2">
+                  <InfoTooltip
+                    id="dubbing-info"
+                    content={t("dubbingInfoTooltip")}
+                  />
                 </div>
               </div>
             )}
@@ -179,14 +135,6 @@ const DubbingPage: React.FC = () => {
           <SocialShareButtons />
         </div>
       </div>
-      {activeTooltip && (
-        <div
-          ref={tooltipRef}
-          className="bg-background text-foreground p-2 rounded-md text-sm z-10 border border-muted-foreground shadow-sm absolute"
-        >
-          {activeTooltip === "dubbing-info" && t("dubbingInfoTooltip")}
-        </div>
-      )}
     </PageLayout>
   );
 };

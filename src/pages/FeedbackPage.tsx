@@ -14,7 +14,7 @@ const FeedbackPage: React.FC = () => {
 
   const formSchema = z.object({
     email: z.string().email({ message: t("invalidEmail") }),
-    subject: z.string().min(1, { message: t("subjectRequired") }),
+    name: z.string().min(1, { message: t("nameRequired") }),
     message: z.string().min(10, { message: t("messageMinLength") }),
   });
 
@@ -27,7 +27,7 @@ const FeedbackPage: React.FC = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      subject: "",
+      name: "",
       message: "",
     },
   });
@@ -70,22 +70,20 @@ const FeedbackPage: React.FC = () => {
 
         <div>
           <label
-            htmlFor="subject"
+            htmlFor="name"
             className="block text-sm font-medium text-muted-foreground"
           >
-            {t("subject")}
+            {t("name")}
           </label>
           <input
             type="text"
-            id="subject"
-            {...register("subject")}
+            id="name"
+            {...register("name")}
             className="w-full p-2 pl-3 pr-3 border rounded bg-input text-foreground border-border placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            placeholder={t("subject")}
+            placeholder={t("name")}
           />
-          {errors.subject && (
-            <p className="text-red-400 mt-2 text-sm">
-              {errors.subject.message}
-            </p>
+          {errors.name && (
+            <p className="text-red-400 mt-2 text-sm">{errors.name.message}</p>
           )}
         </div>
 

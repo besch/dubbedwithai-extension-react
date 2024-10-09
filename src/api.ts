@@ -73,6 +73,6 @@ export const fetchAudioFile = async (
 
 export const sendFeedback = (values: {
   email: string;
-  subject: string;
+  name: string;
   message: string;
 }): Promise<void> => apiFetch("/api/send-feedback", "POST", values);

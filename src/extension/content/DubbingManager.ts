@@ -499,8 +499,10 @@ export class DubbingManager {
     console.log("handleTimeUpdate", currentTimeMs);
 
     // Update only if there's a significant change to prevent excessive processing
-    if (Math.abs(currentTimeMs - this.currentState.lastVideoTime) >= 100) {
-      // 100 ms
+    if (
+      Math.abs(currentTimeMs - this.currentState.lastVideoTime) >=
+      config.videoTimeUpdateInterval
+    ) {
       this.updateCurrentState({ lastVideoTime: currentTimeMs });
       this.handlePreciseTime(currentTimeMs);
     }

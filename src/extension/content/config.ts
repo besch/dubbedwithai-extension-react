@@ -9,6 +9,7 @@ export interface Config {
   audioFileGenerationCacheTimeout: number; // in milliseconds
   subtitleFadeOutDuration: number; // in seconds
   subtitleFadeOutVolume: number; // final volume as a percentage (0-1)
+  videoTimeUpdateInterval: number; // in milliseconds
 }
 
 const config: Config = {
@@ -22,6 +23,7 @@ const config: Config = {
   audioFileGenerationCacheTimeout: 300000,
   subtitleFadeOutDuration: 0.3, // 300 milliseconds fade-out duration
   subtitleFadeOutVolume: 0.7, // Fade out to 70% of the original volume
+  videoTimeUpdateInterval: 100, // 100 milliseconds
 };
 
 export default config;

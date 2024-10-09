@@ -495,8 +495,7 @@ export class DubbingManager {
 
   private handleTimeUpdate = (event: Event): void => {
     const video = event.target as HTMLVideoElement;
-    const currentTimeMs = video.currentTime * 1000; // Converted once here
-    console.log("handleTimeUpdate", currentTimeMs);
+    const currentTimeMs = video.currentTime * 1000;
 
     // Update only if there's a significant change to prevent excessive processing
     if (
@@ -509,10 +508,6 @@ export class DubbingManager {
   };
 
   private handlePreciseTime = (currentTimeMs: number): void => {
-    if (!this.currentState.isDubbingActive) {
-      return;
-    }
-
     const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
 
     if (this.videoElement) {

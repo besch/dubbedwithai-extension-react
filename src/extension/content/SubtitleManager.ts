@@ -22,7 +22,7 @@ export class SubtitleManager {
     this.sortedSubtitles.sort((a, b) => a.start - b.start);
   }
 
-  async getSubtitles(
+  public async getSubtitles(
     movieId: string,
     languageCode: string,
     seasonNumber?: number,
@@ -40,22 +40,25 @@ export class SubtitleManager {
     return subtitles;
   }
 
-  getUpcomingSubtitles(adjustedTime: number, preloadTime: number): Subtitle[] {
+  public getUpcomingSubtitles(
+    adjustedTimeMs: number,
+    preloadTimeMs: number
+  ): Subtitle[] {
     return this.sortedSubtitles.filter((subtitle) => {
       return (
-        subtitle.start > adjustedTime &&
-        subtitle.start <= adjustedTime + preloadTime
+        subtitle.start > adjustedTimeMs &&
+        subtitle.start <= adjustedTimeMs + preloadTimeMs
       );
     });
   }
 
-  getCurrentSubtitles(adjustedTime: number): Subtitle[] {
+  public getCurrentSubtitles(adjustedTimeMs: number): Subtitle[] {
     return this.sortedSubtitles.filter((subtitle) => {
-      return adjustedTime >= subtitle.start && adjustedTime < subtitle.end;
+      return adjustedTimeMs >= subtitle.start && adjustedTimeMs < subtitle.end;
     });
   }
 
-  reset(): void {
+  public reset(): void {
     this.sortedSubtitles = [];
   }
 

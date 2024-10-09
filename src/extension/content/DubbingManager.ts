@@ -20,11 +20,11 @@ export class DubbingManager {
     seasonNumber: number | null;
     episodeNumber: number | null;
     dubbingVoice: DubbingVoice;
-    subtitleOffset: number;
+    subtitleOffset: number; // in milliseconds
     isDubbingActive: boolean;
     lastSentSubtitle: Subtitle | null;
-    lastSentTime: number;
-    lastVideoTime: number;
+    lastSentTime: number; // in milliseconds
+    lastVideoTime: number; // in milliseconds
     currentVideoPlayerVolume: number;
     videoVolumeWhilePlayingDubbing: number;
     originalVideoVolume: number;
@@ -177,8 +177,8 @@ export class DubbingManager {
     }
     this.audioContext.resume();
 
-    const currentVideoTime = this.videoElement?.currentTime || 0;
-    this.updateCurrentState({ lastVideoTime: currentVideoTime });
+    const currentVideoTimeMs = this.getCurrentVideoTimeMs();
+    this.updateCurrentState({ lastVideoTime: currentVideoTimeMs });
     this.adjustVolume(this.videoElement);
 
     chrome.runtime.sendMessage({
@@ -217,7 +217,7 @@ export class DubbingManager {
         const newMovieState = changes.movieState.newValue;
         if (newMovieState && typeof newMovieState.subtitleOffset === "number") {
           this.updateCurrentState({
-            subtitleOffset: newMovieState.subtitleOffset * 1000,
+            subtitleOffset: newMovieState.subtitleOffset,
           });
         }
       }
@@ -331,6 +331,23 @@ export class DubbingManager {
     }
   }
 
+  private setupVideoObserver(): void {
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === "childList") {
+          this.videoElement = document.querySelector("video");
+          if (this.videoElement) {
+            this.handleVideo(this.videoElement);
+            observer.disconnect();
+            return;
+          }
+        }
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
   private async checkAndGenerateUpcomingAudio(
     currentTimeMs: number
   ): Promise<void> {
@@ -366,10 +383,6 @@ export class DubbingManager {
         }
       }
     }
-  }
-
-  private isUploadedSubtitle(filePath: string): boolean {
-    return filePath.includes("uploaded");
   }
 
   private setupMessageListener(): void {
@@ -425,11 +438,11 @@ export class DubbingManager {
   }
 
   private handleVideoPlay = (): void => {
-    const currentTime = this.videoElement?.currentTime || 0;
+    const currentTimeMs = this.getCurrentVideoTimeMs();
 
     if (this.currentState.isDubbingActive) {
-      this.updateCurrentState({ lastVideoTime: currentTime });
-      this.playCurrentSubtitles(currentTime * 1000);
+      this.updateCurrentState({ lastVideoTime: currentTimeMs });
+      this.playCurrentSubtitles(currentTimeMs);
       this.notifyBackgroundScript(true);
     }
 
@@ -456,13 +469,13 @@ export class DubbingManager {
 
   private handleVideoSeeking = (event: Event): void => {
     const video = event.target as HTMLVideoElement;
-    const newTime = video.currentTime;
+    const newTimeMs = video.currentTime * 1000; // Converted once here
 
     this.audioPlayer.pauseAllAudio();
-    this.updateCurrentState({ lastVideoTime: newTime });
+    this.updateCurrentState({ lastVideoTime: newTimeMs });
 
     if (this.currentState.isDubbingActive) {
-      this.playCurrentSubtitles(newTime * 1000);
+      this.playCurrentSubtitles(newTimeMs);
       this.notifyBackgroundScript(true);
     }
   };
@@ -482,22 +495,22 @@ export class DubbingManager {
 
   private handleTimeUpdate = (event: Event): void => {
     const video = event.target as HTMLVideoElement;
-    const currentTime = video.currentTime;
-    console.log("handleTimeUpdate", currentTime);
+    const currentTimeMs = video.currentTime * 1000; // Converted once here
+    console.log("handleTimeUpdate", currentTimeMs);
 
     // Update only if there's a significant change to prevent excessive processing
-    if (Math.abs(currentTime - this.currentState.lastVideoTime) >= 0.1) {
-      this.updateCurrentState({ lastVideoTime: currentTime });
-      this.handlePreciseTime(currentTime);
+    if (Math.abs(currentTimeMs - this.currentState.lastVideoTime) >= 100) {
+      // 100 ms
+      this.updateCurrentState({ lastVideoTime: currentTimeMs });
+      this.handlePreciseTime(currentTimeMs);
     }
   };
 
-  private handlePreciseTime = (currentTime: number): void => {
+  private handlePreciseTime = (currentTimeMs: number): void => {
     if (!this.currentState.isDubbingActive) {
       return;
     }
 
-    const currentTimeMs = currentTime * 1000;
     const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
 
     if (this.videoElement) {
@@ -606,8 +619,11 @@ export class DubbingManager {
       adjustedTimeMs < subtitle.end &&
       !this.audioPlayer.isAudioActive(audioFilePath)
     ) {
-      const audioOffsetMs = Math.max(0, adjustedTimeMs - startTimeMs);
-      this.playAudioIfAvailable(subtitle, audioOffsetMs / 1000);
+      const audioOffsetSeconds = Math.max(
+        0,
+        (adjustedTimeMs - startTimeMs) / 1000
+      );
+      this.playAudioIfAvailable(subtitle, audioOffsetSeconds);
     }
   }
 
@@ -623,32 +639,32 @@ export class DubbingManager {
   }
 
   private sendCurrentSubtitleInfo(
-    adjustedTime: number,
+    adjustedTimeMs: number,
     currentSubtitles: Subtitle[]
   ): void {
     if (currentSubtitles.length > 0) {
       const currentSubtitle = currentSubtitles[0];
-      const startTime = currentSubtitle.start / 1000;
-      const endTime = currentSubtitle.end / 1000;
+      const startTimeSeconds = currentSubtitle.start / 1000;
+      const endTimeSeconds = currentSubtitle.end / 1000;
 
       if (
         currentSubtitle !== this.currentState.lastSentSubtitle ||
-        adjustedTime - this.currentState.lastSentTime >=
+        adjustedTimeMs - this.currentState.lastSentTime >=
           config.subtitleUpdateInterval * 1000
       ) {
         chrome.runtime.sendMessage({
           action: "currentSubtitle",
           subtitle: {
             text: currentSubtitle.text,
-            start: startTime,
-            end: endTime,
-            currentTime: adjustedTime / 1000,
+            start: startTimeSeconds,
+            end: endTimeSeconds,
+            currentTime: adjustedTimeMs / 1000,
           },
         });
 
         this.updateCurrentState({
           lastSentSubtitle: currentSubtitle,
-          lastSentTime: adjustedTime,
+          lastSentTime: adjustedTimeMs,
         });
       }
     } else if (this.currentState.lastSentSubtitle !== null) {
@@ -657,28 +673,15 @@ export class DubbingManager {
     }
   }
 
-  private setupVideoObserver(): void {
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === "childList") {
-          this.videoElement = document.querySelector("video");
-          if (this.videoElement) {
-            this.handleVideo(this.videoElement);
-            observer.disconnect();
-            return;
-          }
-        }
-      }
-    });
+  public setDubbingVoice(voice: DubbingVoice): void {
+    this.updateCurrentState({ dubbingVoice: voice });
+  }
 
-    observer.observe(document.body, { childList: true, subtree: true });
+  private getCurrentVideoTimeMs(): number {
+    return this.videoElement ? this.videoElement.currentTime * 1000 : 0;
   }
 
   public hasVideoElement(): boolean {
     return !!this.videoElement;
-  }
-
-  public setDubbingVoice(voice: DubbingVoice): void {
-    this.updateCurrentState({ dubbingVoice: voice });
   }
 }

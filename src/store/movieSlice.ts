@@ -104,10 +104,19 @@ export const loadSubtitles = createAsyncThunk(
       return;
     }
 
+    const url = await new Promise<string>((resolve) => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        resolve(tabs[0]?.url || "");
+      });
+    });
+
     return dispatch(
       selectSubtitle({
         imdbID: selectedMovie.imdbID,
         languageCode: selectedLanguage.id,
+        seasonNumber: state.movie.selectedSeasonNumber || undefined,
+        episodeNumber: state.movie.selectedEpisodeNumber || undefined,
+        url,
       })
     ).unwrap();
   }
@@ -121,6 +130,7 @@ export const selectSubtitle = createAsyncThunk(
       languageCode: string;
       seasonNumber?: number;
       episodeNumber?: number;
+      url: string;
     },
     { dispatch, getState }
   ) => {
@@ -234,7 +244,13 @@ export const searchMovies = createAsyncThunk(
   "movie/searchMovies",
   async (query: string, { rejectWithValue }) => {
     try {
-      return await fetchMovies(query);
+      const url = await new Promise<string>((resolve) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          resolve(tabs[0]?.url || "");
+        });
+      });
+      const params = { text: query, url };
+      return await fetchMovies(params);
     } catch (error) {
       toast.error((error as Error).message);
       return rejectWithValue((error as Error).message);

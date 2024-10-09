@@ -84,8 +84,9 @@ class BackgroundService {
     sendResponse: (response: any) => void
   ): Promise<void> {
     const { filePath } = message;
+    const url = await this.getCurrentTabUrl();
     try {
-      const audioBuffer = await api.fetchAudioFile(filePath);
+      const audioBuffer = await api.fetchAudioFile(filePath, url);
       const base64Audio = this.arrayBufferToBase64(audioBuffer);
       sendResponse({ success: true, audioData: base64Audio });
     } catch (e: unknown) {
@@ -168,6 +169,7 @@ class BackgroundService {
     sendResponse: (response: any) => void
   ): Promise<void> {
     const { text, filePath } = message;
+    const url = await this.getCurrentTabUrl();
 
     if (!text || !filePath) {
       sendResponse({
@@ -181,7 +183,7 @@ class BackgroundService {
     }
 
     try {
-      const audioBuffer = await api.generateAudio(text, filePath);
+      const audioBuffer = await api.generateAudio(text, filePath, url);
       const base64Audio = this.arrayBufferToBase64(audioBuffer);
       sendResponse({ success: true, audioData: base64Audio });
     } catch (e: unknown) {
@@ -191,6 +193,14 @@ class BackgroundService {
         details: e instanceof Error ? e.message : "An unknown error occurred",
       });
     }
+  }
+
+  private async getCurrentTabUrl(): Promise<string> {
+    return new Promise((resolve) => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        resolve(tabs[0]?.url || "");
+      });
+    });
   }
 }
 

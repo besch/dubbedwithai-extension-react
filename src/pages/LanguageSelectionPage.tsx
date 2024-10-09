@@ -37,11 +37,18 @@ const LanguageSelectionPage: React.FC = () => {
     dispatch(loadLastSelectedLanguage());
   }, [dispatch]);
 
-  const handleLanguageSelect = (languageCode: string) => {
+  const handleLanguageSelect = async (languageCode: string) => {
     if (selectedMovie) {
+      const url = await new Promise<string>((resolve) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          resolve(tabs[0]?.url || "");
+        });
+      });
+
       const params: any = {
         imdbID: selectedMovie.imdbID,
         languageCode,
+        url,
       };
 
       if (selectedMovie.Type === "series" && seasonNumber && episodeNumber) {

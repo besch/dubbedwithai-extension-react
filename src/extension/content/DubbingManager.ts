@@ -1,7 +1,6 @@
 import { AudioFileManager } from "./AudioFileManager";
 import { SubtitleManager } from "./SubtitleManager";
 import { AudioPlayer } from "./AudioPlayer";
-import { PrecisionTimer } from "./PrecisionTimer";
 import { DubbingMessage, DubbingVoice, Subtitle } from "@/types";
 import config from "./config";
 import { parseSrt } from "../utils";
@@ -12,7 +11,6 @@ export class DubbingManager {
   private subtitleManager: SubtitleManager;
   private audioPlayer: AudioPlayer;
   private audioContext: AudioContext;
-  private precisionTimer: PrecisionTimer;
   private videoElement: HTMLVideoElement | null = null;
   private isAdjustingVolume: boolean = false;
 
@@ -37,7 +35,6 @@ export class DubbingManager {
     this.audioFileManager = new AudioFileManager(this.audioContext);
     this.subtitleManager = SubtitleManager.getInstance();
     this.audioPlayer = new AudioPlayer(this.audioContext);
-    this.precisionTimer = new PrecisionTimer(this.handlePreciseTime);
     window.addEventListener("message", this.handleMessage.bind(this));
 
     this.currentState = {
@@ -146,18 +143,18 @@ export class DubbingManager {
   }
 
   private setupAudioContext(): void {
-    this.updateCurrentState({
-      currentVideoPlayerVolume: this.videoElement!.volume,
-    });
-    this.precisionTimer.setVideoElement(this.videoElement!);
-    this.audioContext = new window.AudioContext();
-    this.audioFileManager = new AudioFileManager(this.audioContext);
-    this.audioPlayer = new AudioPlayer(this.audioContext);
+    if (this.videoElement) {
+      this.updateCurrentState({
+        currentVideoPlayerVolume: this.videoElement.volume,
+      });
+      this.audioContext = new window.AudioContext();
+      this.audioFileManager = new AudioFileManager(this.audioContext);
+      this.audioPlayer = new AudioPlayer(this.audioContext);
+    }
   }
 
   private stopDubbing(): void {
     this.updateCurrentState({ isDubbingActive: false });
-    this.precisionTimer.pause();
     this.audioPlayer.pauseAllAudio();
     this.restoreOriginalVideoVolume();
 
@@ -180,8 +177,8 @@ export class DubbingManager {
     }
     this.audioContext.resume();
 
-    const currentVideoTime = this.videoElement.currentTime;
-    this.precisionTimer.start(currentVideoTime);
+    const currentVideoTime = this.videoElement?.currentTime || 0;
+    this.updateCurrentState({ lastVideoTime: currentVideoTime });
     this.adjustVolume(this.videoElement);
 
     chrome.runtime.sendMessage({
@@ -232,7 +229,6 @@ export class DubbingManager {
     this.audioFileManager.clearCache();
     this.audioPlayer.pauseAllAudio();
     this.subtitleManager.reset();
-    this.precisionTimer.stop();
     this.removeVideoEventListeners();
     this.restoreVideoVolume();
 
@@ -432,7 +428,7 @@ export class DubbingManager {
     const currentTime = this.videoElement?.currentTime || 0;
 
     if (this.currentState.isDubbingActive) {
-      this.precisionTimer.start(currentTime);
+      this.updateCurrentState({ lastVideoTime: currentTime });
       this.playCurrentSubtitles(currentTime * 1000);
       this.notifyBackgroundScript(true);
     }
@@ -444,7 +440,6 @@ export class DubbingManager {
 
   private handleVideoPause = (): void => {
     if (this.currentState.isDubbingActive) {
-      this.precisionTimer.pause();
       this.audioPlayer.pauseAllAudio();
       this.notifyBackgroundScript(false);
     }
@@ -463,9 +458,8 @@ export class DubbingManager {
     const video = event.target as HTMLVideoElement;
     const newTime = video.currentTime;
 
-    this.precisionTimer.stop();
     this.audioPlayer.pauseAllAudio();
-    this.precisionTimer.start(newTime);
+    this.updateCurrentState({ lastVideoTime: newTime });
 
     if (this.currentState.isDubbingActive) {
       this.playCurrentSubtitles(newTime * 1000);
@@ -489,26 +483,28 @@ export class DubbingManager {
   private handleTimeUpdate = (event: Event): void => {
     const video = event.target as HTMLVideoElement;
     const currentTime = video.currentTime;
+    console.log("handleTimeUpdate", currentTime);
 
-    if (Math.abs(currentTime - this.currentState.lastVideoTime) >= 1) {
+    // Update only if there's a significant change to prevent excessive processing
+    if (Math.abs(currentTime - this.currentState.lastVideoTime) >= 0.1) {
       this.updateCurrentState({ lastVideoTime: currentTime });
-      this.precisionTimer.start(currentTime);
+      this.handlePreciseTime(currentTime);
     }
   };
 
-  private handlePreciseTime = (time: number): void => {
+  private handlePreciseTime = (currentTime: number): void => {
     if (!this.currentState.isDubbingActive) {
       return;
     }
 
-    const currentTimeMs = time * 1000;
+    const currentTimeMs = currentTime * 1000;
     const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
 
     if (this.videoElement) {
       this.adjustVolume(this.videoElement);
     }
 
-    this.playCurrentSubtitles(currentTimeMs);
+    this.playCurrentSubtitles(adjustedTimeMs);
     this.audioPlayer.fadeOutExpiredAudio(adjustedTimeMs);
     this.sendCurrentSubtitleInfo(
       adjustedTimeMs,

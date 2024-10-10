@@ -13,7 +13,7 @@ import Button from "@/components/ui/Button";
 import { toast } from "react-toastify";
 import config from "@/extension/content/config";
 import { DubbingMessage, DubbingVoice } from "@/types";
-import { Globe } from "lucide-react";
+import { Globe, Minus, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { changeLanguage } from "@/store/languageSlice";
 import InfoTooltip from "@/components/ui/InfoTooltip";
@@ -51,6 +51,11 @@ const SettingsPage: React.FC = () => {
 
   const handleOffsetChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLocalOffset(parseFloat(event.target.value));
+  };
+
+  const adjustOffset = (amount: number) => {
+    const newOffset = Math.max(-60, Math.min(60, localOffset + amount));
+    setLocalOffset(newOffset);
   };
 
   const handleDubbingVolumeChange = (
@@ -194,20 +199,38 @@ const SettingsPage: React.FC = () => {
                 content={t("subtitleOffsetInfo")}
               />
             </div>
+            <div className="flex items-center space-x-4 mb-2">
+              <Button
+                onClick={() => adjustOffset(-1)}
+                variant="outline"
+                size="sm"
+                className="w-20"
+              >
+                <Minus className="w-4 h-4 mr-1" /> 1s
+              </Button>
+              <div className="flex-grow text-center font-medium">
+                {localOffset.toFixed(1)}s
+              </div>
+              <Button
+                onClick={() => adjustOffset(1)}
+                variant="outline"
+                size="sm"
+                className="w-20"
+              >
+                <Plus className="w-4 h-4 mr-1" /> 1s
+              </Button>
+            </div>
             <div className="flex items-center space-x-4">
               <input
                 id="subtitle-offset"
                 type="range"
-                min="-15"
-                max="15"
+                min="-60"
+                max="60"
                 step="0.1"
                 value={localOffset}
                 onChange={handleOffsetChange}
                 className="flex-grow h-2 rounded-lg appearance-none cursor-pointer bg-muted"
               />
-              <span className="w-16 text-right text-foreground">
-                {localOffset.toFixed(1)}s
-              </span>
             </div>
           </div>
 

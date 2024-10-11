@@ -3,7 +3,6 @@ import { DubbingMessage, DubbingVoice, StorageData } from "@/types";
 
 class ContentScript {
   private dubbingManager: DubbingManager;
-  private isDubbingActive = false;
 
   constructor() {
     this.dubbingManager = DubbingManager.getInstance();
@@ -65,7 +64,10 @@ class ContentScript {
       case "setDubbingVoice":
         return this.setDubbingVoice(message.payload);
       case "checkDubbingStatus":
-        return { status: "checked", isDubbingActive: this.isDubbingActive };
+        return {
+          status: "checked",
+          isDubbingActive: this.dubbingManager.isDubbingActive,
+        };
       default:
         throw new Error(`Unknown action: ${(message as any).action}`);
     }
@@ -90,7 +92,7 @@ class ContentScript {
     seasonNumber?: number,
     episodeNumber?: number
   ): Promise<any> {
-    if (!this.checkForVideoElement()) {
+    if (!this.dubbingManager.hasVideoElement()) {
       return;
     }
 
@@ -130,7 +132,7 @@ class ContentScript {
   }
 
   private async updateDubbingState(isActive: boolean): Promise<any> {
-    this.isDubbingActive = isActive;
+    await this.dubbingManager.updateCurrentState({ isDubbingActive: isActive });
     await chrome.storage.local.set({ isDubbingActive: isActive });
     chrome.runtime.sendMessage({
       action: "updateDubbingState",
@@ -154,7 +156,7 @@ class ContentScript {
       ((storage.movieId && storage.languageCode) || storage.srtContent)
     ) {
       try {
-        if (!this.checkForVideoElement()) {
+        if (!this.dubbingManager.hasVideoElement()) {
           return;
         }
 
@@ -172,11 +174,6 @@ class ContentScript {
     } else if (storage.isDubbingActive) {
       await this.updateDubbingState(false);
     }
-  }
-
-  private checkForVideoElement(): boolean {
-    this.dubbingManager.findAndStoreVideoElement();
-    return this.dubbingManager.hasVideoElement();
   }
 
   private async updateStorage(data: Partial<StorageData>): Promise<void> {

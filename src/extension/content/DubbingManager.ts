@@ -248,8 +248,6 @@ export class DubbingManager {
     this.videoManager.restoreOriginalVideoVolume();
 
     this.updateCurrentState({
-      movieId: null,
-      languageCode: null,
       isDubbingActive: false,
       lastSentSubtitle: null,
       lastSentTime: 0,

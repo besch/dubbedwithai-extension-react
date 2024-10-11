@@ -63,6 +63,8 @@ class ContentScript {
         return this.setVideoVolumeWhilePlayingDubbing(message.payload);
       case "setDubbingVoice":
         return this.setDubbingVoice(message.payload);
+      case "setDubbingVolumeMultiplier":
+        return this.setDubbingVolumeMultiplier(message.payload);
       case "checkDubbingStatus":
         return {
           status: "checked",
@@ -71,6 +73,11 @@ class ContentScript {
       default:
         throw new Error(`Unknown action: ${(message as any).action}`);
     }
+  }
+
+  private setDubbingVolumeMultiplier(volume: number): { status: string } {
+    this.dubbingManager.setDubbingVolumeMultiplier(volume);
+    return { status: "updated" };
   }
 
   private setDubbingVoice(voice: DubbingVoice): { status: string } {

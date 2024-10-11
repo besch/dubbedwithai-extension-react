@@ -5,6 +5,16 @@ import { DubbingMessage, DubbingVoice, Subtitle } from "@/types";
 import config from "./config";
 import { parseSrt } from "../utils";
 
+declare global {
+  interface Window {
+    webkitSpeechRecognition: any;
+  }
+}
+
+interface SpeechRecognitionEvent {
+  results: SpeechRecognitionResultList;
+}
+
 export class DubbingManager {
   private static instance: DubbingManager | null = null;
   private audioFileManager: AudioFileManager;

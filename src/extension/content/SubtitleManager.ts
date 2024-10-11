@@ -22,6 +22,10 @@ export class SubtitleManager {
     this.sortedSubtitles.sort((a, b) => a.start - b.start);
   }
 
+  public getActiveSubtitles(): Subtitle[] {
+    return this.sortedSubtitles;
+  }
+
   public async getSubtitles(
     movieId: string,
     languageCode: string,

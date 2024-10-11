@@ -6,16 +6,6 @@ import config from "./config";
 import { parseSrt } from "../utils";
 import { VideoManager } from "./VideoManager";
 
-declare global {
-  interface Window {
-    webkitSpeechRecognition: any;
-  }
-}
-
-interface SpeechRecognitionEvent {
-  results: SpeechRecognitionResultList;
-}
-
 type DubbingManagerState = {
   movieId: string | null;
   languageCode: string | null;

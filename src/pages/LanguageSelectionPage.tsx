@@ -79,6 +79,7 @@ const LanguageSelectionPage: React.FC = () => {
 
   const handleUseLastLanguage = () => {
     if (lastSelectedLanguage && selectedMovie) {
+      dispatch(setSelectedLanguage(lastSelectedLanguage));
       handleLanguageSelect(lastSelectedLanguage.id);
     }
   };

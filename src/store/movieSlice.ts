@@ -79,16 +79,21 @@ export const setLastSelectedLanguage = createAsyncThunk(
   async (language: Language, { dispatch }) => {
     await chrome.storage.local.set({ lastSelectedLanguage: language });
     dispatch(updateLastSelectedLanguage(language));
+    dispatch(setSelectedLanguage(language));
     return language;
   }
 );
 
 export const loadLastSelectedLanguage = createAsyncThunk(
   "movie/loadLastSelectedLanguage",
-  async () => {
+  async (_, { dispatch }) => {
     return new Promise<Language | null>((resolve) => {
       chrome.storage.local.get(["lastSelectedLanguage"], (result) => {
-        resolve(result.lastSelectedLanguage || null);
+        const lastSelectedLanguage = result.lastSelectedLanguage || null;
+        if (lastSelectedLanguage) {
+          dispatch(setSelectedLanguage(lastSelectedLanguage));
+        }
+        resolve(lastSelectedLanguage);
       });
     });
   }
@@ -295,6 +300,56 @@ export const setSrtContentAndSave = createAsyncThunk(
     await new Promise<void>((resolve) => {
       chrome.storage.local.set({ srtContent: content }, () => {
         resolve();
+      });
+    });
+  }
+);
+
+export const startManualAlignment = createAsyncThunk(
+  "movie/startManualAlignment",
+  async (_, { dispatch }) => {
+    return new Promise<void>((resolve, reject) => {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        if (tabs[0]?.id) {
+          chrome.tabs.sendMessage(
+            tabs[0].id,
+            { action: "startManualAlignment" },
+            (response) => {
+              if (response && response.status === "aligned") {
+                resolve();
+              } else {
+                reject(new Error("Failed to align subtitles"));
+              }
+            }
+          );
+        } else {
+          reject(new Error("No active tab found"));
+        }
+      });
+    });
+  }
+);
+
+export const cancelManualAlignment = createAsyncThunk(
+  "movie/cancelManualAlignment",
+  async (_, { dispatch }) => {
+    return new Promise<void>((resolve, reject) => {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        if (tabs[0]?.id) {
+          chrome.tabs.sendMessage(
+            tabs[0].id,
+            { action: "cancelManualAlignment" },
+            (response) => {
+              if (response && response.status === "cancelled") {
+                resolve();
+              } else {
+                reject(new Error("Failed to cancel alignment"));
+              }
+            }
+          );
+        } else {
+          reject(new Error("No active tab found"));
+        }
       });
     });
   }

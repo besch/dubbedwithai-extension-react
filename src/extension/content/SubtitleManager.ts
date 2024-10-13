@@ -95,4 +95,12 @@ export class SubtitleManager {
   private generateUniqueId(): string {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
+
+  public adjustSubtitlesByOffset(offset: number): void {
+    this.sortedSubtitles = this.sortedSubtitles.map((subtitle) => ({
+      ...subtitle,
+      start: subtitle.start + offset,
+      end: subtitle.end + offset,
+    }));
+  }
 }

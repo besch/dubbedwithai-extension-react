@@ -3,6 +3,7 @@ import { Subtitle } from "@/types";
 import { DubbingManager } from "./DubbingManager";
 import { SubtitleManager } from "./SubtitleManager";
 import { AudioPlayer } from "./AudioPlayer";
+import { SubtitleAligner } from "./SubtitleAligner"; // Import the new class
 
 export class VideoManager {
   private videoElement: HTMLVideoElement | null = null;
@@ -12,11 +13,21 @@ export class VideoManager {
   private audioPlayer: AudioPlayer;
   private currentVideoPlayerVolume: number = 1;
   private originalVideoVolume: number = 1;
+  private audioContext: AudioContext | null = null;
+  private audioSourceNode: MediaElementAudioSourceNode | null = null;
 
   constructor(dubbingManager: DubbingManager) {
     this.dubbingManager = dubbingManager;
     this.subtitleManager = SubtitleManager.getInstance();
     this.audioPlayer = this.dubbingManager.getAudioPlayer();
+    this.initializeAudioContext();
+  }
+
+  private initializeAudioContext(): void {
+    if (!this.audioContext) {
+      this.audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+    }
   }
 
   public async findAndStoreVideoElement(): Promise<void> {
@@ -50,10 +61,56 @@ export class VideoManager {
         }
       } catch (e) {
         console.error("Could not access iframe content:", e);
+        // If we can't access the iframe directly, we'll use a message passing approach
+        this.setupIframeMessageListener(iframe);
       }
     }
 
     this.setupVideoObserver();
+  }
+
+  private setupIframeMessageListener(iframe: HTMLIFrameElement): void {
+    window.addEventListener("message", (event) => {
+      if (event.source === iframe.contentWindow) {
+        if (event.data.type === "VIDEO_ELEMENT_FOUND") {
+          this.handleIframeVideo(iframe);
+        }
+      }
+    });
+
+    // Send a message to the iframe to find the video element
+    iframe.contentWindow?.postMessage({ type: "FIND_VIDEO_ELEMENT" }, "*");
+  }
+
+  private handleIframeVideo(iframe: HTMLIFrameElement): void {
+    // Create a proxy video element
+    const proxyVideo = document.createElement("video");
+
+    // Set up message passing for video events and properties
+    window.addEventListener("message", (event) => {
+      if (event.source === iframe.contentWindow) {
+        if (event.data.type === "VIDEO_EVENT") {
+          proxyVideo.dispatchEvent(new Event(event.data.eventName));
+        } else if (event.data.type === "VIDEO_PROPERTY_UPDATE") {
+          (proxyVideo as any)[event.data.property] = event.data.value;
+        }
+      }
+    });
+
+    // Override video methods to send messages to the iframe
+    const videoMethods = ["play", "pause", "load"];
+    videoMethods.forEach((method) => {
+      (proxyVideo as any)[method] = () => {
+        iframe.contentWindow?.postMessage(
+          { type: "VIDEO_METHOD", method },
+          "*"
+        );
+      };
+    });
+
+    this.videoElement = proxyVideo;
+    this.handleVideo(proxyVideo);
+    this.setDubbingActiveFlag();
   }
 
   private setDubbingActiveFlag(): void {
@@ -70,6 +127,26 @@ export class VideoManager {
     video.addEventListener("seeking", this.handleVideoSeeking);
     video.addEventListener("volumechange", this.handleVolumeChange);
     video.addEventListener("timeupdate", this.handleTimeUpdate);
+
+    this.initializeAudioContext();
+    this.createAudioSourceNode();
+    this.connectAudioNodes();
+  }
+
+  private createAudioSourceNode(): void {
+    if (this.audioContext && this.videoElement && !this.audioSourceNode) {
+      this.audioSourceNode = this.audioContext.createMediaElementSource(
+        this.videoElement
+      );
+      this.connectAudioNodes();
+    }
+  }
+
+  private connectAudioNodes(): void {
+    if (this.audioSourceNode && this.audioContext) {
+      this.audioSourceNode.disconnect();
+      this.audioSourceNode.connect(this.audioContext.destination);
+    }
   }
 
   public removeVideoEventListeners(): void {
@@ -192,11 +269,20 @@ export class VideoManager {
       this.audioPlayer.getCurrentlyPlayingSubtitles().length > 0;
 
     if (isDubbingPlaying && this.dubbingManager.isDubbingActive) {
-      video.volume =
+      const adjustedVolume =
         this.currentVideoPlayerVolume *
         this.dubbingManager.getVideoVolumeWhilePlayingDubbing();
+      video.volume = Math.max(0, Math.min(1, adjustedVolume));
     } else {
       video.volume = this.originalVideoVolume;
+    }
+
+    if (this.audioSourceNode && this.audioContext) {
+      const gainNode = this.audioContext.createGain();
+      gainNode.gain.setValueAtTime(video.volume, this.audioContext.currentTime);
+      this.audioSourceNode.disconnect();
+      this.audioSourceNode.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
     }
 
     setTimeout(() => {
@@ -241,4 +327,12 @@ export class VideoManager {
   private handlePageUnload = (): void => {
     this.restoreOriginalVideoVolume();
   };
+
+  public getAudioContext(): AudioContext | null {
+    return this.audioContext;
+  }
+
+  public getAudioSourceNode(): MediaElementAudioSourceNode | null {
+    return this.audioSourceNode;
+  }
 }

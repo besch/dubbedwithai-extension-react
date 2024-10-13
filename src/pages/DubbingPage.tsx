@@ -8,6 +8,8 @@ import {
   checkDubbingStatus,
   loadSubtitles,
   toggleDubbingProcess,
+  startManualAlignment,
+  cancelManualAlignment,
 } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
 import PageLayout from "@/components/ui/PageLayout";
@@ -17,6 +19,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useTranslation } from "react-i18next";
 import SocialShareButtons from "@/components/SocialShareButtons";
 import InfoTooltip from "@/components/ui/InfoTooltip";
+import Button from "@/components/ui/Button";
 
 const DubbingPage: React.FC = () => {
   const { t } = useTranslation();
@@ -32,6 +35,7 @@ const DubbingPage: React.FC = () => {
     srtContent,
   } = useSelector((state: RootState) => state.movie);
   const [isLoadingSubtitles, setIsLoadingSubtitles] = useState(false);
+  const [isAligning, setIsAligning] = useState(false);
 
   useEffect(() => {
     if (!srtContent) {
@@ -84,6 +88,29 @@ const DubbingPage: React.FC = () => {
   const getFullLanguageName = (languageCode: string): string =>
     languageCodes[languageCode] || languageCode;
 
+  const handleManualAlignment = async () => {
+    setIsAligning(true);
+    try {
+      await dispatch(startManualAlignment());
+      toast.success(t("alignmentComplete"));
+    } catch (error: any) {
+      if (error.message !== "Alignment cancelled") {
+        toast.error(t("alignmentFailed"));
+      }
+    } finally {
+      setIsAligning(false);
+    }
+  };
+
+  const handleCancelAlignment = async () => {
+    try {
+      await dispatch(cancelManualAlignment());
+      toast.info(t("alignmentCancelled"));
+    } catch (error) {
+      toast.error(t("failedToCancelAlignment"));
+    }
+  };
+
   return (
     <PageLayout title={t("dubbingControls")}>
       <div className="flex flex-col h-full">
@@ -120,6 +147,15 @@ const DubbingPage: React.FC = () => {
                   onDubbingToggle={handleDubbingToggle}
                   disabled={isLoadingSubtitles}
                 />
+                <Button
+                  onClick={
+                    isAligning ? handleCancelAlignment : handleManualAlignment
+                  }
+                  // disabled={!isDubbingActive}
+                  className="ml-2"
+                >
+                  {isAligning ? t("cancelAlignment") : t("alignSubtitles")}
+                </Button>
                 <div className="ml-2">
                   <InfoTooltip
                     id="dubbing-info"

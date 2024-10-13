@@ -79,6 +79,10 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "If you have any issues when starting dubbing, please try to refresh the page or update OneDub extension",
       },
+      alignSubtitles: "Align Subtitles",
+      aligning: "Aligning...",
+      alignmentComplete: "Subtitle alignment complete",
+      alignmentFailed: "Failed to align subtitles",
     },
     es: {
       translation: {

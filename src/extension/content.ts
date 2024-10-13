@@ -70,6 +70,9 @@ class ContentScript {
           status: "checked",
           isDubbingActive: this.dubbingManager.isDubbingActive,
         };
+      case "startManualAlignment":
+        await this.dubbingManager.startManualAlignment();
+        return { status: "aligned" };
       default:
         throw new Error(`Unknown action: ${(message as any).action}`);
     }
@@ -198,3 +201,61 @@ class ContentScript {
 const contentScript = new ContentScript();
 (window as any).dubbingManager = contentScript;
 (window as any).__DUBBING_CONTENT_SCRIPT_LOADED__ = true;
+
+function injectIframeScript() {
+  const script = document.createElement("script");
+  script.textContent = `
+    (function() {
+      const videoElement = document.querySelector('video');
+      if (videoElement) {
+        window.parent.postMessage({ type: "VIDEO_ELEMENT_FOUND" }, "*");
+        
+        // Listen for messages from the parent window
+        window.addEventListener("message", (event) => {
+          if (event.data.type === "FIND_VIDEO_ELEMENT") {
+            window.parent.postMessage({ type: "VIDEO_ELEMENT_FOUND" }, "*");
+          } else if (event.data.type === "VIDEO_METHOD") {
+            videoElement[event.data.method]();
+          }
+        });
+
+        // Forward video events to the parent window
+        const events = ["play", "pause", "timeupdate", "seeking", "seeked", "volumechange"];
+        events.forEach(eventName => {
+          videoElement.addEventListener(eventName, () => {
+            window.parent.postMessage({ type: "VIDEO_EVENT", eventName }, "*");
+          });
+        });
+
+        // Periodically update video properties
+        setInterval(() => {
+          const properties = ["currentTime", "duration", "paused", "volume", "muted"];
+          properties.forEach(property => {
+            window.parent.postMessage({
+              type: "VIDEO_PROPERTY_UPDATE",
+              property,
+              value: videoElement[property]
+            }, "*");
+          });
+        }, 100);
+      }
+    })();
+  `;
+  document.head.appendChild(script);
+}
+
+// Inject the script into all iframes
+const iframes = document.querySelectorAll("iframe");
+iframes.forEach((iframe) => {
+  try {
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (iframeDoc) {
+      const scriptElement = iframeDoc.createElement("script");
+      scriptElement.textContent =
+        injectIframeScript.toString() + ";injectIframeScript();";
+      iframeDoc.head.appendChild(scriptElement);
+    }
+  } catch (e) {
+    console.error("Could not inject script into iframe:", e);
+  }
+});

@@ -5,6 +5,7 @@ import { DubbingMessage, DubbingVoice, Subtitle } from "@/types";
 import config from "./config";
 import { parseSrt } from "../utils";
 import { VideoManager } from "./VideoManager";
+import { SubtitleAligner } from "./SubtitleAligner";
 
 type DubbingManagerState = {
   movieId: string | null;
@@ -29,6 +30,7 @@ export class DubbingManager {
   private audioPlayer: AudioPlayer;
   private audioContext: AudioContext;
   private videoManager: VideoManager;
+  private aligner: SubtitleAligner | null = null;
 
   private currentState: {
     movieId: string | null;
@@ -508,5 +510,34 @@ export class DubbingManager {
 
   public get isDubbingActive(): boolean {
     return this.currentState.isDubbingActive;
+  }
+
+  public updateSubtitleOffset(offset: number): void {
+    this.updateCurrentState({ subtitleOffset: offset });
+    this.subtitleManager.adjustSubtitlesByOffset(offset);
+  }
+
+  public async startManualAlignment(): Promise<void> {
+    this.aligner = new SubtitleAligner(
+      this.videoManager,
+      this.currentState.languageCode || "en"
+    );
+    try {
+      const offset = await this.aligner.alignSubtitles();
+      if (offset !== null) {
+        this.updateSubtitleOffset(offset);
+      }
+    } catch (error) {
+      console.error("Error aligning subtitles:", error);
+      throw error;
+    } finally {
+      this.aligner = null;
+    }
+  }
+
+  public cancelManualAlignment(): void {
+    if (this.aligner) {
+      this.aligner.cancelAlignment();
+    }
   }
 }

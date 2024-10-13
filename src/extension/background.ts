@@ -73,10 +73,30 @@ class BackgroundService {
       case "updateVideoPlaybackState":
         this.handleUpdateVideoPlaybackState(message);
         break;
+      case "recognizeSpeech":
+        this.handleRecognizeSpeech(message, sendResponse);
+        break;
       default:
         break;
     }
     return true;
+  }
+
+  private async handleRecognizeSpeech(
+    message: any,
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    const { audioData, languageCode } = message;
+    try {
+      const translatedTranscript = await api.recognizeSpeech(
+        audioData,
+        languageCode
+      );
+      sendResponse({ success: true, translatedTranscript });
+    } catch (error) {
+      console.error("Error recognizing speech:", error);
+      sendResponse({ error: "Speech recognition failed" });
+    }
   }
 
   private async handleFetchAudioFile(

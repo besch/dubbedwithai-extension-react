@@ -99,3 +99,27 @@ export const sendFeedback = async (values: {
     throw new Error(`API call failed: ${response.statusText}`);
   }
 };
+
+export const recognizeSpeech = async (
+  audioData: string,
+  languageCode: string
+): Promise<string> => {
+  const response = await fetch(`${API_BASE_URL}/api/recognize-speech`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ audioData, languageCode }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (data && data.success) {
+    return data.translatedTranscript;
+  } else {
+    throw new Error(data.error || "Speech recognition failed");
+  }
+};

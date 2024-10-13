@@ -51,7 +51,8 @@ export type DubbingMessage =
   | { action: "updateDubbingState"; payload: boolean }
   | { action: "setDubbingVolumeMultiplier"; payload: number }
   | { action: "setVideoVolumeWhilePlayingDubbing"; payload: number }
-  | { action: "setDubbingVoice"; payload: DubbingVoice };
+  | { action: "setDubbingVoice"; payload: DubbingVoice }
+  | { action: "startManualAlignment" };
 
 export interface StorageData {
   isDubbingActive?: boolean;

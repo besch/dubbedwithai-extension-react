@@ -305,56 +305,6 @@ export const setSrtContentAndSave = createAsyncThunk(
   }
 );
 
-export const startManualAlignment = createAsyncThunk(
-  "movie/startManualAlignment",
-  async (_, { dispatch }) => {
-    return new Promise<void>((resolve, reject) => {
-      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        if (tabs[0]?.id) {
-          chrome.tabs.sendMessage(
-            tabs[0].id,
-            { action: "startManualAlignment" },
-            (response) => {
-              if (response && response.status === "aligned") {
-                resolve();
-              } else {
-                reject(new Error("Failed to align subtitles"));
-              }
-            }
-          );
-        } else {
-          reject(new Error("No active tab found"));
-        }
-      });
-    });
-  }
-);
-
-export const cancelManualAlignment = createAsyncThunk(
-  "movie/cancelManualAlignment",
-  async (_, { dispatch }) => {
-    return new Promise<void>((resolve, reject) => {
-      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        if (tabs[0]?.id) {
-          chrome.tabs.sendMessage(
-            tabs[0].id,
-            { action: "cancelManualAlignment" },
-            (response) => {
-              if (response && response.status === "cancelled") {
-                resolve();
-              } else {
-                reject(new Error("Failed to cancel alignment"));
-              }
-            }
-          );
-        } else {
-          reject(new Error("No active tab found"));
-        }
-      });
-    });
-  }
-);
-
 const movieSlice = createSlice({
   name: "movie",
   initialState,

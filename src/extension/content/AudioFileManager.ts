@@ -32,21 +32,23 @@ export class AudioFileManager {
       return this.inMemoryCache.get(filePath)!;
     }
 
-    const arrayBuffer = await this.fetchAndProcessAudio(filePath, text);
-    if (!arrayBuffer) {
-      return null;
+    const cachedArrayBuffer = await this.audioCache.getAudio(filePath);
+    if (cachedArrayBuffer) {
+      try {
+        const audioBuffer = await this.audioContext.decodeAudioData(
+          cachedArrayBuffer.slice(0)
+        );
+        this.inMemoryCache.set(filePath, audioBuffer);
+        return audioBuffer;
+      } catch (error) {
+        console.error(
+          `Failed to decode cached audio data for ${filePath}:`,
+          error
+        );
+      }
     }
 
-    try {
-      const audioBuffer = await this.audioContext.decodeAudioData(
-        arrayBuffer.slice(0)
-      );
-      this.inMemoryCache.set(filePath, audioBuffer);
-      return audioBuffer;
-    } catch (error) {
-      console.error(`Failed to decode audio data for ${filePath}:`, error);
-      return null;
-    }
+    return this.fetchAndProcessAudio(filePath, text);
   }
 
   clearCache(): void {
@@ -62,20 +64,20 @@ export class AudioFileManager {
   private async fetchAndProcessAudio(
     filePath: string,
     text: string
-  ): Promise<ArrayBuffer | null> {
+  ): Promise<AudioBuffer | null> {
     try {
-      let audioData = await this.audioCache.getAudio(filePath);
-
-      if (!audioData) {
-        audioData = await this.fetchAudioFile(filePath, text);
-        if (!audioData) {
-          this.notFoundFiles.add(filePath);
-          return null;
-        }
-        await this.audioCache.storeAudio(filePath, audioData);
+      const arrayBuffer = await this.fetchAudioFile(filePath, text);
+      if (!arrayBuffer) {
+        this.notFoundFiles.add(filePath);
+        return null;
       }
 
-      return audioData;
+      const audioBuffer = await this.audioContext.decodeAudioData(
+        arrayBuffer.slice(0)
+      );
+      this.inMemoryCache.set(filePath, audioBuffer);
+      await this.audioCache.storeAudio(filePath, arrayBuffer);
+      return audioBuffer;
     } catch (error) {
       console.error("Error fetching or processing audio:", error);
       return null;

@@ -293,21 +293,12 @@ export class DubbingManager {
     return this.audioPlayer.getCurrentlyPlayingSubtitles().length > 0;
   }
 
-  public playCurrentSubtitles(currentTimeMs: number): void {
-    const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
+  public playCurrentSubtitles(adjustedTimeMs: number): void {
     const currentSubtitles =
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
 
-    if (currentSubtitles.length === 0) {
-      const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
-        adjustedTimeMs,
-        config.preloadAudioTime
-      );
-      if (upcomingSubtitles.length > 0) {
-        this.prepareAndPlaySubtitle(upcomingSubtitles[0], adjustedTimeMs);
-      }
-    } else {
-      for (const subtitle of currentSubtitles) {
+    for (const subtitle of currentSubtitles) {
+      if (!this.isSubtitlePlaying(subtitle)) {
         this.prepareAndPlaySubtitle(subtitle, adjustedTimeMs);
       }
     }
@@ -317,23 +308,24 @@ export class DubbingManager {
     }
   }
 
-  private prepareAndPlaySubtitle(
+  private isSubtitlePlaying(subtitle: Subtitle): boolean {
+    const audioFilePath = this.getAudioFilePath(subtitle);
+    return this.audioPlayer.isAudioActive(audioFilePath);
+  }
+
+  private async prepareAndPlaySubtitle(
     subtitle: Subtitle,
     adjustedTimeMs: number
-  ): void {
+  ): Promise<void> {
     const audioFilePath = this.getAudioFilePath(subtitle);
     const startTimeMs = subtitle.start;
 
-    if (
-      adjustedTimeMs >= startTimeMs &&
-      adjustedTimeMs < subtitle.end &&
-      !this.audioPlayer.isAudioActive(audioFilePath)
-    ) {
+    if (adjustedTimeMs >= startTimeMs && adjustedTimeMs < subtitle.end) {
       const audioOffsetSeconds = Math.max(
         0,
         (adjustedTimeMs - startTimeMs) / 1000
       );
-      this.playAudioIfAvailable(subtitle, audioOffsetSeconds);
+      await this.playAudioIfAvailable(subtitle, audioOffsetSeconds);
     }
   }
 
@@ -342,12 +334,18 @@ export class DubbingManager {
     offset: number = 0
   ): Promise<void> {
     const filePath = this.getAudioFilePath(subtitle);
-    const buffer = await this.audioFileManager.getAudioBuffer(
+    const cachedBuffer = await this.audioFileManager.getAudioBuffer(
       filePath,
       subtitle.text
     );
-    if (buffer) {
-      await this.audioPlayer.playAudio(buffer, filePath, subtitle, offset);
+
+    if (cachedBuffer) {
+      await this.audioPlayer.playAudio(
+        cachedBuffer,
+        filePath,
+        subtitle,
+        offset
+      );
     }
   }
 
@@ -406,7 +404,9 @@ export class DubbingManager {
     return this.audioPlayer;
   }
 
-  public checkAndGenerateUpcomingAudio(currentTimeMs: number): void {
+  public async checkAndGenerateUpcomingAudio(
+    currentTimeMs: number
+  ): Promise<void> {
     const upcomingSubtitles = this.subtitleManager.getUpcomingSubtitles(
       currentTimeMs,
       config.preloadAudioGenerationTime
@@ -420,14 +420,17 @@ export class DubbingManager {
         timeUntilPlay <= config.preloadAudioGenerationTime &&
         timeUntilPlay > 0
       ) {
-        (async () => {
+        const cachedBuffer = await this.audioFileManager.getAudioBuffer(
+          filePath,
+          subtitle.text
+        );
+        if (!cachedBuffer) {
           try {
             const audioBuffer = await this.audioFileManager.fetchAudioFile(
               filePath,
               subtitle.text
             );
             if (audioBuffer) {
-              // Cache the audio buffer for later use
               await this.audioFileManager.cacheAudioBuffer(
                 filePath,
                 audioBuffer
@@ -439,7 +442,7 @@ export class DubbingManager {
               error
             );
           }
-        })();
+        }
       }
     }
   }

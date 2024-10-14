@@ -81,7 +81,6 @@ class BackgroundService {
     sendResponse: (response: any) => void
   ): Promise<void> {
     const { filePath, text } = message;
-    console.log("!!!filePath, text", filePath, text);
     const url = await this.getCurrentTabUrl();
     try {
       let audioBuffer: ArrayBuffer;

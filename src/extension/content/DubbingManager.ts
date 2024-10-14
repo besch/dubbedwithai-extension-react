@@ -342,7 +342,10 @@ export class DubbingManager {
     offset: number = 0
   ): Promise<void> {
     const filePath = this.getAudioFilePath(subtitle);
-    const buffer = await this.audioFileManager.getAudioBuffer(filePath);
+    const buffer = await this.audioFileManager.getAudioBuffer(
+      filePath,
+      subtitle.text
+    );
     if (buffer) {
       await this.audioPlayer.playAudio(buffer, filePath, subtitle, offset);
     }
@@ -420,19 +423,14 @@ export class DubbingManager {
         (async () => {
           try {
             const audioBuffer = await this.audioFileManager.fetchAudioFile(
-              filePath
+              filePath,
+              subtitle.text
             );
             if (audioBuffer) {
               // Cache the audio buffer for later use
               await this.audioFileManager.cacheAudioBuffer(
                 filePath,
                 audioBuffer
-              );
-            } else {
-              // If audio file not found, generate it
-              await this.audioFileManager.generateAudio(
-                filePath,
-                subtitle.text
               );
             }
           } catch (error) {

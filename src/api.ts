@@ -29,16 +29,13 @@ export const fetchSubtitles = async (params: {
   episodeNumber?: number;
   url: string;
 }): Promise<{ srtContent: string }> => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/opensubtitles/fetch-subtitles`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(params),
-    }
-  );
+  const response = await fetch(`${API_BASE_URL}/api/fetch-subtitles`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(params),
+  });
 
   if (!response.ok) {
     throw new Error(`API call failed: ${response.statusText}`);
@@ -52,7 +49,7 @@ export const generateAudio = async (
   filePath: string,
   url: string
 ): Promise<ArrayBuffer> => {
-  const response = await fetch(`${API_BASE_URL}/api/openai/generate-audio`, {
+  const response = await fetch(`${API_BASE_URL}/api/generate-audio`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

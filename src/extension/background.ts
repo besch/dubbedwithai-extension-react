@@ -67,9 +67,6 @@ class BackgroundService {
       case "fetchAudioFile":
         this.handleFetchAudioFile(message, sendResponse);
         break;
-      case "generateAudio":
-        this.handleGenerateAudio(message, sendResponse);
-        break;
       case "updateVideoPlaybackState":
         this.handleUpdateVideoPlaybackState(message);
         break;
@@ -83,16 +80,22 @@ class BackgroundService {
     message: any,
     sendResponse: (response: any) => void
   ): Promise<void> {
-    const { filePath } = message;
+    const { filePath, text } = message;
+    console.log("!!!filePath, text", filePath, text);
     const url = await this.getCurrentTabUrl();
     try {
-      const audioBuffer = await api.fetchAudioFile(filePath, url);
+      let audioBuffer: ArrayBuffer;
+      try {
+        audioBuffer = await api.fetchAudioFile(filePath, url);
+      } catch (fetchError) {
+        audioBuffer = await api.generateAudio(text, filePath, url);
+      }
       const base64Audio = this.arrayBufferToBase64(audioBuffer);
       sendResponse({ success: true, audioData: base64Audio });
     } catch (e: unknown) {
-      console.error("Error fetching audio file:", e);
+      console.error("Error fetching or generating audio file:", e);
       sendResponse({
-        error: "Failed to fetch audio file",
+        error: "Failed to fetch or generate audio file",
         details: e instanceof Error ? e.message : "An unknown error occurred",
       });
     }

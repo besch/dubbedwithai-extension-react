@@ -13,7 +13,9 @@ const Navigation: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
 
-  const { isDubbingActive } = useSelector((state: RootState) => state.movie);
+  const { isDubbingActive, srtContent } = useSelector(
+    (state: RootState) => state.movie
+  );
 
   if (location.pathname === "/auth") {
     return null;
@@ -42,6 +44,10 @@ const Navigation: React.FC = () => {
   };
 
   const handleNavigate = (path: string) => {
+    if (path === "/dubbing" && !srtContent) {
+      navigate("/search");
+      return;
+    }
     navigate(path);
     if (path === "/dubbing") {
       dispatch(checkDubbingStatus());

@@ -61,15 +61,6 @@ export const setDubbingVoice = createAsyncThunk(
     };
     await chrome.storage.local.set({ movieState: updatedMovieState });
 
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      if (tabs[0]?.id) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: "setDubbingVoice",
-          payload: voice,
-        });
-      }
-    });
-
     return voice;
   }
 );

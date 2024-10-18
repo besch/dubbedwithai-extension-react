@@ -293,7 +293,9 @@ export class DubbingManager {
     return this.audioPlayer.getCurrentlyPlayingSubtitles().length > 0;
   }
 
-  public async playCurrentSubtitles(adjustedTimeMs: number): Promise<void> {
+  public async playCurrentSubtitles(currentTimeMs: number): Promise<void> {
+    const adjustedTimeMs =
+      currentTimeMs - this.currentState.subtitleOffset * 1000;
     const currentSubtitles =
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
 
@@ -315,7 +317,6 @@ export class DubbingManager {
     subtitle: Subtitle,
     adjustedTimeMs: number
   ): Promise<void> {
-    const audioFilePath = this.getAudioFilePath(subtitle);
     const startTimeMs = subtitle.start;
 
     if (adjustedTimeMs >= startTimeMs && adjustedTimeMs < subtitle.end) {

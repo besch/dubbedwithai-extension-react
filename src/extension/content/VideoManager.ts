@@ -165,7 +165,25 @@ export class VideoManager {
       this.dubbingManager.updateCurrentState({ lastVideoTime: currentTimeMs });
       this.handlePreciseTime(currentTimeMs);
     }
+
+    this.adjustVolumeBasedOnSubtitles(currentTimeMs);
   };
+
+  private adjustVolumeBasedOnSubtitles(currentTimeMs: number): void {
+    if (!this.videoElement || !this.dubbingManager.isDubbingActive) {
+      return;
+    }
+
+    const currentSubtitles =
+      this.subtitleManager.getCurrentSubtitles(currentTimeMs);
+
+    if (currentSubtitles.length > 0) {
+      this.videoElement.volume =
+        this.dubbingManager.getVideoVolumeWhilePlayingDubbing();
+    } else {
+      this.videoElement.volume = this.originalVideoVolume;
+    }
+  }
 
   private handlePreciseTime = (currentTimeMs: number): void => {
     const adjustedTimeMs =
@@ -188,16 +206,9 @@ export class VideoManager {
     if (!video) return;
 
     this.isAdjustingVolume = true;
-    const isDubbingPlaying =
-      this.audioPlayer.getCurrentlyPlayingSubtitles().length > 0;
 
-    if (isDubbingPlaying && this.dubbingManager.isDubbingActive) {
-      video.volume =
-        this.currentVideoPlayerVolume *
-        this.dubbingManager.getVideoVolumeWhilePlayingDubbing();
-    } else {
-      video.volume = this.originalVideoVolume;
-    }
+    const currentTimeMs = this.getCurrentVideoTimeMs();
+    this.adjustVolumeBasedOnSubtitles(currentTimeMs);
 
     setTimeout(() => {
       this.isAdjustingVolume = false;

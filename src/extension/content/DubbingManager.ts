@@ -293,18 +293,16 @@ export class DubbingManager {
     return this.audioPlayer.getCurrentlyPlayingSubtitles().length > 0;
   }
 
-  public playCurrentSubtitles(adjustedTimeMs: number): void {
+  public async playCurrentSubtitles(adjustedTimeMs: number): Promise<void> {
     const currentSubtitles =
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
 
     for (const subtitle of currentSubtitles) {
-      if (!this.isSubtitlePlaying(subtitle)) {
-        this.prepareAndPlaySubtitle(subtitle, adjustedTimeMs);
-      }
-    }
+      const isPlaying = this.isSubtitlePlaying(subtitle);
 
-    if (this.videoManager.getVideoElement()) {
-      this.videoManager.adjustVolume(this.videoManager.getVideoElement());
+      if (!isPlaying) {
+        await this.prepareAndPlaySubtitle(subtitle, adjustedTimeMs);
+      }
     }
   }
 

@@ -66,7 +66,8 @@ export class AudioPlayer {
     gainNode.connect(this.audioContext.destination);
 
     const startOffset = Math.max(0, Math.min(offset, buffer.duration));
-    source.start(0, startOffset);
+    const startTime = this.audioContext.currentTime;
+    source.start(startTime, startOffset);
 
     this.activeAudio.set(filePath, { source, subtitle, gainNode });
     this.recentlyPlayedAudio.set(filePath, now);

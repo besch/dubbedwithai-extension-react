@@ -1,7 +1,5 @@
-import { DubbingMessage } from "@/types";
-
 const ICON_BASE_PATH = chrome.runtime.getURL("icons/");
-const ICON_SIZES = [16, 48, 128] as const;
+const ICON_SIZES = [48, 128] as const;
 const ICON_STATES = ["active", "active-filled", "inactive"] as const;
 
 type IconSize = (typeof ICON_SIZES)[number];

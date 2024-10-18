@@ -60,7 +60,7 @@ export class DubbingManager {
       languageCode: null,
       seasonNumber: null,
       episodeNumber: null,
-      dubbingVoice: "echo",
+      dubbingVoice: config.defaultVoice,
       subtitleOffset: 0,
       isDubbingActive: false,
       lastSentSubtitle: null,

@@ -33,7 +33,7 @@ const initialState: MovieState = {
   selectedSeasonNumber: null,
   selectedEpisodeNumber: null,
   srtContent: null,
-  dubbingVoice: "alloy",
+  dubbingVoice: config.defaultVoice,
   languages: Object.entries(languageCodes).map(([code, name]) => ({
     id: code,
     attributes: {

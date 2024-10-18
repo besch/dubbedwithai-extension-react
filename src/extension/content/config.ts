@@ -1,3 +1,5 @@
+import { DubbingVoice } from "@/types";
+
 export interface Config {
   videoVolumeWhilePlayingDubbing: number;
   maxDubbingVolumeMultiplier: number;
@@ -10,6 +12,7 @@ export interface Config {
   subtitleFadeOutDuration: number; // in seconds
   subtitleFadeOutVolume: number; // final volume as a percentage (0-1)
   videoTimeUpdateInterval: number; // in milliseconds
+  defaultVoice: DubbingVoice;
 }
 
 const config: Config = {
@@ -24,6 +27,7 @@ const config: Config = {
   subtitleFadeOutDuration: 0.3, // 300 milliseconds fade-out duration
   subtitleFadeOutVolume: 0.7, // Fade out to 70% of the original volume
   videoTimeUpdateInterval: 100, // 100 milliseconds
+  defaultVoice: "echo",
 };
 
 export default config;

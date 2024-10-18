@@ -460,6 +460,24 @@ export class DubbingManager {
     }
   }
 
+  public applySettingsChanges(settings: {
+    subtitleOffset: number;
+    dubbingVolumeMultiplier: number;
+    videoVolumeWhilePlayingDubbing: number;
+    dubbingVoice: DubbingVoice;
+  }): void {
+    this.updateCurrentState({
+      subtitleOffset: settings.subtitleOffset,
+      dubbingVoice: settings.dubbingVoice,
+    });
+    this.audioPlayer.setDubbingVolumeMultiplier(
+      settings.dubbingVolumeMultiplier
+    );
+    this.setVideoVolumeWhilePlayingDubbing(
+      settings.videoVolumeWhilePlayingDubbing
+    );
+  }
+
   private setupMessageListener(): void {
     chrome.runtime.onMessage.addListener(
       (message: DubbingMessage, sender, sendResponse) => {
@@ -487,12 +505,8 @@ export class DubbingManager {
             }
             sendResponse({ status: "updated" });
             break;
-          case "setDubbingVolumeMultiplier":
-            this.setDubbingVolumeMultiplier(message.payload);
-            sendResponse({ status: "updated" });
-            break;
-          case "setDubbingVoice":
-            this.setDubbingVoice(message.payload);
+          case "applySettingsChanges":
+            this.applySettingsChanges(message.payload);
             sendResponse({ status: "updated" });
             break;
         }

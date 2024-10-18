@@ -85,16 +85,13 @@ const SettingsPage: React.FC = () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
         chrome.tabs.sendMessage(tabs[0].id, {
-          action: "setDubbingVolumeMultiplier",
-          payload: localDubbingVolume,
-        } as DubbingMessage);
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: "setVideoVolumeWhilePlayingDubbing",
-          payload: localVideoVolume,
-        } as DubbingMessage);
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: "setDubbingVoice",
-          payload: localDubbingVoice,
+          action: "applySettingsChanges",
+          payload: {
+            subtitleOffset: localOffset,
+            dubbingVolumeMultiplier: localDubbingVolume,
+            videoVolumeWhilePlayingDubbing: localVideoVolume,
+            dubbingVoice: localDubbingVoice,
+          },
         } as DubbingMessage);
       }
     });

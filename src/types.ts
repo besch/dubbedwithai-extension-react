@@ -49,9 +49,15 @@ export type DubbingMessage =
   | { action: "toggleDubbing" }
   | { action: "checkDubbingStatus" }
   | { action: "updateDubbingState"; payload: boolean }
-  | { action: "setDubbingVolumeMultiplier"; payload: number }
-  | { action: "setVideoVolumeWhilePlayingDubbing"; payload: number }
-  | { action: "setDubbingVoice"; payload: DubbingVoice };
+  | {
+      action: "applySettingsChanges";
+      payload: {
+        subtitleOffset: number;
+        dubbingVolumeMultiplier: number;
+        videoVolumeWhilePlayingDubbing: number;
+        dubbingVoice: DubbingVoice;
+      };
+    };
 
 export interface StorageData {
   isDubbingActive?: boolean;

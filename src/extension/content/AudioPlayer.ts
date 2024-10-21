@@ -14,9 +14,6 @@ export class AudioPlayer {
       offset: number;
     }
   > = new Map();
-  private recentlyPlayedAudio: Map<string, number> = new Map();
-  private readonly REPLAY_THRESHOLD_MS: number = 500; // Minimum time between replays
-
   constructor(private audioContext: AudioContext) {}
 
   public static getInstance(audioContext: AudioContext): AudioPlayer {
@@ -84,29 +81,38 @@ export class AudioPlayer {
     source.buffer = buffer;
 
     const gainNode = this.audioContext.createGain();
-    gainNode.gain.setValueAtTime(
-      this.dubbingVolumeMultiplier,
-      this.audioContext.currentTime
-    );
+    gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
 
     source.connect(gainNode);
     gainNode.connect(this.audioContext.destination);
 
     const startOffset = Math.max(0, Math.min(offset, buffer.duration));
-    const startTime = this.audioContext.currentTime;
-    source.start(startTime, startOffset);
+    const currentTime = this.audioContext.currentTime;
+    const preRollTime = 0.1; // 100ms pre-roll
+    const fadeInTime = 0.1; // 100ms fade-in
+
+    // Start the source slightly before the intended start time
+    const actualStartOffset = Math.max(0, startOffset - preRollTime);
+    source.start(currentTime, actualStartOffset);
+
+    // Schedule the fade-in
+    gainNode.gain.setValueAtTime(0, currentTime);
+    gainNode.gain.linearRampToValueAtTime(
+      this.dubbingVolumeMultiplier,
+      currentTime + fadeInTime
+    );
 
     this.activeAudio.set(filePath, {
       source,
       subtitle,
       gainNode,
-      startTime,
-      offset: startOffset,
+      startTime: currentTime,
+      offset: actualStartOffset,
     });
 
     // Schedule the fade-out
     const fadeOutStartTime =
-      this.audioContext.currentTime +
+      currentTime +
       (subtitle.end - subtitle.start) / 1000 -
       config.subtitleFadeOutDuration;
 

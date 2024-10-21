@@ -179,6 +179,12 @@ export const loadMovieState = createAsyncThunk("movie/loadState", async () => {
         movieState.videoVolumeWhilePlayingDubbing =
           config.videoVolumeWhilePlayingDubbing;
       }
+      if (typeof movieState.dubbingVolumeMultiplier !== "number") {
+        movieState.dubbingVolumeMultiplier = 1.0;
+      }
+      if (typeof movieState.dubbingVoice !== "string") {
+        movieState.dubbingVoice = config.defaultVoice;
+      }
       movieState.srtContent = result.srtContent || null;
       resolve(movieState);
     });

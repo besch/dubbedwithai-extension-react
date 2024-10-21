@@ -135,6 +135,7 @@ export class DubbingManager {
         this.videoElementFound = true;
         this.notifyVideoElementFound();
         this.setupAudioContext();
+        await this.loadSettingsFromStorage();
         await this.startDubbing();
         this.updateCurrentState({
           isDubbingActive: true,
@@ -150,6 +151,25 @@ export class DubbingManager {
     } catch (error) {
       this.updateCurrentState({ isDubbingActive: false });
       throw error;
+    }
+  }
+
+  private async loadSettingsFromStorage(): Promise<void> {
+    const storage = await chrome.storage.local.get(["movieState"]);
+    if (storage.movieState) {
+      const {
+        dubbingVolumeMultiplier,
+        videoVolumeWhilePlayingDubbing,
+        dubbingVoice,
+      } = storage.movieState;
+      this.applySettingsChanges({
+        subtitleOffset: this.currentState.subtitleOffset / 1000, // Convert back to seconds
+        dubbingVolumeMultiplier: dubbingVolumeMultiplier || 1.0,
+        videoVolumeWhilePlayingDubbing:
+          videoVolumeWhilePlayingDubbing ||
+          config.videoVolumeWhilePlayingDubbing,
+        dubbingVoice: dubbingVoice || config.defaultVoice,
+      });
     }
   }
 

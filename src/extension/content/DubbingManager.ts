@@ -222,7 +222,7 @@ export class DubbingManager {
         const newMovieState = changes.movieState.newValue;
         if (newMovieState && typeof newMovieState.subtitleOffset === "number") {
           this.updateCurrentState({
-            subtitleOffset: newMovieState.subtitleOffset,
+            subtitleOffset: newMovieState.subtitleOffset * 1000,
           });
         }
       }
@@ -294,8 +294,7 @@ export class DubbingManager {
   }
 
   public async playCurrentSubtitles(currentTimeMs: number): Promise<void> {
-    const adjustedTimeMs =
-      currentTimeMs - this.currentState.subtitleOffset * 1000;
+    const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
     const currentSubtitles =
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
 
@@ -349,27 +348,17 @@ export class DubbingManager {
   }
 
   public sendCurrentSubtitleInfo(
-    adjustedTimeMs: number,
+    currentTimeMs: number,
     currentSubtitles: Subtitle[]
   ): void {
+    const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
     if (currentSubtitles.length > 0) {
       const currentSubtitle = currentSubtitles[0];
-      const startTimeSeconds = currentSubtitle.start / 1000;
-      const endTimeSeconds = currentSubtitle.end / 1000;
 
-      if (
-        currentSubtitle !== this.currentState.lastSentSubtitle ||
-        adjustedTimeMs - this.currentState.lastSentTime >=
-          config.subtitleUpdateInterval * 1000
-      ) {
+      if (this.currentState.lastSentSubtitle?.start !== currentSubtitle.start) {
         chrome.runtime.sendMessage({
-          action: "currentSubtitle",
-          subtitle: {
-            text: currentSubtitle.text,
-            start: startTimeSeconds,
-            end: endTimeSeconds,
-            currentTime: adjustedTimeMs / 1000,
-          },
+          action: "currentVideoTimeWithOffsetMs",
+          time: adjustedTimeMs,
         });
 
         this.updateCurrentState({
@@ -377,9 +366,6 @@ export class DubbingManager {
           lastSentTime: adjustedTimeMs,
         });
       }
-    } else if (this.currentState.lastSentSubtitle !== null) {
-      chrome.runtime.sendMessage({ action: "currentSubtitle", subtitle: null });
-      this.updateCurrentState({ lastSentSubtitle: null });
     }
   }
 
@@ -468,7 +454,7 @@ export class DubbingManager {
     dubbingVoice: DubbingVoice;
   }): void {
     this.updateCurrentState({
-      subtitleOffset: settings.subtitleOffset,
+      subtitleOffset: settings.subtitleOffset * 1000,
       dubbingVoice: settings.dubbingVoice,
     });
     this.audioPlayer.setDubbingVolumeMultiplier(

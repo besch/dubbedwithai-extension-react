@@ -186,18 +186,15 @@ export class VideoManager {
   }
 
   private handlePreciseTime = (currentTimeMs: number): void => {
-    const adjustedTimeMs =
-      currentTimeMs - this.dubbingManager.getSubtitleOffset();
-
     if (this.videoElement) {
       this.adjustVolume(this.videoElement);
     }
 
-    this.dubbingManager.playCurrentSubtitles(adjustedTimeMs);
-    this.audioPlayer.fadeOutExpiredAudio(adjustedTimeMs);
+    this.dubbingManager.playCurrentSubtitles(currentTimeMs);
+    this.audioPlayer.fadeOutExpiredAudio(currentTimeMs);
     this.dubbingManager.sendCurrentSubtitleInfo(
-      adjustedTimeMs,
-      this.subtitleManager.getCurrentSubtitles(adjustedTimeMs)
+      currentTimeMs,
+      this.subtitleManager.getCurrentSubtitles(currentTimeMs)
     );
     this.dubbingManager.checkAndGenerateUpcomingAudio(currentTimeMs);
   };

@@ -8,30 +8,50 @@ import { Subtitle } from "@/types";
 const SubtitleCarousel: React.FC = () => {
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
-  const srtContent = useSelector((state: RootState) => state.movie.srtContent);
+  const { srtContent, subtitleOffset } = useSelector(
+    (state: RootState) => state.movie
+  );
 
   useEffect(() => {
     if (srtContent) {
       const parsedSubtitles = parseSrt(srtContent);
-      setSubtitles(parsedSubtitles);
+      const shiftedSubtitles = parsedSubtitles.map((subtitle) => ({
+        ...subtitle,
+        start: subtitle.start,
+        end: subtitle.end,
+      }));
+      setSubtitles(shiftedSubtitles);
       setCurrentIndex(-1);
     }
-  }, [srtContent]);
+  }, [srtContent, subtitleOffset]);
 
   const handleSubtitleChange = useCallback(
     (message: any) => {
-      if (message.action === "currentSubtitle" && message.subtitle) {
-        const index = subtitles.findIndex(
-          (sub) =>
-            Math.abs(sub.start - message.subtitle.start * 1000) < 100 &&
-            Math.abs(sub.end - message.subtitle.end * 1000) < 100
-        );
-        if (index !== -1) {
-          setCurrentIndex(index);
+      if (message.action === "currentVideoTimeWithOffsetMs") {
+        const currentTime = message.time;
+        let newIndex = -1;
+
+        for (let i = 0; i < subtitles.length; i++) {
+          if (currentTime < subtitles[i].start) {
+            break;
+          }
+          if (currentTime <= subtitles[i].end) {
+            newIndex = i;
+            break;
+          }
+        }
+
+        if (newIndex === -1) {
+          newIndex = subtitles.findIndex((sub) => currentTime < sub.start);
+          if (newIndex === -1) newIndex = subtitles.length - 1;
+        }
+
+        if (newIndex !== currentIndex) {
+          setCurrentIndex(newIndex);
         }
       }
     },
-    [subtitles]
+    [subtitles, currentIndex]
   );
 
   useEffect(() => {

@@ -27,6 +27,13 @@ class ContentScript {
 
   private setupMessageListener(): void {
     chrome.runtime.onMessage.addListener(this.handleMessage.bind(this));
+    window.addEventListener("message", this.handleWindowMessage.bind(this));
+  }
+
+  private handleWindowMessage(event: MessageEvent): void {
+    if (event.data.type === "VIDEO_ELEMENT_FOUND" && event.source !== window) {
+      this.dubbingManager.updateCurrentState({ isDubbingActive: false });
+    }
   }
 
   private async handleMessage(

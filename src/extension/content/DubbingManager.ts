@@ -46,6 +46,8 @@ export class DubbingManager {
     originalVideoVolume: number;
   };
 
+  private videoElementFound: boolean = false;
+
   private constructor() {
     this.audioContext = new window.AudioContext();
     this.audioFileManager = new AudioFileManager(this.audioContext);
@@ -91,6 +93,12 @@ export class DubbingManager {
     if (!srtContent) {
       return;
     }
+
+    if (this.videoElementFound) {
+      console.log("Video element already found in another content script.");
+      return;
+    }
+
     const isDubbingActive = await this.isDubbingActiveInAnyFrame();
     if (isDubbingActive) {
       return;
@@ -124,6 +132,8 @@ export class DubbingManager {
 
       await this.videoManager.findAndStoreVideoElement();
       if (this.videoManager.getVideoElement()) {
+        this.videoElementFound = true;
+        this.notifyVideoElementFound();
         this.setupAudioContext();
         this.startDubbing();
         this.updateCurrentState({
@@ -143,7 +153,16 @@ export class DubbingManager {
     }
   }
 
+  private notifyVideoElementFound(): void {
+    window.top?.postMessage({ type: "VIDEO_ELEMENT_FOUND" }, "*");
+  }
+
   private handleMessage(event: MessageEvent): void {
+    if (event.data.type === "VIDEO_ELEMENT_FOUND" && event.source !== window) {
+      this.videoElementFound = true;
+      this.updateCurrentState({ isDubbingActive: false });
+    }
+
     if (event.data.type === "CHECK_DUBBING_ACTIVE") {
       (event.source as Window)?.postMessage(
         {
@@ -214,6 +233,8 @@ export class DubbingManager {
     this.setupStorageListener();
     this.setupMessageListener();
     this.videoManager.setupUnloadListener();
+
+    window.addEventListener("message", this.handleMessage.bind(this));
   }
 
   private setupStorageListener(): void {

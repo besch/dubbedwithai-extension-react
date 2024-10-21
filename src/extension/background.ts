@@ -72,6 +72,9 @@ class BackgroundService {
       case "updateVideoPlaybackState":
         this.handleUpdateVideoPlaybackState(message);
         break;
+      case "updateSubtitles":
+        chrome.runtime.sendMessage(message);
+        break;
       default:
         break;
     }

@@ -95,4 +95,56 @@ export class SubtitleManager {
   private generateUniqueId(): string {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
+
+  public getSubtitlesAroundTime(timeMs: number, count: number): Subtitle[] {
+    let index = this.sortedSubtitles.findIndex(
+      (subtitle) => timeMs >= subtitle.start && timeMs < subtitle.end
+    );
+
+    if (index === -1) {
+      // Handle timeMs before the first subtitle
+      if (timeMs < this.sortedSubtitles[0].start) {
+        index = 0;
+      }
+      // Handle timeMs after the last subtitle
+      else if (
+        timeMs >= this.sortedSubtitles[this.sortedSubtitles.length - 1].end
+      ) {
+        index = this.sortedSubtitles.length - 1;
+      }
+      // Handle timeMs between subtitles
+      else {
+        index = this.findNearestSubtitleIndex(timeMs);
+      }
+    }
+
+    const halfCount = Math.floor(count / 2);
+    const startIndex = Math.max(0, index - halfCount);
+    const endIndex = Math.min(
+      this.sortedSubtitles.length,
+      index + halfCount + 1
+    );
+
+    return this.sortedSubtitles.slice(startIndex, endIndex);
+  }
+
+  private findNearestSubtitleIndex(timeMs: number): number {
+    let nearestIndex = -1;
+    let minDiff = Number.MAX_VALUE;
+
+    for (let i = 0; i < this.sortedSubtitles.length; i++) {
+      const subtitle = this.sortedSubtitles[i];
+      const diff = Math.min(
+        Math.abs(timeMs - subtitle.start),
+        Math.abs(timeMs - subtitle.end)
+      );
+
+      if (diff < minDiff) {
+        minDiff = diff;
+        nearestIndex = i;
+      }
+    }
+
+    return nearestIndex !== -1 ? nearestIndex : 0;
+  }
 }

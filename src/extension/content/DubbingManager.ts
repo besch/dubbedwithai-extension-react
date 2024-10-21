@@ -396,15 +396,21 @@ export class DubbingManager {
     currentSubtitles: Subtitle[]
   ): void {
     const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
+
+    const allSubtitles = this.subtitleManager.getSubtitlesAroundTime(
+      adjustedTimeMs,
+      5
+    );
+
+    chrome.runtime.sendMessage({
+      action: "updateSubtitles",
+      subtitles: allSubtitles,
+    });
+
     if (currentSubtitles.length > 0) {
       const currentSubtitle = currentSubtitles[0];
 
       if (this.currentState.lastSentSubtitle?.start !== currentSubtitle.start) {
-        chrome.runtime.sendMessage({
-          action: "currentVideoTimeWithOffsetMs",
-          time: adjustedTimeMs,
-        });
-
         this.updateCurrentState({
           lastSentSubtitle: currentSubtitle,
           lastSentTime: adjustedTimeMs,

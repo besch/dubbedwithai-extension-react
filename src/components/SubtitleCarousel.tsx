@@ -1,66 +1,28 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
-import { parseSrt } from "@/extension/utils";
-import { Subtitle } from "@/types";
+
+interface Subtitle {
+  start: number;
+  end: number;
+  text: string;
+}
 
 const SubtitleCarousel: React.FC = () => {
-  const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(-1);
-  const { srtContent, subtitleOffset } = useSelector(
-    (state: RootState) => state.movie
-  );
+  const [currentSubtitles, setCurrentSubtitles] = useState<Subtitle[]>([]);
 
   useEffect(() => {
-    if (srtContent) {
-      const parsedSubtitles = parseSrt(srtContent);
-      const shiftedSubtitles = parsedSubtitles.map((subtitle) => ({
-        ...subtitle,
-        start: subtitle.start,
-        end: subtitle.end,
-      }));
-      setSubtitles(shiftedSubtitles);
-      setCurrentIndex(-1);
-    }
-  }, [srtContent, subtitleOffset]);
-
-  const handleSubtitleChange = useCallback(
-    (message: any) => {
-      if (message.action === "currentVideoTimeWithOffsetMs") {
-        const currentTime = message.time;
-        let newIndex = -1;
-
-        for (let i = 0; i < subtitles.length; i++) {
-          if (currentTime < subtitles[i].start) {
-            break;
-          }
-          if (currentTime <= subtitles[i].end) {
-            newIndex = i;
-            break;
-          }
-        }
-
-        if (newIndex === -1) {
-          newIndex = subtitles.findIndex((sub) => currentTime < sub.start);
-          if (newIndex === -1) newIndex = subtitles.length - 1;
-        }
-
-        if (newIndex !== currentIndex) {
-          setCurrentIndex(newIndex);
-        }
+    const handleSubtitleUpdate = (message: any) => {
+      if (message.action === "updateSubtitles") {
+        setCurrentSubtitles(message.subtitles);
       }
-    },
-    [subtitles, currentIndex]
-  );
+    };
 
-  useEffect(() => {
-    chrome.runtime.onMessage.addListener(handleSubtitleChange);
+    chrome.runtime.onMessage.addListener(handleSubtitleUpdate);
 
     return () => {
-      chrome.runtime.onMessage.removeListener(handleSubtitleChange);
+      chrome.runtime.onMessage.removeListener(handleSubtitleUpdate);
     };
-  }, [handleSubtitleChange]);
+  }, []);
 
   const formatTime = (timeInMilliseconds: number) => {
     const totalSeconds = Math.floor(timeInMilliseconds / 1000);
@@ -71,30 +33,18 @@ const SubtitleCarousel: React.FC = () => {
       .padStart(2, "0")}`;
   };
 
-  const visibleSubtitles: (Subtitle | null)[] = [
-    subtitles[currentIndex - 2] || null,
-    subtitles[currentIndex - 1] || null,
-    subtitles[currentIndex] || null,
-    subtitles[currentIndex + 1] || null,
-    subtitles[currentIndex + 2] || null,
-  ];
-
   return (
     <div
       className="h-full flex flex-col justify-center items-center p-2 overflow-hidden relative"
       style={{ minHeight: "400px", width: "100%" }}
     >
       <AnimatePresence initial={false}>
-        {visibleSubtitles.map((subtitle, index) => (
+        {currentSubtitles.map((subtitle, index) => (
           <motion.div
-            key={`subtitle-${currentIndex}-${index}`}
+            key={`subtitle-${subtitle.start}-${index}`}
             initial={{ opacity: 0, y: 100 }}
             animate={{
-              opacity: subtitle
-                ? index === 2
-                  ? 1
-                  : 0.5 - Math.abs(index - 2) * 0.05
-                : 0,
+              opacity: index === 2 ? 1 : 0.5 - Math.abs(index - 2) * 0.05,
               y: (index - 2) * 120,
               scale: 1 - Math.abs(index - 2) * 0.1,
             }}
@@ -120,33 +70,31 @@ const SubtitleCarousel: React.FC = () => {
               pointerEvents: "none",
             }}
           >
-            {subtitle && (
-              <>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="mb-2 text-xs opacity-75"
-                >
-                  {formatTime(subtitle.start)} - {formatTime(subtitle.end)}
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                  className="break-words"
-                  style={{
-                    maxWidth: "100%",
-                    whiteSpace: "normal",
-                    wordWrap: "break-word",
-                  }}
-                >
-                  {subtitle.text}
-                </motion.div>
-              </>
-            )}
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mb-2 text-xs opacity-75"
+              >
+                {formatTime(subtitle.start)} - {formatTime(subtitle.end)}
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+                className="break-words"
+                style={{
+                  maxWidth: "100%",
+                  whiteSpace: "normal",
+                  wordWrap: "break-word",
+                }}
+              >
+                {subtitle.text}
+              </motion.div>
+            </>
           </motion.div>
         ))}
       </AnimatePresence>

@@ -173,8 +173,11 @@ export class VideoManager {
       return;
     }
 
+    const subtitleOffset = this.dubbingManager.getSubtitleOffset();
+    const adjustedTimeMs = currentTimeMs - subtitleOffset;
+
     const currentSubtitles =
-      this.subtitleManager.getCurrentSubtitles(currentTimeMs);
+      this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
 
     if (currentSubtitles.length > 0) {
       this.videoElement.volume =

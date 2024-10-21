@@ -37,6 +37,7 @@ class BackgroundService {
     await chrome.storage.local.clear();
     await this.iconManager.preloadIcons();
     await this.initializeStorage();
+    await this.stopDubbingOnAllTabs();
   }
 
   private async onStartup(): Promise<void> {
@@ -204,6 +205,21 @@ class BackgroundService {
         resolve(tabs[0]?.url || "");
       });
     });
+  }
+
+  private async stopDubbingOnAllTabs(): Promise<void> {
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (tab.id) {
+        try {
+          await chrome.tabs.sendMessage(tab.id, { action: "stopDubbing" });
+        } catch (error) {
+          // Ignore errors, as not all tabs may have the content script loaded
+          console.log(`Failed to stop dubbing on tab ${tab.id}:`, error);
+        }
+      }
+    }
+    await this.updateDubbingState(false);
   }
 }
 

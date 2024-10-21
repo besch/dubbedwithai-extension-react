@@ -6,7 +6,13 @@ export class AudioPlayer {
   private static instance: AudioPlayer | null = null;
   private activeAudio: Map<
     string,
-    { source: AudioBufferSourceNode; subtitle: Subtitle; gainNode: GainNode }
+    {
+      source: AudioBufferSourceNode;
+      subtitle: Subtitle;
+      gainNode: GainNode;
+      startTime: number;
+      offset: number;
+    }
   > = new Map();
   private recentlyPlayedAudio: Map<string, number> = new Map();
   private readonly REPLAY_THRESHOLD_MS: number = 500; // Minimum time between replays
@@ -34,23 +40,44 @@ export class AudioPlayer {
     });
   }
 
+  public pauseAllAudio(): void {
+    this.activeAudio.forEach((audioInfo, filePath) => {
+      const { source, gainNode, startTime, offset, subtitle } = audioInfo;
+      const elapsedTime = this.audioContext.currentTime - startTime;
+      source.stop();
+      this.activeAudio.set(filePath, {
+        source,
+        gainNode,
+        startTime,
+        offset: offset + elapsedTime,
+        subtitle,
+      });
+    });
+  }
+
+  public resumeAllAudio(): void {
+    const audioToResume = new Map(this.activeAudio);
+    this.activeAudio.clear();
+    audioToResume.forEach((audioInfo, filePath) => {
+      const { subtitle, offset } = audioInfo;
+      const buffer = audioInfo.source.buffer;
+      if (buffer) {
+        this.playAudio(buffer, filePath, subtitle, offset);
+      }
+    });
+  }
+
   async playAudio(
     buffer: AudioBuffer,
     filePath: string,
     subtitle: Subtitle,
     offset: number = 0
   ): Promise<void> {
-    const now = this.audioContext.currentTime;
-    const lastPlayedTime = this.recentlyPlayedAudio.get(filePath) || 0;
-
-    if (now - lastPlayedTime < this.REPLAY_THRESHOLD_MS / 1000) {
-      return;
-    }
-
-    // Instead of stopping, we'll just reduce the volume of any existing audio for this file
+    // Stop any existing audio for this file path
     const existingAudio = this.activeAudio.get(filePath);
     if (existingAudio) {
-      this.fadeOutAudio(existingAudio.gainNode);
+      existingAudio.source.stop();
+      this.activeAudio.delete(filePath);
     }
 
     const source = this.audioContext.createBufferSource();
@@ -69,8 +96,13 @@ export class AudioPlayer {
     const startTime = this.audioContext.currentTime;
     source.start(startTime, startOffset);
 
-    this.activeAudio.set(filePath, { source, subtitle, gainNode });
-    this.recentlyPlayedAudio.set(filePath, now);
+    this.activeAudio.set(filePath, {
+      source,
+      subtitle,
+      gainNode,
+      startTime,
+      offset: startOffset,
+    });
 
     // Schedule the fade-out
     const fadeOutStartTime =
@@ -122,9 +154,5 @@ export class AudioPlayer {
     return Array.from(this.activeAudio.values()).map(
       (audioInfo) => audioInfo.subtitle
     );
-  }
-
-  public pauseAllAudio(): void {
-    this.activeAudio.forEach(({ source }) => source.stop());
   }
 }

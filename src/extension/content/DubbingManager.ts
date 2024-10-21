@@ -155,7 +155,7 @@ export class DubbingManager {
     } else if (event.data.type === "SET_DUBBING_ACTIVE") {
       this.updateCurrentState({ isDubbingActive: true });
     } else if (event.data.type === "DUBBING_ACTIVE_STATUS") {
-      if (event.data.isActive) {
+      if (event.data.isActive && event.source !== window) {
         this.updateCurrentState({ isDubbingActive: false });
       }
     }
@@ -293,6 +293,25 @@ export class DubbingManager {
     return this.audioPlayer.getCurrentlyPlayingSubtitles().length > 0;
   }
 
+  public pauseAllAudio(): void {
+    this.audioPlayer.pauseAllAudio();
+  }
+
+  public resumeAudioFromTime(currentTimeMs: number): void {
+    this.audioPlayer.resumeAllAudio();
+    const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
+    const currentSubtitles =
+      this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
+
+    for (const subtitle of currentSubtitles) {
+      const audioOffsetSeconds = Math.max(
+        0,
+        (adjustedTimeMs - subtitle.start) / 1000
+      );
+      this.playAudioIfAvailable(subtitle, audioOffsetSeconds);
+    }
+  }
+
   public async playCurrentSubtitles(currentTimeMs: number): Promise<void> {
     const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
     const currentSubtitles =
@@ -302,7 +321,11 @@ export class DubbingManager {
       const isPlaying = this.isSubtitlePlaying(subtitle);
 
       if (!isPlaying) {
-        await this.prepareAndPlaySubtitle(subtitle, adjustedTimeMs);
+        const audioOffsetSeconds = Math.max(
+          0,
+          (adjustedTimeMs - subtitle.start) / 1000
+        );
+        await this.playAudioIfAvailable(subtitle, audioOffsetSeconds);
       }
     }
   }

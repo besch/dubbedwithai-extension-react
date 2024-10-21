@@ -1,5 +1,4 @@
 import config from "./config";
-import { Subtitle } from "@/types";
 import { DubbingManager } from "./DubbingManager";
 import { SubtitleManager } from "./SubtitleManager";
 import { AudioPlayer } from "./AudioPlayer";
@@ -110,7 +109,7 @@ export class VideoManager {
 
     if (this.dubbingManager.isDubbingActive) {
       this.dubbingManager.updateCurrentState({ lastVideoTime: currentTimeMs });
-      this.dubbingManager.playCurrentSubtitles(currentTimeMs);
+      this.dubbingManager.resumeAudioFromTime(currentTimeMs);
       this.dubbingManager.notifyBackgroundScript(true);
     }
 
@@ -121,7 +120,7 @@ export class VideoManager {
 
   private handleVideoPause = (): void => {
     if (this.dubbingManager.isDubbingActive) {
-      this.audioPlayer.pauseAllAudio();
+      this.dubbingManager.pauseAllAudio();
       this.dubbingManager.notifyBackgroundScript(false);
     }
     this.restoreOriginalVideoVolume();

@@ -211,12 +211,7 @@ class BackgroundService {
     const tabs = await chrome.tabs.query({});
     for (const tab of tabs) {
       if (tab.id) {
-        try {
-          await chrome.tabs.sendMessage(tab.id, { action: "stopDubbing" });
-        } catch (error) {
-          // Ignore errors, as not all tabs may have the content script loaded
-          console.log(`Failed to stop dubbing on tab ${tab.id}:`, error);
-        }
+        await chrome.tabs.sendMessage(tab.id, { action: "stopDubbing" });
       }
     }
     await this.updateDubbingState(false);

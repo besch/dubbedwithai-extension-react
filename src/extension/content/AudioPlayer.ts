@@ -7,7 +7,7 @@ export class AudioPlayer {
   private activeAudio: Map<
     string,
     {
-      source: AudioBufferSourceNode;
+      source: AudioBufferSourceNode | null;
       subtitle: Subtitle;
       gainNode: GainNode;
       startTime: number;
@@ -39,16 +39,13 @@ export class AudioPlayer {
 
   public pauseAllAudio(): void {
     this.activeAudio.forEach((audioInfo, filePath) => {
-      const { source, gainNode, startTime, offset, subtitle } = audioInfo;
-      const elapsedTime = this.audioContext.currentTime - startTime;
-      source.stop();
-      this.activeAudio.set(filePath, {
-        source,
-        gainNode,
-        startTime,
-        offset: offset + elapsedTime,
-        subtitle,
-      });
+      const { source, startTime } = audioInfo;
+      if (source) {
+        const elapsedTime = this.audioContext.currentTime - startTime;
+        source.stop();
+        audioInfo.offset += elapsedTime;
+        this.activeAudio.set(filePath, { ...audioInfo, source: null });
+      }
     });
   }
 
@@ -57,7 +54,7 @@ export class AudioPlayer {
     this.activeAudio.clear();
     audioToResume.forEach((audioInfo, filePath) => {
       const { subtitle, offset } = audioInfo;
-      const buffer = audioInfo.source.buffer;
+      const buffer = audioInfo.source?.buffer;
       if (buffer) {
         this.playAudio(buffer, filePath, subtitle, offset);
       }
@@ -72,51 +69,56 @@ export class AudioPlayer {
   ): Promise<void> {
     // Stop any existing audio for this file path
     const existingAudio = this.activeAudio.get(filePath);
-    if (existingAudio) {
+    if (existingAudio && existingAudio.source) {
       existingAudio.source.stop();
       this.activeAudio.delete(filePath);
+    }
+
+    // Ensure the audio context is running
+    if (this.audioContext.state === "suspended") {
+      await this.audioContext.resume();
     }
 
     const source = this.audioContext.createBufferSource();
     source.buffer = buffer;
 
     const gainNode = this.audioContext.createGain();
-    gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+    gainNode.gain.setValueAtTime(
+      this.dubbingVolumeMultiplier,
+      this.audioContext.currentTime
+    );
 
     source.connect(gainNode);
     gainNode.connect(this.audioContext.destination);
 
     const startOffset = Math.max(0, Math.min(offset, buffer.duration));
-    const currentTime = this.audioContext.currentTime;
-    const preRollTime = 0.1; // 100ms pre-roll
-    const fadeInTime = 0.1; // 100ms fade-in
 
-    // Start the source slightly before the intended start time
-    const actualStartOffset = Math.max(0, startOffset - preRollTime);
-    source.start(currentTime, actualStartOffset);
+    // Schedule the audio to start slightly in the future
+    const scheduledStartTime = this.audioContext.currentTime + 0.05; // Reduced from 0.1 to 0.05 seconds
+    source.start(scheduledStartTime, startOffset);
 
-    // Schedule the fade-in
-    gainNode.gain.setValueAtTime(0, currentTime);
+    // Add a small ramp-up to avoid sudden starts
+    gainNode.gain.setValueAtTime(0, scheduledStartTime);
     gainNode.gain.linearRampToValueAtTime(
       this.dubbingVolumeMultiplier,
-      currentTime + fadeInTime
+      scheduledStartTime + 0.02
     );
 
     this.activeAudio.set(filePath, {
       source,
       subtitle,
       gainNode,
-      startTime: currentTime,
-      offset: actualStartOffset,
+      startTime: scheduledStartTime,
+      offset: startOffset,
     });
 
     // Schedule the fade-out
     const fadeOutStartTime =
-      currentTime +
+      scheduledStartTime +
       (subtitle.end - subtitle.start) / 1000 -
       config.subtitleFadeOutDuration;
 
-    this.fadeOutAudio(gainNode, fadeOutStartTime);
+    // this.fadeOutAudio(gainNode, fadeOutStartTime);
 
     source.onended = () => {
       this.activeAudio.delete(filePath);

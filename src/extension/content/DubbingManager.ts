@@ -135,7 +135,7 @@ export class DubbingManager {
         this.videoElementFound = true;
         this.notifyVideoElementFound();
         this.setupAudioContext();
-        this.startDubbing();
+        await this.startDubbing();
         this.updateCurrentState({
           isDubbingActive: true,
         });
@@ -145,7 +145,7 @@ export class DubbingManager {
         this.videoManager.getVideoElement() &&
         !this.videoManager.getVideoElement()!.paused
       ) {
-        this.videoManager["handleVideoPlay"](); // invoking private method
+        this.videoManager["handleVideoPlay"]();
       }
     } catch (error) {
       this.updateCurrentState({ isDubbingActive: false });
@@ -202,7 +202,7 @@ export class DubbingManager {
     });
   }
 
-  private startDubbing(): void {
+  private async startDubbing(): Promise<void> {
     if (this.videoManager.getVideoElement()) {
       this.updateCurrentState({
         isDubbingActive: true,
@@ -213,7 +213,7 @@ export class DubbingManager {
         isDubbingActive: true,
       });
     }
-    this.audioContext.resume();
+    await this.audioContext.resume();
 
     const currentVideoTimeMs = this.videoManager.getCurrentVideoTimeMs();
     this.updateCurrentState({ lastVideoTime: currentVideoTimeMs });

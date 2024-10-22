@@ -55,7 +55,7 @@ const SettingsPage: React.FC = () => {
 
   const adjustOffset = (amount: number) => {
     const newOffset = Math.max(-60, Math.min(60, localOffset + amount));
-    setLocalOffset(newOffset);
+    setLocalOffset(Number(newOffset.toFixed(1)));
   };
 
   const handleDubbingVolumeChange = (
@@ -196,25 +196,41 @@ const SettingsPage: React.FC = () => {
                 content={t("subtitleOffsetInfo")}
               />
             </div>
-            <div className="flex items-center space-x-4 mb-2">
+            <div className="flex items-center space-x-2 mb-2">
               <Button
                 onClick={() => adjustOffset(-1)}
                 variant="outline"
                 size="sm"
-                className="w-20"
+                className="w-16"
               >
-                <Minus className="w-4 h-4 mr-1" /> 1s
+                <Minus className="w-3 h-3 mr-1" /> 1s
+              </Button>
+              <Button
+                onClick={() => adjustOffset(-0.1)}
+                variant="outline"
+                size="sm"
+                className="w-16"
+              >
+                -0.1s
               </Button>
               <div className="flex-grow text-center font-medium">
                 {localOffset.toFixed(1)}s
               </div>
               <Button
+                onClick={() => adjustOffset(0.1)}
+                variant="outline"
+                size="sm"
+                className="w-16"
+              >
+                +0.1s
+              </Button>
+              <Button
                 onClick={() => adjustOffset(1)}
                 variant="outline"
                 size="sm"
-                className="w-20"
+                className="w-16"
               >
-                <Plus className="w-4 h-4 mr-1" /> 1s
+                <Plus className="w-3 h-3 mr-1" /> 1s
               </Button>
             </div>
             <div className="flex items-center space-x-4">

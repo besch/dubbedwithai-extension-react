@@ -79,14 +79,15 @@ export class AudioPlayer {
       await this.audioContext.resume();
     }
 
+    // Get current time after resuming
+    const currentTime = this.audioContext.currentTime;
+
     const source = this.audioContext.createBufferSource();
     source.buffer = buffer;
 
     const gainNode = this.audioContext.createGain();
-    gainNode.gain.setValueAtTime(
-      this.dubbingVolumeMultiplier,
-      this.audioContext.currentTime
-    );
+    // Set the gain to 0 at currentTime
+    gainNode.gain.setValueAtTime(0, currentTime);
 
     source.connect(gainNode);
     gainNode.connect(this.audioContext.destination);
@@ -94,11 +95,10 @@ export class AudioPlayer {
     const startOffset = Math.max(0, Math.min(offset, buffer.duration));
 
     // Schedule the audio to start slightly in the future
-    const scheduledStartTime = this.audioContext.currentTime + 0.05; // Reduced from 0.1 to 0.05 seconds
+    const scheduledStartTime = currentTime + 0.05;
     source.start(scheduledStartTime, startOffset);
 
-    // Add a small ramp-up to avoid sudden starts
-    gainNode.gain.setValueAtTime(0, scheduledStartTime);
+    // Schedule the gain ramp-up
     gainNode.gain.linearRampToValueAtTime(
       this.dubbingVolumeMultiplier,
       scheduledStartTime + 0.02
@@ -112,44 +112,19 @@ export class AudioPlayer {
       offset: startOffset,
     });
 
-    // Schedule the fade-out
-    const fadeOutStartTime =
-      scheduledStartTime +
-      (subtitle.end - subtitle.start) / 1000 -
-      config.subtitleFadeOutDuration;
-
-    // this.fadeOutAudio(gainNode, fadeOutStartTime);
-
     source.onended = () => {
       this.activeAudio.delete(filePath);
     };
   }
 
-  private fadeOutAudio(
-    gainNode: GainNode,
-    startTime: number = this.audioContext.currentTime
-  ): void {
-    const currentVolume = gainNode.gain.value;
-    const fadeOutEndTime = startTime + config.subtitleFadeOutDuration;
-
-    gainNode.gain.setValueAtTime(currentVolume, startTime);
-    gainNode.gain.linearRampToValueAtTime(
-      currentVolume * config.subtitleFadeOutVolume,
-      fadeOutEndTime
-    );
-  }
-
   fadeOutExpiredAudio(adjustedTime: number): void {
     this.activeAudio.forEach((audioInfo, filePath) => {
-      if (
-        adjustedTime >=
-        audioInfo.subtitle.end + config.subtitleFadeOutDuration * 1000
-      ) {
-        // Instead of stopping, we'll just keep the volume at the faded-out level
-        audioInfo.gainNode.gain.setValueAtTime(
-          this.dubbingVolumeMultiplier * config.subtitleFadeOutVolume,
-          this.audioContext.currentTime
-        );
+      if (adjustedTime >= audioInfo.subtitle.end) {
+        // Stop the audio immediately when the subtitle ends
+        if (audioInfo.source) {
+          audioInfo.source.stop();
+        }
+        this.activeAudio.delete(filePath);
       }
     });
   }

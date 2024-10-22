@@ -283,6 +283,8 @@ export class DubbingManager {
       lastSentSubtitle: null,
       lastSentTime: 0,
     });
+
+    chrome.runtime.sendMessage({ action: "dubbingStopped" });
   }
 
   public isCurrentDubbing(movieId: string, languageCode: string): boolean {
@@ -565,6 +567,10 @@ export class DubbingManager {
           case "applySettingsChanges":
             this.applySettingsChanges(message.payload);
             sendResponse({ status: "updated" });
+            break;
+          case "stopDubbing":
+            this.stop();
+            sendResponse({ status: "stopped" });
             break;
         }
         return true;

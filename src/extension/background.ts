@@ -75,6 +75,13 @@ class BackgroundService {
       case "updateSubtitles":
         chrome.runtime.sendMessage(message);
         break;
+      case "stopDubbing":
+        this.stopDubbingOnAllTabs();
+        sendResponse({ status: "stopped" });
+        break;
+      case "dubbingStopped":
+        this.updateDubbingState(false);
+        break;
       default:
         break;
     }
@@ -214,7 +221,11 @@ class BackgroundService {
     const tabs = await chrome.tabs.query({});
     for (const tab of tabs) {
       if (tab.id) {
-        await chrome.tabs.sendMessage(tab.id, { action: "stopDubbing" });
+        try {
+          await chrome.tabs.sendMessage(tab.id, { action: "stopDubbing" });
+        } catch (error) {
+          console.error(`Failed to stop dubbing on tab ${tab.id}:`, error);
+        }
       }
     }
     await this.updateDubbingState(false);

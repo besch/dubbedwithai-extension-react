@@ -86,23 +86,26 @@ export class AudioPlayer {
     source.buffer = buffer;
 
     const gainNode = this.audioContext.createGain();
-    // Set the gain to 0 at currentTime
-    gainNode.gain.setValueAtTime(0, currentTime);
+
+    // Schedule the audio to start slightly in the future
+    const scheduledStartTime = currentTime + 0.05;
+
+    // Set the gain to 0 at the scheduled start time
+    gainNode.gain.setValueAtTime(0, scheduledStartTime);
+
+    // Schedule the gain to ramp up immediately after the audio starts
+    gainNode.gain.linearRampToValueAtTime(
+      this.dubbingVolumeMultiplier,
+      scheduledStartTime + 0.02
+    );
 
     source.connect(gainNode);
     gainNode.connect(this.audioContext.destination);
 
     const startOffset = Math.max(0, Math.min(offset, buffer.duration));
 
-    // Schedule the audio to start slightly in the future
-    const scheduledStartTime = currentTime + 0.05;
+    // Start the audio source at the scheduled start time
     source.start(scheduledStartTime, startOffset);
-
-    // Schedule the gain ramp-up
-    gainNode.gain.linearRampToValueAtTime(
-      this.dubbingVolumeMultiplier,
-      scheduledStartTime + 0.02
-    );
 
     this.activeAudio.set(filePath, {
       source,

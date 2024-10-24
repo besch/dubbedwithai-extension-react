@@ -27,7 +27,7 @@ const config: Config = {
   subtitleFadeOutDuration: 0.3, // 300 milliseconds fade-out duration
   subtitleFadeOutVolume: 0.7, // Fade out to 70% of the original volume
   videoTimeUpdateInterval: 100, // 100 milliseconds
-  defaultVoice: "echo",
+  defaultVoice: "en-US-GuyNeural",
 };
 
 export default config;

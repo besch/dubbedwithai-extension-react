@@ -18,6 +18,48 @@ import { useTranslation } from "react-i18next";
 import { changeLanguage } from "@/store/languageSlice";
 import InfoTooltip from "@/components/ui/InfoTooltip";
 
+const voiceOptions = [
+  { value: "en-US-JennyNeural", label: "English (US) - Jenny (Female)" },
+  { value: "en-US-GuyNeural", label: "English (US) - Guy (Male)" },
+  { value: "en-US-AmberNeural", label: "English (US) - Amber (Female)" },
+  {
+    value: "en-US-ChristopherNeural",
+    label: "English (US) - Christopher (Male)",
+  },
+  { value: "en-US-AriaNeural", label: "English (US) - Aria (Female)" },
+  { value: "en-US-JaneNeural", label: "English (US) - Jane (Female)" },
+  { value: "es-ES-ElviraNeural", label: "Spanish (Spain) - Elvira (Female)" },
+  { value: "es-ES-AlvaroNeural", label: "Spanish (Spain) - Alvaro (Male)" },
+  { value: "fr-FR-DeniseNeural", label: "French (France) - Denise (Female)" },
+  { value: "fr-FR-HenriNeural", label: "French (France) - Henri (Male)" },
+  { value: "de-DE-KatjaNeural", label: "German (Germany) - Katja (Female)" },
+  { value: "de-DE-ConradNeural", label: "German (Germany) - Conrad (Male)" },
+  { value: "it-IT-ElsaNeural", label: "Italian (Italy) - Elsa (Female)" },
+  { value: "it-IT-DiegoNeural", label: "Italian (Italy) - Diego (Male)" },
+  { value: "ja-JP-NanamiNeural", label: "Japanese (Japan) - Nanami (Female)" },
+  { value: "ja-JP-KeitaNeural", label: "Japanese (Japan) - Keita (Male)" },
+  { value: "ko-KR-SunHiNeural", label: "Korean (Korea) - Sun-Hi (Female)" },
+  { value: "ko-KR-InJoonNeural", label: "Korean (Korea) - In-Joon (Male)" },
+  {
+    value: "pt-BR-FranciscaNeural",
+    label: "Portuguese (Brazil) - Francisca (Female)",
+  },
+  {
+    value: "pt-BR-AntonioNeural",
+    label: "Portuguese (Brazil) - Antonio (Male)",
+  },
+  {
+    value: "ru-RU-SvetlanaNeural",
+    label: "Russian (Russia) - Svetlana (Female)",
+  },
+  { value: "ru-RU-DmitryNeural", label: "Russian (Russia) - Dmitry (Male)" },
+  {
+    value: "zh-CN-XiaoxiaoNeural",
+    label: "Chinese (Mainland) - Xiaoxiao (Female)",
+  },
+  { value: "zh-CN-YunxiNeural", label: "Chinese (Mainland) - Yunxi (Male)" },
+];
+
 const SettingsPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { t, i18n } = useTranslation();
@@ -104,11 +146,11 @@ const SettingsPage: React.FC = () => {
     dispatch(
       setVideoVolumeWhilePlayingDubbing(config.videoVolumeWhilePlayingDubbing)
     );
-    dispatch(setDubbingVoice("echo"));
+    dispatch(setDubbingVoice(config.defaultVoice));
     setLocalOffset(0);
     setLocalDubbingVolume(1);
     setLocalVideoVolume(config.videoVolumeWhilePlayingDubbing);
-    setLocalDubbingVoice("echo");
+    setLocalDubbingVoice(config.defaultVoice);
     toast.success(t("settingsReset"));
   };
 
@@ -173,12 +215,11 @@ const SettingsPage: React.FC = () => {
             onChange={handleDubbingVoiceChange}
             className="w-full p-2 border rounded bg-background text-foreground border-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
           >
-            <option value="alloy">Alloy</option>
-            <option value="echo">Echo</option>
-            <option value="fable">Fable</option>
-            <option value="onyx">Onyx</option>
-            <option value="nova">Nova</option>
-            <option value="shimmer">Shimmer</option>
+            {voiceOptions.map((voice) => (
+              <option key={voice.value} value={voice.value}>
+                {voice.label}
+              </option>
+            ))}
           </select>
         </div>
 

@@ -1,6 +1,6 @@
 const ICON_BASE_PATH = chrome.runtime.getURL("icons/");
 const ICON_SIZES = [48, 128] as const;
-const ICON_STATES = ["active", "active-filled", "inactive"] as const;
+const ICON_STATES = ["active", "active-filled"] as const;
 
 type IconSize = (typeof ICON_SIZES)[number];
 type IconState = (typeof ICON_STATES)[number];
@@ -71,7 +71,7 @@ export class IconManager {
       ? pulse
         ? "active-filled"
         : "active"
-      : "inactive";
+      : "active-filled";
     const iconData: { [key: number]: ImageData } = {};
 
     ICON_SIZES.forEach((size) => {

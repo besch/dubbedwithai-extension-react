@@ -74,6 +74,32 @@ export class AudioPlayer {
       this.activeAudio.delete(filePath);
     }
 
+    // Silent buffer is used to overcome webaudio bug that cause audio sounds like it is cutted at the beginning
+    // Create a silent buffer for the delay (e.g., 0.2 seconds)
+    const silentDuration = 0.2; // Adjust this value as needed
+    const silentBuffer = this.audioContext.createBuffer(
+      buffer.numberOfChannels,
+      this.audioContext.sampleRate * silentDuration,
+      this.audioContext.sampleRate
+    );
+
+    // Create a new buffer that combines silence and original audio
+    const combinedBuffer = this.audioContext.createBuffer(
+      buffer.numberOfChannels,
+      silentBuffer.length + buffer.length,
+      this.audioContext.sampleRate
+    );
+
+    // Copy silent buffer first
+    for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+      const combinedChannelData = combinedBuffer.getChannelData(channel);
+      combinedChannelData.set(silentBuffer.getChannelData(channel), 0);
+      combinedChannelData.set(
+        buffer.getChannelData(channel),
+        silentBuffer.length
+      );
+    }
+
     // Ensure the audio context is running
     if (this.audioContext.state === "suspended") {
       await this.audioContext.resume();
@@ -83,7 +109,7 @@ export class AudioPlayer {
     const currentTime = this.audioContext.currentTime;
 
     const source = this.audioContext.createBufferSource();
-    source.buffer = buffer;
+    source.buffer = combinedBuffer; // Use the combined buffer instead of the original
 
     const gainNode = this.audioContext.createGain();
 

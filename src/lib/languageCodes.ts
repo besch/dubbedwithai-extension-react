@@ -23,6 +23,7 @@ const languageCodes: { [key: string]: string } = {
   fil: "Filipino",
   fr: "French",
   ga: "Irish",
+  gl: "Galician",
   gu: "Gujarati",
   ha: "Hausa",
   he: "Hebrew",

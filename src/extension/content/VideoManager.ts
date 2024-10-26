@@ -133,7 +133,7 @@ export class VideoManager {
     this.audioPlayer.pauseAllAudio();
     this.dubbingManager.updateCurrentState({ lastVideoTime: newTimeMs });
 
-    if (this.dubbingManager.isDubbingActive) {
+    if (this.dubbingManager.isDubbingActive && !video.paused) {
       this.dubbingManager.playCurrentSubtitles(newTimeMs);
       this.dubbingManager.notifyBackgroundScript(true);
     }

@@ -168,6 +168,34 @@ export class VideoManager {
     this.adjustVolumeBasedOnSubtitles(currentTimeMs);
   };
 
+  private async adjustVolumeGradually(
+    video: HTMLVideoElement,
+    targetVolume: number,
+    duration: number = 200
+  ): Promise<void> {
+    const startVolume = video.volume;
+    const startTime = performance.now();
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Use easeInOutQuad for smoother transition
+      const easeProgress =
+        progress < 0.5
+          ? 2 * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+      video.volume = startVolume + (targetVolume - startVolume) * easeProgress;
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }
+
   private adjustVolumeBasedOnSubtitles(currentTimeMs: number): void {
     if (!this.videoElement || !this.dubbingManager.isDubbingActive) {
       return;
@@ -180,10 +208,12 @@ export class VideoManager {
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
 
     if (currentSubtitles.length > 0) {
-      this.videoElement.volume =
-        this.dubbingManager.getVideoVolumeWhilePlayingDubbing();
+      this.adjustVolumeGradually(
+        this.videoElement,
+        this.dubbingManager.getVideoVolumeWhilePlayingDubbing()
+      );
     } else {
-      this.videoElement.volume = this.originalVideoVolume;
+      this.adjustVolumeGradually(this.videoElement, this.originalVideoVolume);
     }
   }
 
@@ -216,7 +246,7 @@ export class VideoManager {
 
   public restoreOriginalVideoVolume(): void {
     if (this.videoElement && this.originalVideoVolume !== undefined) {
-      this.videoElement.volume = this.originalVideoVolume;
+      this.adjustVolumeGradually(this.videoElement, this.originalVideoVolume);
       this.currentVideoPlayerVolume = this.originalVideoVolume;
       this.dubbingManager.updateCurrentState({
         currentVideoPlayerVolume: this.originalVideoVolume,

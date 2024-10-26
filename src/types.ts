@@ -22,14 +22,6 @@ export interface Language {
   };
 }
 
-export interface DubbingConfig {
-  defaultVolume: number;
-  dubbingVolume: number;
-  preloadTime: number;
-  preloadAudioGenerationTime: number;
-  subtitleUpdateInterval: number;
-}
-
 export interface Subtitle {
   start: number;
   end: number;

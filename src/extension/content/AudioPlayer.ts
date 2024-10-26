@@ -74,9 +74,10 @@ export class AudioPlayer {
       this.activeAudio.delete(filePath);
     }
 
-    // Silent buffer is used to overcome webaudio bug that cause audio sounds like it is cutted at the beginning
-    // Create a silent buffer for the delay (e.g., 0.2 seconds)
+    // Silent buffer is used to overcome webaudio bug that causes audio sounds like it is cut at the beginning
     const silentDuration = 0.2; // Adjust this value as needed
+
+    // Create a silent buffer
     const silentBuffer = this.audioContext.createBuffer(
       buffer.numberOfChannels,
       this.audioContext.sampleRate * silentDuration,
@@ -128,10 +129,12 @@ export class AudioPlayer {
     source.connect(gainNode);
     gainNode.connect(this.audioContext.destination);
 
+    // Adjust the offset to account for the silent duration
     const startOffset = Math.max(0, Math.min(offset, buffer.duration));
+    const adjustedOffset = startOffset + silentDuration;
 
-    // Start the audio source at the scheduled start time
-    source.start(scheduledStartTime, startOffset);
+    // Start the audio source at the scheduled start time with the adjusted offset
+    source.start(scheduledStartTime, adjustedOffset);
 
     this.activeAudio.set(filePath, {
       source,

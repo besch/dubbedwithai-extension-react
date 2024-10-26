@@ -6,7 +6,8 @@ import App from "@/App";
 import "./index.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from "react-query";
+import "@/assets/styles/fonts.css";
 
 const container = document.getElementById("root");
 if (!container) throw new Error("Failed to find the root element");

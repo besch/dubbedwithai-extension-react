@@ -58,7 +58,7 @@ const Navigation: React.FC = () => {
     <nav className="flex justify-between items-center p-4 bg-background border-b border-border">
       <div className="flex items-center space-x-4">
         <img
-          src="/icons/logo-onedub.png"
+          src="assets/icons/logo-onedub.png"
           className="w-[125px]"
           alt="OneDub Logo"
         />

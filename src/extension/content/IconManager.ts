@@ -1,4 +1,4 @@
-const ICON_BASE_PATH = chrome.runtime.getURL("icons/");
+const ICON_BASE_PATH = chrome.runtime.getURL("assets/icons/");
 const ICON_SIZES = [48, 128] as const;
 const ICON_STATES = ["active", "active-filled"] as const;
 

@@ -55,7 +55,7 @@ const SubtitleCarousel: React.FC = () => {
               stiffness: 120,
               damping: 20,
             }}
-            className={`absolute w-full text-center px-4 ${
+            className={`absolute w-full text-center px-4 font-roboto ${
               index === 2
                 ? "text-white text-xl font-semibold"
                 : "text-gray-300 text-base"

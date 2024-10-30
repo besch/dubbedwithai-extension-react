@@ -219,15 +219,24 @@ class BackgroundService {
 
   private async stopDubbingOnAllTabs(): Promise<void> {
     const tabs = await chrome.tabs.query({});
-    for (const tab of tabs) {
-      if (tab.id) {
-        try {
-          await chrome.tabs.sendMessage(tab.id, { action: "stopDubbing" });
-        } catch (error) {
+    const promises = tabs.map(async (tab) => {
+      if (!tab.id || !tab.url?.startsWith("http")) {
+        return; // Skip tabs without IDs or non-HTTP URLs
+      }
+
+      try {
+        await chrome.tabs.sendMessage(tab.id, { action: "stopDubbing" });
+      } catch (error) {
+        if (
+          !(error instanceof Error) ||
+          !error.message.includes("Receiving end does not exist")
+        ) {
           console.error(`Failed to stop dubbing on tab ${tab.id}:`, error);
         }
       }
-    }
+    });
+
+    await Promise.all(promises);
     await this.updateDubbingState(false);
   }
 }

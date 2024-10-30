@@ -129,11 +129,11 @@ export class DubbingManager {
         this.videoElementFound = true;
         this.isMainContentScript = true;
         this.notifyVideoElementFound();
-        this.setupAudioContext();
         await this.loadSettingsFromStorage();
         await this.startDubbing();
         this.updateCurrentState({
           isDubbingActive: true,
+          currentVideoPlayerVolume: this.videoManager.getVideoElement()!.volume,
         });
       }
 
@@ -193,17 +193,6 @@ export class DubbingManager {
       if (event.data.isActive && event.source !== window) {
         this.updateCurrentState({ isDubbingActive: false });
       }
-    }
-  }
-
-  private setupAudioContext(): void {
-    if (this.videoManager.getVideoElement()) {
-      this.updateCurrentState({
-        currentVideoPlayerVolume: this.videoManager.getVideoElement()!.volume,
-      });
-      this.audioContext = new window.AudioContext();
-      this.audioFileManager = new AudioFileManager(this.audioContext);
-      this.audioPlayer = new AudioPlayer(this.audioContext);
     }
   }
 

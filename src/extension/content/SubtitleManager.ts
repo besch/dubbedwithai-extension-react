@@ -5,6 +5,11 @@ export class SubtitleManager {
   private sortedSubtitles: Subtitle[] = [];
 
   public setActiveSubtitles(subtitles: Subtitle[]): void {
+    if (!subtitles || subtitles.length === 0) {
+      this.reset();
+      return;
+    }
+
     const uniqueId = this.generateUniqueId();
     this.sortedSubtitles = subtitles.map((subtitle) => ({
       ...subtitle,
@@ -88,6 +93,10 @@ export class SubtitleManager {
   }
 
   public getSubtitlesAroundTime(timeMs: number, count: number): Subtitle[] {
+    if (!this.sortedSubtitles || this.sortedSubtitles.length === 0) {
+      return [];
+    }
+
     let index = this.sortedSubtitles.findIndex(
       (subtitle) => timeMs >= subtitle.start && timeMs < subtitle.end
     );
@@ -120,6 +129,10 @@ export class SubtitleManager {
   }
 
   private findNearestSubtitleIndex(timeMs: number): number {
+    if (!this.sortedSubtitles || this.sortedSubtitles.length === 0) {
+      return 0;
+    }
+
     let nearestIndex = -1;
     let minDiff = Number.MAX_VALUE;
 

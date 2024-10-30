@@ -88,11 +88,6 @@ export class DubbingManager {
       return;
     }
 
-    if (this.videoElementFound) {
-      console.log("Video element already found in another content script.");
-      return;
-    }
-
     const isDubbingActive = await this.isDubbingActiveInAnyFrame();
     if (isDubbingActive) {
       return;
@@ -124,7 +119,11 @@ export class DubbingManager {
 
       this.subtitleManager.setActiveSubtitles(subtitles);
 
-      await this.videoManager.findAndStoreVideoElement();
+      const videoElement = this.videoManager.getVideoElement();
+      if (!videoElement) {
+        await this.videoManager.findAndStoreVideoElement();
+      }
+
       if (this.videoManager.getVideoElement()) {
         this.videoElementFound = true;
         this.isMainContentScript = true;
@@ -135,13 +134,10 @@ export class DubbingManager {
           isDubbingActive: true,
           currentVideoPlayerVolume: this.videoManager.getVideoElement()!.volume,
         });
-      }
 
-      if (
-        this.videoManager.getVideoElement() &&
-        !this.videoManager.getVideoElement()!.paused
-      ) {
-        this.videoManager.handleVideoPlay();
+        if (!this.videoManager.getVideoElement()!.paused) {
+          this.videoManager.handleVideoPlay();
+        }
       }
     } catch (error) {
       this.updateCurrentState({ isDubbingActive: false });
@@ -208,21 +204,23 @@ export class DubbingManager {
   }
 
   private async startDubbing(): Promise<void> {
-    if (this.videoManager.getVideoElement()) {
-      this.updateCurrentState({
-        isDubbingActive: true,
-        originalVideoVolume: this.videoManager.getVideoElement()!.volume,
-      });
-    } else {
-      return this.updateCurrentState({
-        isDubbingActive: true,
-      });
+    const videoElement = this.videoManager.getVideoElement();
+    if (!videoElement) {
+      throw new Error("No video element found when starting dubbing");
     }
+
+    this.updateCurrentState({
+      isDubbingActive: true,
+      originalVideoVolume: videoElement.volume,
+    });
+
     await this.audioContext.resume();
 
     const currentVideoTimeMs = this.videoManager.getCurrentVideoTimeMs();
     this.updateCurrentState({ lastVideoTime: currentVideoTimeMs });
-    this.videoManager.adjustVolume(this.videoManager.getVideoElement());
+    this.videoManager.adjustVolume(videoElement);
+
+    await this.resumeAudioFromTime(currentVideoTimeMs);
 
     chrome.runtime.sendMessage({
       action: "updateDubbingState",
@@ -260,7 +258,7 @@ export class DubbingManager {
     this.audioFileManager.clearCache();
     this.audioPlayer.pauseAllAudio();
     this.subtitleManager.reset();
-    this.videoManager.removeVideoEventListeners();
+
     this.videoManager.restoreOriginalVideoVolume();
 
     this.updateCurrentState({
@@ -408,10 +406,10 @@ export class DubbingManager {
 
     const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
 
-    const allSubtitles = this.subtitleManager.getSubtitlesAroundTime(
-      adjustedTimeMs,
-      5
-    );
+    const allSubtitles =
+      this.subtitleManager.getActiveSubtitles().length > 0
+        ? this.subtitleManager.getSubtitlesAroundTime(adjustedTimeMs, 5)
+        : [];
 
     chrome.runtime.sendMessage({
       action: "updateSubtitles",

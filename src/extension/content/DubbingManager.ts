@@ -48,10 +48,10 @@ export class DubbingManager {
 
   private videoElementFound: boolean = false;
 
-  private constructor() {
+  constructor() {
     this.audioContext = new window.AudioContext();
     this.audioFileManager = new AudioFileManager(this.audioContext);
-    this.subtitleManager = SubtitleManager.getInstance();
+    this.subtitleManager = new SubtitleManager();
     this.audioPlayer = new AudioPlayer(this.audioContext);
     this.videoManager = new VideoManager(this);
 
@@ -74,13 +74,6 @@ export class DubbingManager {
     };
 
     this.setupEventListeners();
-  }
-
-  public static getInstance(): DubbingManager {
-    if (!DubbingManager.instance) {
-      DubbingManager.instance = new DubbingManager();
-    }
-    return DubbingManager.instance;
   }
 
   public async initialize(

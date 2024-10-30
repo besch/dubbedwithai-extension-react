@@ -3,7 +3,6 @@ import config from "./config";
 import { base64ToArrayBuffer } from "../utils";
 
 export class AudioFileManager {
-  private static instance: AudioFileManager | null = null;
   private audioCache: AudioCache;
   private inMemoryCache: Map<string, AudioBuffer> = new Map();
   private notFoundFiles: Set<string> = new Set();
@@ -11,13 +10,6 @@ export class AudioFileManager {
 
   constructor(private audioContext: AudioContext) {
     this.audioCache = new AudioCache();
-  }
-
-  public static getInstance(audioContext: AudioContext): AudioFileManager {
-    if (!AudioFileManager.instance) {
-      AudioFileManager.instance = new AudioFileManager(audioContext);
-    }
-    return AudioFileManager.instance;
   }
 
   public async getAudioBuffer(

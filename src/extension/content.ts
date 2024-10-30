@@ -5,7 +5,7 @@ class ContentScript {
   private dubbingManager: DubbingManager;
 
   constructor() {
-    this.dubbingManager = DubbingManager.getInstance();
+    this.dubbingManager = new DubbingManager();
     this.initialize();
   }
 

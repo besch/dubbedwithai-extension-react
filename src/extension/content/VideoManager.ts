@@ -14,7 +14,7 @@ export class VideoManager {
 
   constructor(dubbingManager: DubbingManager) {
     this.dubbingManager = dubbingManager;
-    this.subtitleManager = SubtitleManager.getInstance();
+    this.subtitleManager = new SubtitleManager();
     this.audioPlayer = this.dubbingManager.getAudioPlayer();
   }
 

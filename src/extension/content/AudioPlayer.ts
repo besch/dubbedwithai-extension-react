@@ -1,9 +1,7 @@
 import { Subtitle } from "@/types";
-import config from "./config";
 
 export class AudioPlayer {
   private dubbingVolumeMultiplier: number = 1.0;
-  private static instance: AudioPlayer | null = null;
   private activeAudio: Map<
     string,
     {
@@ -15,13 +13,6 @@ export class AudioPlayer {
     }
   > = new Map();
   constructor(private audioContext: AudioContext) {}
-
-  public static getInstance(audioContext: AudioContext): AudioPlayer {
-    if (!AudioPlayer.instance) {
-      AudioPlayer.instance = new AudioPlayer(audioContext);
-    }
-    return AudioPlayer.instance;
-  }
 
   setDubbingVolumeMultiplier(multiplier: number): void {
     this.dubbingVolumeMultiplier = multiplier;

@@ -4,15 +4,6 @@ export class SubtitleManager {
   private static instance: SubtitleManager | null = null;
   private sortedSubtitles: Subtitle[] = [];
 
-  private constructor() {}
-
-  public static getInstance(): SubtitleManager {
-    if (!SubtitleManager.instance) {
-      SubtitleManager.instance = new SubtitleManager();
-    }
-    return SubtitleManager.instance;
-  }
-
   public setActiveSubtitles(subtitles: Subtitle[]): void {
     const uniqueId = this.generateUniqueId();
     this.sortedSubtitles = subtitles.map((subtitle) => ({

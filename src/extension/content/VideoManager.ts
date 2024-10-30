@@ -104,7 +104,7 @@ export class VideoManager {
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  private handleVideoPlay = (): void => {
+  public handleVideoPlay = (): void => {
     const currentTimeMs = this.getCurrentVideoTimeMs();
 
     if (this.dubbingManager.isDubbingActive) {

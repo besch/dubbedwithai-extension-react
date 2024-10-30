@@ -146,7 +146,7 @@ export class DubbingManager {
         this.videoManager.getVideoElement() &&
         !this.videoManager.getVideoElement()!.paused
       ) {
-        this.videoManager["handleVideoPlay"]();
+        this.videoManager.handleVideoPlay();
       }
     } catch (error) {
       this.updateCurrentState({ isDubbingActive: false });

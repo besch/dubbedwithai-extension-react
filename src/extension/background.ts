@@ -221,7 +221,7 @@ class BackgroundService {
     const tabs = await chrome.tabs.query({});
     const promises = tabs.map(async (tab) => {
       if (!tab.id || !tab.url?.startsWith("http")) {
-        return; // Skip tabs without IDs or non-HTTP URLs
+        return;
       }
 
       try {

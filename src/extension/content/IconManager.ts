@@ -45,7 +45,15 @@ export class IconManager {
     if (this.isPulsing) return;
     this.isPulsing = true;
     this.pulseState = false;
-    chrome.alarms.create("iconPulse", { periodInMinutes: 1 / 60 });
+
+    chrome.alarms.create("iconPulse", { periodInMinutes: 5 / 60 }, () => {
+      if (chrome.runtime.lastError) {
+        setInterval(() => {
+          this.togglePulseState();
+        }, 5000);
+      }
+    });
+
     this.updateIcon(true, true);
   }
 

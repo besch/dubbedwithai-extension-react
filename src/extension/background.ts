@@ -12,7 +12,6 @@ class BackgroundService {
   }
 
   private async initialize(): Promise<void> {
-    await this.iconManager.preloadIcons();
     await this.initializeStorage();
   }
 
@@ -36,12 +35,10 @@ class BackgroundService {
   private async onInstalled(): Promise<void> {
     await chrome.storage.local.clear();
     await this.iconManager.preloadIcons();
-    await this.initializeStorage();
     await this.stopDubbingOnAllTabs();
   }
 
   private async onStartup(): Promise<void> {
-    await this.iconManager.preloadIcons();
     await this.retrieveDubbingState();
   }
 

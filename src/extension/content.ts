@@ -41,6 +41,11 @@ class ContentScript {
     sender: chrome.runtime.MessageSender,
     sendResponse: (response?: any) => void
   ): Promise<boolean> {
+    if (!this.dubbingManager.isMain()) {
+      sendResponse({ status: "ignored", message: "Not main content script" });
+      return true;
+    }
+
     try {
       const response = await this.processDubbingMessage(message);
       sendResponse(response);
@@ -135,6 +140,8 @@ class ContentScript {
   }
 
   private async updateDubbingState(isActive: boolean): Promise<any> {
+    if (!this.dubbingManager.isMain()) return { status: "ignored" };
+
     await this.dubbingManager.updateCurrentState({ isDubbingActive: isActive });
     await chrome.storage.local.set({ isDubbingActive: isActive });
     chrome.runtime.sendMessage({
@@ -145,6 +152,13 @@ class ContentScript {
   }
 
   private async initializeFromStorage(): Promise<void> {
+    if (
+      this.dubbingManager.hasVideoElement() &&
+      !this.dubbingManager.isMain()
+    ) {
+      return;
+    }
+
     const storage = (await chrome.storage.local.get([
       "isDubbingActive",
       "movieId",

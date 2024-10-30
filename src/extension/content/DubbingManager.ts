@@ -47,6 +47,7 @@ export class DubbingManager {
   };
 
   private videoElementFound: boolean = false;
+  private isMainContentScript: boolean = false;
 
   constructor() {
     this.audioContext = new window.AudioContext();
@@ -126,6 +127,7 @@ export class DubbingManager {
       await this.videoManager.findAndStoreVideoElement();
       if (this.videoManager.getVideoElement()) {
         this.videoElementFound = true;
+        this.isMainContentScript = true;
         this.notifyVideoElementFound();
         this.setupAudioContext();
         await this.loadSettingsFromStorage();
@@ -173,6 +175,7 @@ export class DubbingManager {
   private handleMessage(event: MessageEvent): void {
     if (event.data.type === "VIDEO_ELEMENT_FOUND" && event.source !== window) {
       this.videoElementFound = true;
+      this.isMainContentScript = false;
       this.updateCurrentState({ isDubbingActive: false });
     }
 
@@ -307,6 +310,8 @@ export class DubbingManager {
   }
 
   public notifyBackgroundScript(isPlaying: boolean): void {
+    if (!this.isMainContentScript) return;
+
     chrome.runtime.sendMessage({
       action: "updateVideoPlaybackState",
       isPlaying: isPlaying,
@@ -410,6 +415,8 @@ export class DubbingManager {
     currentTimeMs: number,
     currentSubtitles: Subtitle[]
   ): void {
+    if (!this.isMainContentScript) return;
+
     const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
 
     const allSubtitles = this.subtitleManager.getSubtitlesAroundTime(
@@ -577,5 +584,9 @@ export class DubbingManager {
 
   public get isDubbingActive(): boolean {
     return this.currentState.isDubbingActive;
+  }
+
+  public isMain(): boolean {
+    return this.isMainContentScript;
   }
 }

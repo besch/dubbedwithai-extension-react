@@ -71,11 +71,7 @@ const DubbingPage: React.FC = () => {
     }
 
     try {
-      if (isDubbingActive) {
-        await chrome.runtime.sendMessage({ action: "stopDubbing" });
-      } else {
-        await dispatch(toggleDubbingProcess());
-      }
+      await dispatch(toggleDubbingProcess()).unwrap();
       toast.success(
         isDubbingActive ? t("dubbingStopped") : t("dubbingStarted")
       );

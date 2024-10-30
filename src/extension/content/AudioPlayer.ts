@@ -10,6 +10,7 @@ export class AudioPlayer {
       gainNode: GainNode;
       startTime: number;
       offset: number;
+      isFadingOut?: boolean;
     }
   > = new Map();
   constructor(private audioContext: AudioContext) {}
@@ -52,12 +53,54 @@ export class AudioPlayer {
     });
   }
 
+  private fadeOutAudio(
+    audioInfo: {
+      source: AudioBufferSourceNode | null;
+      gainNode: GainNode;
+      isFadingOut?: boolean;
+    } & Record<string, any>,
+    duration: number = 4.0 // 4.0 seconds
+  ): void {
+    if (audioInfo.source && !audioInfo.isFadingOut) {
+      const { gainNode } = audioInfo;
+      const currentTime = this.audioContext.currentTime;
+      const currentGain = this.dubbingVolumeMultiplier;
+
+      // Start from current gain value
+      gainNode.gain.setValueAtTime(currentGain, currentTime);
+
+      // Use exponentialRampToValueAtTime for a more natural-sounding fade
+      // Note: We use 0.001 instead of 0 because exponentialRamp cannot reach zero
+      gainNode.gain.exponentialRampToValueAtTime(0.001, currentTime + duration);
+
+      // Final linear ramp to 0 to complete the fade
+      gainNode.gain.linearRampToValueAtTime(0, currentTime + duration + 0.1);
+
+      // Mark this audio as fading out
+      audioInfo.isFadingOut = true;
+
+      // Schedule cleanup after fade out
+      setTimeout(() => {
+        if (audioInfo.source) {
+          audioInfo.source.stop();
+        }
+      }, (duration + 0.1) * 1000);
+    }
+  }
+
   async playAudio(
     buffer: AudioBuffer,
     filePath: string,
     subtitle: Subtitle,
     offset: number = 0
   ): Promise<void> {
+    // When new audio starts playing, check for any overlapping audio and fade them out
+    this.activeAudio.forEach((audioInfo, existingPath) => {
+      if (existingPath !== filePath && !audioInfo.isFadingOut) {
+        this.fadeOutAudio(audioInfo);
+      }
+    });
+
     // Stop any existing audio for this file path
     const existingAudio = this.activeAudio.get(filePath);
     if (existingAudio && existingAudio.source) {
@@ -142,12 +185,12 @@ export class AudioPlayer {
 
   fadeOutExpiredAudio(adjustedTime: number): void {
     this.activeAudio.forEach((audioInfo, filePath) => {
-      if (adjustedTime >= audioInfo.subtitle.end) {
-        // Stop the audio immediately when the subtitle ends
-        if (audioInfo.source) {
-          audioInfo.source.stop();
-        }
-        this.activeAudio.delete(filePath);
+      if (adjustedTime >= audioInfo.subtitle.end && !audioInfo.isFadingOut) {
+        this.fadeOutAudio(audioInfo);
+        // We'll remove the audio from activeAudio after the fade out completes
+        setTimeout(() => {
+          this.activeAudio.delete(filePath);
+        }, 500); // Match the fade duration
       }
     });
   }

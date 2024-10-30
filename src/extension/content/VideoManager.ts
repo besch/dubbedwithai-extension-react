@@ -19,19 +19,14 @@ export class VideoManager {
   }
 
   public async findAndStoreVideoElement(): Promise<void> {
-    console.log("Finding video element...");
     const video = document.querySelector("video");
     if (video) {
-      console.log("Video element found");
       this.handleVideo(video);
       this.setupVideoEventListeners(video);
-    } else {
-      console.log("No video element found");
     }
   }
 
   public setupVideoEventListeners(video: HTMLVideoElement): void {
-    console.log("Setting up video event listeners");
     this.removeVideoEventListeners();
     video.addEventListener("play", this.handleVideoPlay);
     video.addEventListener("pause", this.handleVideoPause);
@@ -40,12 +35,7 @@ export class VideoManager {
     video.addEventListener("timeupdate", this.handleTimeUpdate);
   }
 
-  private setDubbingActiveFlag(): void {
-    window.top?.postMessage({ type: "SET_DUBBING_ACTIVE" }, "*");
-  }
-
   private handleVideo(video: HTMLVideoElement): void {
-    console.log("Handling video element");
     this.videoElement = video;
     this.currentVideoPlayerVolume = video.volume;
     this.originalVideoVolume = video.volume;

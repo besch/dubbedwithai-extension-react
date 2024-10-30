@@ -19,40 +19,25 @@ export class VideoManager {
   }
 
   public async findAndStoreVideoElement(): Promise<void> {
-    const isDubbingActive =
-      await this.dubbingManager.isDubbingActiveInAnyFrame();
-    if (isDubbingActive) {
-      return;
+    console.log("Finding video element...");
+    const video = document.querySelector("video");
+    if (video) {
+      console.log("Video element found");
+      this.handleVideo(video);
+      this.setupVideoEventListeners(video);
+    } else {
+      console.log("No video element found");
     }
+  }
 
-    this.videoElement = document.querySelector("video");
-
-    if (this.videoElement) {
-      this.handleVideo(this.videoElement);
-      this.setDubbingActiveFlag();
-      return;
-    }
-
-    const iframes = document.querySelectorAll("iframe");
-    for (let i = 0; i < iframes.length; i++) {
-      const iframe = iframes[i];
-      try {
-        const iframeDocument =
-          iframe.contentDocument || iframe.contentWindow?.document;
-        if (iframeDocument) {
-          this.videoElement = iframeDocument.querySelector("video");
-          if (this.videoElement) {
-            this.handleVideo(this.videoElement);
-            this.setDubbingActiveFlag();
-            return;
-          }
-        }
-      } catch (e) {
-        console.error("Could not access iframe content:", e);
-      }
-    }
-
-    this.setupVideoObserver();
+  public setupVideoEventListeners(video: HTMLVideoElement): void {
+    console.log("Setting up video event listeners");
+    this.removeVideoEventListeners();
+    video.addEventListener("play", this.handleVideoPlay);
+    video.addEventListener("pause", this.handleVideoPause);
+    video.addEventListener("seeking", this.handleVideoSeeking);
+    video.addEventListener("volumechange", this.handleVolumeChange);
+    video.addEventListener("timeupdate", this.handleTimeUpdate);
   }
 
   private setDubbingActiveFlag(): void {
@@ -60,15 +45,11 @@ export class VideoManager {
   }
 
   private handleVideo(video: HTMLVideoElement): void {
+    console.log("Handling video element");
     this.videoElement = video;
     this.currentVideoPlayerVolume = video.volume;
     this.originalVideoVolume = video.volume;
-    this.removeVideoEventListeners();
-    video.addEventListener("play", this.handleVideoPlay);
-    video.addEventListener("pause", this.handleVideoPause);
-    video.addEventListener("seeking", this.handleVideoSeeking);
-    video.addEventListener("volumechange", this.handleVolumeChange);
-    video.addEventListener("timeupdate", this.handleTimeUpdate);
+    this.setupVideoEventListeners(video);
   }
 
   public removeVideoEventListeners(): void {
@@ -85,23 +66,6 @@ export class VideoManager {
         this.handleTimeUpdate
       );
     }
-  }
-
-  private setupVideoObserver(): void {
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === "childList") {
-          this.videoElement = document.querySelector("video");
-          if (this.videoElement) {
-            this.handleVideo(this.videoElement);
-            observer.disconnect();
-            return;
-          }
-        }
-      }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
   }
 
   public handleVideoPlay = (): void => {

@@ -8,6 +8,7 @@ import { Movie } from "@/types";
 import PageLayout from "@/components/ui/PageLayout";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import StreamingServices from "@/components/StreamingServices";
 
 const MovieSearchPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ const MovieSearchPage: React.FC = () => {
   return (
     <PageLayout title={t("subtitles")}>
       <div className="h-full overflow-visible flex flex-col space-y-2">
+        <StreamingServices />
         <div
           className={cn(
             "bg-card transition-colors duration-200 p-6 rounded-lg shadow-sm",

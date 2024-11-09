@@ -374,6 +374,9 @@ const movieSlice = createSlice({
       state.selectedEpisodeNumber = action.payload;
       chrome.storage.local.set({ movieState: { ...state } });
     },
+    resetLoadingState: (state) => {
+      state.isLoading = false;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -435,6 +438,7 @@ export const {
   updateLastSelectedLanguage,
   setSelectedSeasonNumber,
   setSelectedEpisodeNumber,
+  resetLoadingState,
 } = movieSlice.actions;
 
 export default movieSlice.reducer;

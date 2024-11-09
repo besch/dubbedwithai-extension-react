@@ -9,6 +9,7 @@ import {
   searchMovies,
   setSearchResults,
   setSelectedMovie,
+  resetLoadingState,
 } from "@/store/movieSlice";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -32,6 +33,11 @@ const MovieSearch: React.FC<MovieSearchProps> = ({
 
   useEffect(() => {
     dispatch(setSearchResults([]));
+    dispatch(resetLoadingState());
+
+    return () => {
+      dispatch(resetLoadingState());
+    };
   }, [dispatch]);
 
   const handleSearch = useCallback(

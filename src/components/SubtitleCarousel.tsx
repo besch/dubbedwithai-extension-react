@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cleanSubtitleText } from "../extension/utils";
 
 interface Subtitle {
   start: number;
@@ -92,7 +93,7 @@ const SubtitleCarousel: React.FC = () => {
                   wordWrap: "break-word",
                 }}
               >
-                {subtitle.text}
+                {cleanSubtitleText(subtitle.text)}
               </motion.div>
             </>
           </motion.div>

@@ -8,15 +8,19 @@ export function parseSrt(srtContent: string): Subtitle[] {
   return parsedSubtitles.map((sub) => ({
     start: timeStringToMilliseconds(sub.startTime),
     end: timeStringToMilliseconds(sub.endTime),
-    // Remove unwanted characters and strings
-    text: sub.text
-      .replace(/<[^>]*>/g, "") // Remove HTML tags
-      .replace(/\n/g, "") // Remove newlines
-      .replace(/\[.*?\]/g, "") // Remove text in square brackets
-      .replace(/```/g, "") // Remove triple backticks
-      .trim(), // Trim whitespace
+    text: cleanSubtitleText(sub.text),
   }));
 }
+
+export const cleanSubtitleText = (text: string): string => {
+  // Remove unwanted characters and strings
+  return text
+    .replace(/<[^>]*>/g, "") // Remove HTML tags
+    .replace(/\n/g, "") // Remove newlines
+    .replace(/\[.*?\]/g, "") // Remove text in square brackets
+    .replace(/```/g, "") // Remove triple backticks
+    .trim(); // Trim whitespace
+};
 
 export function millisecondsToTimeString(milliseconds: number): string {
   const hours = Math.floor(milliseconds / 3600000);

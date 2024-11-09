@@ -23,7 +23,6 @@ type DubbingManagerState = {
 };
 
 export class DubbingManager {
-  private static instance: DubbingManager | null = null;
   private audioFileManager: AudioFileManager;
   private subtitleManager: SubtitleManager;
   private audioPlayer: AudioPlayer;

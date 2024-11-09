@@ -31,19 +31,19 @@ const MovieSearchPage: React.FC = () => {
         <StreamingServices />
         <div
           className={cn(
-            "bg-card transition-colors duration-200 p-6 rounded-lg shadow-sm",
+            "bg-card transition-colors duration-200 p-4 rounded-lg shadow-sm",
             { "hover:bg-accent": searchInput.trim() === "" }
           )}
         >
-          <h2 className="text-xl font-semibold mb-4">{t("searchForMovie")}</h2>
+          <h2 className="text-xl font-semibold mb-2">{t("searchForMovie")}</h2>
           <MovieSearch
             onSelectMovie={handleMovieSelect}
             onSearchInputChange={setSearchInput}
           />
         </div>
         {searchInput.trim() === "" && (
-          <div className="bg-card hover:bg-accent transition-colors duration-200 p-6 rounded-lg shadow-sm">
-            <h2 className="text-xl font-semibold mb-4">
+          <div className="bg-card hover:bg-accent transition-colors duration-200 p-4 rounded-lg shadow-sm">
+            <h2 className="text-xl font-semibold mb-2">
               {t("uploadSubtitles")}
             </h2>
             <SubtitleUpload />

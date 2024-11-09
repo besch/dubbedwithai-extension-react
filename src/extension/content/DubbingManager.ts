@@ -3,8 +3,8 @@ import { SubtitleManager } from "./SubtitleManager";
 import { AudioPlayer } from "./AudioPlayer";
 import { DubbingMessage, DubbingVoice, Subtitle } from "@/types";
 import config from "./config";
-import { parseSrt } from "../utils";
 import { VideoManager } from "./VideoManager";
+import { parseSrt } from "../utils";
 
 type DubbingManagerState = {
   movieId: string | null;

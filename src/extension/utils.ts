@@ -1,48 +1,15 @@
+import Parser from "srt-parser-2";
 import { Subtitle } from "@/types";
 
 export function parseSrt(srtContent: string): Subtitle[] {
-  const subtitles: Subtitle[] = [];
-  const lines = srtContent.split(/\r?\n/);
-  let currentSubtitle: Partial<Subtitle> | null = null;
+  const parser = new Parser();
+  const parsedSubtitles = parser.fromSrt(srtContent);
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-
-    if (/^\d+$/.test(line)) {
-      if (
-        currentSubtitle &&
-        currentSubtitle.start &&
-        currentSubtitle.end &&
-        currentSubtitle.text
-      ) {
-        subtitles.push(currentSubtitle as Subtitle);
-      }
-      currentSubtitle = {};
-    } else if (line.includes(" --> ")) {
-      const [startTime, endTime] = line.split(" --> ");
-      if (currentSubtitle) {
-        currentSubtitle.start = timeStringToMilliseconds(startTime.trim());
-        currentSubtitle.end = timeStringToMilliseconds(endTime.trim());
-      }
-    } else if (line !== "") {
-      if (currentSubtitle) {
-        currentSubtitle.text = currentSubtitle.text
-          ? currentSubtitle.text + "\n" + line
-          : line;
-      }
-    }
-  }
-
-  if (
-    currentSubtitle &&
-    currentSubtitle.start &&
-    currentSubtitle.end &&
-    currentSubtitle.text
-  ) {
-    subtitles.push(currentSubtitle as Subtitle);
-  }
-
-  return subtitles;
+  return parsedSubtitles.map((sub) => ({
+    start: timeStringToMilliseconds(sub.startTime),
+    end: timeStringToMilliseconds(sub.endTime),
+    text: sub.text,
+  }));
 }
 
 export function millisecondsToTimeString(milliseconds: number): string {

@@ -18,6 +18,12 @@ export const streamingServices = {
     { name: "Movies2Watch", url: "https://movies2watch.tv" },
     { name: "M4uhd", url: "https://ww2.m4uhd.tv/" },
     { name: "Stremio", url: "https://web.stremio.com/" },
+    { name: "Yesmovies", url: "https://ww.yesmovies.ag/" },
+    { name: "Myflixer", url: "https://myflixer.pw/" },
+    { name: "Moviesjoy", url: "https://moviesjoy.is/" },
+    { name: "Vipstream", url: "https://vipstream.tv/" },
+    { name: "Movies2watch", url: "https://movies2watch.is/" },
+    { name: "Pressplay", url: "https://pressplay.top/" },
   ],
   anime: [
     { name: "AnimeTake", url: "https://animetake.tv" },

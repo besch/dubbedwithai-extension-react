@@ -67,3 +67,10 @@ export type DubbingVoice =
   | "onyx"
   | "nova"
   | "shimmer";
+
+export interface SettingsPayload {
+  subtitleOffset: number;
+  dubbingVolumeMultiplier: number;
+  videoVolumeWhilePlayingDubbing: number;
+  dubbingVoice: DubbingVoice;
+}

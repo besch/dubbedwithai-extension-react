@@ -1,6 +1,6 @@
 import { toast } from "react-toastify";
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { Language, Movie } from "@/types";
+import { Language, Movie, SettingsPayload } from "@/types";
 import { RootState } from "@/store/index";
 import { sendMessageToActiveTab } from "@/lib/messaging";
 import config from "@/extension/content/config";
@@ -154,20 +154,6 @@ export const selectSubtitle = createAsyncThunk(
   }
 );
 
-export const setVideoVolumeWhilePlayingDubbing = createAsyncThunk(
-  "movie/setVideoVolumeWhilePlayingDubbing",
-  async (volume: number, { dispatch, getState }) => {
-    const state = getState() as RootState;
-    const updatedMovieState = {
-      ...state.movie,
-      videoVolumeWhilePlayingDubbing: volume,
-    };
-    await chrome.storage.local.set({ movieState: updatedMovieState });
-    dispatch(updateVideoVolumeWhilePlayingDubbing(volume));
-    return volume;
-  }
-);
-
 export const loadMovieState = createAsyncThunk("movie/loadState", async () => {
   return new Promise<Partial<MovieState>>((resolve) => {
     chrome.storage.local.get(["movieState", "srtContent"], (result) => {
@@ -302,22 +288,25 @@ export const setSrtContentAndSave = createAsyncThunk(
   }
 );
 
+export const updateAllSettings = createAsyncThunk(
+  "movie/updateAllSettings",
+  async (settings: SettingsPayload, { dispatch, getState }) => {
+    const state = getState() as RootState;
+    const updatedMovieState = {
+      ...state.movie,
+      ...settings,
+    };
+    await chrome.storage.local.set({ movieState: updatedMovieState });
+    return settings;
+  }
+);
+
 const movieSlice = createSlice({
   name: "movie",
   initialState,
   reducers: {
     setSrtContent: (state, action: PayloadAction<string | null>) => {
       state.srtContent = action.payload;
-    },
-    updateVideoVolumeWhilePlayingDubbing: (
-      state,
-      action: PayloadAction<number>
-    ) => {
-      state.videoVolumeWhilePlayingDubbing = action.payload;
-    },
-    setDubbingVolumeMultiplier: (state, action: PayloadAction<number>) => {
-      state.dubbingVolumeMultiplier = action.payload;
-      chrome.storage.local.set({ movieState: { ...state } });
     },
     setSelectedMovie: (state, action: PayloadAction<Movie | null>) => {
       if (!Array.isArray(state.languages)) {
@@ -353,14 +342,6 @@ const movieSlice = createSlice({
     },
     updateDubbingState: (state, action: PayloadAction<boolean>) => {
       state.isDubbingActive = action.payload;
-      chrome.storage.local.set({ movieState: { ...state } });
-    },
-    setSubtitleOffset: (state, action: PayloadAction<number>) => {
-      state.subtitleOffset = action.payload;
-      chrome.storage.local.set({ movieState: { ...state } });
-    },
-    resetSettings: (state) => {
-      state.subtitleOffset = 0;
       chrome.storage.local.set({ movieState: { ...state } });
     },
     updateLastSelectedLanguage: (state, action: PayloadAction<Language>) => {
@@ -419,8 +400,12 @@ const movieSlice = createSlice({
       .addCase(loadLastSelectedLanguage.fulfilled, (state, action) => {
         state.lastSelectedLanguage = action.payload;
       })
-      .addCase(setDubbingVoice.fulfilled, (state, action) => {
-        state.dubbingVoice = action.payload;
+      .addCase(updateAllSettings.fulfilled, (state, action) => {
+        state.subtitleOffset = action.payload.subtitleOffset;
+        state.dubbingVolumeMultiplier = action.payload.dubbingVolumeMultiplier;
+        state.videoVolumeWhilePlayingDubbing =
+          action.payload.videoVolumeWhilePlayingDubbing;
+        state.dubbingVoice = action.payload.dubbingVoice;
       });
   },
 });
@@ -430,10 +415,6 @@ export const {
   setSelectedLanguage,
   setSearchResults,
   updateDubbingState,
-  setSubtitleOffset,
-  resetSettings,
-  setDubbingVolumeMultiplier,
-  updateVideoVolumeWhilePlayingDubbing,
   setSrtContent,
   updateLastSelectedLanguage,
   setSelectedSeasonNumber,

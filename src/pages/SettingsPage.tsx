@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import {
-  setSubtitleOffset,
-  resetSettings,
-  setDubbingVolumeMultiplier,
-  setVideoVolumeWhilePlayingDubbing,
-  setDubbingVoice,
-} from "@/store/movieSlice";
+import { updateAllSettings } from "@/store/movieSlice";
 import PageLayout from "@/components/ui/PageLayout";
 import Button from "@/components/ui/Button";
 import { toast } from "react-toastify";
@@ -78,10 +72,15 @@ const SettingsPage: React.FC = () => {
   };
 
   const handleApplyChanges = () => {
-    dispatch(setSubtitleOffset(localOffset));
-    dispatch(setDubbingVolumeMultiplier(localDubbingVolume));
-    dispatch(setVideoVolumeWhilePlayingDubbing(localVideoVolume));
-    dispatch(setDubbingVoice(localDubbingVoice));
+    dispatch(
+      updateAllSettings({
+        subtitleOffset: localOffset,
+        dubbingVolumeMultiplier: localDubbingVolume,
+        videoVolumeWhilePlayingDubbing: localVideoVolume,
+        dubbingVoice: localDubbingVoice,
+      })
+    );
+
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
         chrome.tabs.sendMessage(tabs[0].id, {
@@ -99,16 +98,20 @@ const SettingsPage: React.FC = () => {
   };
 
   const handleReset = () => {
-    dispatch(resetSettings());
-    dispatch(setDubbingVolumeMultiplier(1));
-    dispatch(
-      setVideoVolumeWhilePlayingDubbing(config.videoVolumeWhilePlayingDubbing)
-    );
-    dispatch(setDubbingVoice(config.defaultVoice));
-    setLocalOffset(0);
-    setLocalDubbingVolume(1);
-    setLocalVideoVolume(config.videoVolumeWhilePlayingDubbing);
-    setLocalDubbingVoice(config.defaultVoice);
+    const defaultSettings = {
+      subtitleOffset: 0,
+      dubbingVolumeMultiplier: 1,
+      videoVolumeWhilePlayingDubbing: config.videoVolumeWhilePlayingDubbing,
+      dubbingVoice: config.defaultVoice,
+    };
+
+    dispatch(updateAllSettings(defaultSettings));
+
+    setLocalOffset(defaultSettings.subtitleOffset);
+    setLocalDubbingVolume(defaultSettings.dubbingVolumeMultiplier);
+    setLocalVideoVolume(defaultSettings.videoVolumeWhilePlayingDubbing);
+    setLocalDubbingVoice(defaultSettings.dubbingVoice);
+
     toast.success(t("settingsReset"));
   };
 

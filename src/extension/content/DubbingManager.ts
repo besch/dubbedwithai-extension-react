@@ -45,7 +45,6 @@ export class DubbingManager {
     originalVideoVolume: number;
   };
 
-  private videoElementFound: boolean = false;
   private isMainContentScript: boolean = false;
 
   constructor() {
@@ -124,7 +123,6 @@ export class DubbingManager {
       }
 
       if (this.videoManager.getVideoElement()) {
-        this.videoElementFound = true;
         this.isMainContentScript = true;
         this.notifyVideoElementFound();
         await this.loadSettingsFromStorage();
@@ -146,6 +144,7 @@ export class DubbingManager {
 
   private async loadSettingsFromStorage(): Promise<void> {
     const storage = await chrome.storage.local.get(["movieState"]);
+    console.log("storage", storage);
     if (storage.movieState) {
       const {
         dubbingVolumeMultiplier,
@@ -169,7 +168,6 @@ export class DubbingManager {
 
   private handleMessage(event: MessageEvent): void {
     if (event.data.type === "VIDEO_ELEMENT_FOUND" && event.source !== window) {
-      this.videoElementFound = true;
       this.isMainContentScript = false;
       this.updateCurrentState({ isDubbingActive: false });
     }

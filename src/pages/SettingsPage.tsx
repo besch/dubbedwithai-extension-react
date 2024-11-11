@@ -104,11 +104,11 @@ const SettingsPage: React.FC = () => {
     dispatch(
       setVideoVolumeWhilePlayingDubbing(config.videoVolumeWhilePlayingDubbing)
     );
-    dispatch(setDubbingVoice("echo"));
+    dispatch(setDubbingVoice(config.defaultVoice));
     setLocalOffset(0);
     setLocalDubbingVolume(1);
     setLocalVideoVolume(config.videoVolumeWhilePlayingDubbing);
-    setLocalDubbingVoice("echo");
+    setLocalDubbingVoice(config.defaultVoice);
     toast.success(t("settingsReset"));
   };
 

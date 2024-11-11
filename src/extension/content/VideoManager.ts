@@ -119,8 +119,24 @@ export class VideoManager {
       this.handlePreciseTime(currentTimeMs);
     }
 
-    this.adjustVolumeBasedOnSubtitles(currentTimeMs);
+    const isAudioPlaying = this.dubbingManager.isAnyDubbingAudioPlaying();
+    this.adjustVolumeBasedOnPlayback(isAudioPlaying);
   };
+
+  private adjustVolumeBasedOnPlayback(isAudioPlaying: boolean): void {
+    if (!this.videoElement || !this.dubbingManager.isDubbingActive) {
+      return;
+    }
+
+    if (isAudioPlaying) {
+      this.adjustVolumeGradually(
+        this.videoElement,
+        this.dubbingManager.getVideoVolumeWhilePlayingDubbing()
+      );
+    } else {
+      this.adjustVolumeGradually(this.videoElement, this.originalVideoVolume);
+    }
+  }
 
   private async adjustVolumeGradually(
     video: HTMLVideoElement,
@@ -150,31 +166,9 @@ export class VideoManager {
     requestAnimationFrame(animate);
   }
 
-  private adjustVolumeBasedOnSubtitles(currentTimeMs: number): void {
-    if (!this.videoElement || !this.dubbingManager.isDubbingActive) {
-      return;
-    }
-
-    const subtitleOffset = this.dubbingManager.getSubtitleOffset();
-    const adjustedTimeMs = currentTimeMs - subtitleOffset;
-
-    const currentSubtitles =
-      this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);
-
-    if (currentSubtitles.length > 0) {
-      this.adjustVolumeGradually(
-        this.videoElement,
-        this.dubbingManager.getVideoVolumeWhilePlayingDubbing()
-      );
-    } else {
-      this.adjustVolumeGradually(this.videoElement, this.originalVideoVolume);
-    }
-  }
-
   private handlePreciseTime = (currentTimeMs: number): void => {
-    if (this.videoElement) {
-      this.adjustVolume(this.videoElement);
-    }
+    const isAudioPlaying = this.dubbingManager.isAnyDubbingAudioPlaying();
+    this.adjustVolumeBasedOnPlayback(isAudioPlaying);
 
     this.dubbingManager.playCurrentSubtitles(currentTimeMs);
     this.audioPlayer.fadeOutExpiredAudio(currentTimeMs);
@@ -191,7 +185,9 @@ export class VideoManager {
     this.isAdjustingVolume = true;
 
     const currentTimeMs = this.getCurrentVideoTimeMs();
-    this.adjustVolumeBasedOnSubtitles(currentTimeMs);
+    this.adjustVolumeBasedOnPlayback(
+      this.dubbingManager.isAnyDubbingAudioPlaying()
+    );
 
     setTimeout(() => {
       this.isAdjustingVolume = false;

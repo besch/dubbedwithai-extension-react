@@ -323,6 +323,10 @@ export class DubbingManager {
   }
 
   public resumeAudioFromTime(currentTimeMs: number): void {
+    if (this.videoManager.getVideoElement()?.paused) {
+      return;
+    }
+
     this.audioPlayer.resumeAllAudio();
     const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
     const currentSubtitles =
@@ -338,6 +342,10 @@ export class DubbingManager {
   }
 
   public async playCurrentSubtitles(currentTimeMs: number): Promise<void> {
+    if (this.videoManager.getVideoElement()?.paused) {
+      return;
+    }
+
     const adjustedTimeMs = currentTimeMs - this.currentState.subtitleOffset;
     const currentSubtitles =
       this.subtitleManager.getCurrentSubtitles(adjustedTimeMs);

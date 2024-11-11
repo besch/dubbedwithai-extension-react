@@ -123,49 +123,6 @@ export class VideoManager {
     this.adjustVolumeBasedOnPlayback(isAudioPlaying);
   };
 
-  private adjustVolumeBasedOnPlayback(isAudioPlaying: boolean): void {
-    if (!this.videoElement || !this.dubbingManager.isDubbingActive) {
-      return;
-    }
-
-    if (isAudioPlaying) {
-      this.adjustVolumeGradually(
-        this.videoElement,
-        this.dubbingManager.getVideoVolumeWhilePlayingDubbing()
-      );
-    } else {
-      this.adjustVolumeGradually(this.videoElement, this.originalVideoVolume);
-    }
-  }
-
-  private async adjustVolumeGradually(
-    video: HTMLVideoElement,
-    targetVolume: number,
-    duration: number = 200
-  ): Promise<void> {
-    const startVolume = video.volume;
-    const startTime = performance.now();
-
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Use easeInOutQuad for smoother transition
-      const easeProgress =
-        progress < 0.5
-          ? 2 * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-
-      video.volume = startVolume + (targetVolume - startVolume) * easeProgress;
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-
-    requestAnimationFrame(animate);
-  }
-
   private handlePreciseTime = (currentTimeMs: number): void => {
     const isAudioPlaying = this.dubbingManager.isAnyDubbingAudioPlaying();
     this.adjustVolumeBasedOnPlayback(isAudioPlaying);
@@ -179,15 +136,38 @@ export class VideoManager {
     this.dubbingManager.checkAndGenerateUpcomingAudio(currentTimeMs);
   };
 
+  private adjustVolumeBasedOnPlayback(isAudioPlaying: boolean): void {
+    if (!this.videoElement || !this.dubbingManager.isDubbingActive) {
+      return;
+    }
+
+    this.isAdjustingVolume = true;
+    if (isAudioPlaying) {
+      this.videoElement.volume =
+        this.dubbingManager.getVideoVolumeWhilePlayingDubbing();
+    } else {
+      this.videoElement.volume = this.originalVideoVolume;
+    }
+    this.currentVideoPlayerVolume = this.videoElement.volume;
+
+    // Reset the adjusting flag after a short delay
+    setTimeout(() => {
+      this.isAdjustingVolume = false;
+    }, 50);
+  }
+
   public adjustVolume(video: HTMLVideoElement | null): void {
     if (!video) return;
 
     this.isAdjustingVolume = true;
+    const isAudioPlaying = this.dubbingManager.isAnyDubbingAudioPlaying();
 
-    const currentTimeMs = this.getCurrentVideoTimeMs();
-    this.adjustVolumeBasedOnPlayback(
-      this.dubbingManager.isAnyDubbingAudioPlaying()
-    );
+    if (isAudioPlaying) {
+      video.volume = this.dubbingManager.getVideoVolumeWhilePlayingDubbing();
+    } else {
+      video.volume = this.originalVideoVolume;
+    }
+    this.currentVideoPlayerVolume = video.volume;
 
     setTimeout(() => {
       this.isAdjustingVolume = false;
@@ -196,7 +176,7 @@ export class VideoManager {
 
   public restoreOriginalVideoVolume(): void {
     if (this.videoElement && this.originalVideoVolume !== undefined) {
-      this.adjustVolumeGradually(this.videoElement, this.originalVideoVolume);
+      this.videoElement.volume = this.originalVideoVolume;
       this.currentVideoPlayerVolume = this.originalVideoVolume;
       this.dubbingManager.updateCurrentState({
         currentVideoPlayerVolume: this.originalVideoVolume,

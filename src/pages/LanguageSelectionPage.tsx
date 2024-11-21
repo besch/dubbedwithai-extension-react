@@ -153,7 +153,7 @@ const LanguageSelectionPage: React.FC = () => {
                 </p>
                 <Button
                   onClick={handleCancelFetch}
-                  variant="destructive"
+                  variant="outline"
                   className="mt-4"
                 >
                   {t("cancel")}

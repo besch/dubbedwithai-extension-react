@@ -21,7 +21,7 @@ i18n.use(initReactI18next).init({
         clearSearch: "Clear search",
         noMoviesFound: "No movies found. Try another search term.",
         startTyping:
-          "Start typing to search for movies. If you're having trouble finding the movie you're seeking, please try searching for it on IMDb and paste the movie title in English.",
+          "If you're having trouble finding the movie, please try searching for it on IMDb and paste the movie title in English.",
         seasonNumber: "Season Number",
         episodeNumber: "Episode Number",
         lastSelectedLanguage: "Last selected language:",
@@ -79,6 +79,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "If you have any issues when starting dubbing, please try to refresh the page or update OneDub extension",
         loadMore: "Load More",
+        cancel: "Cancel",
       },
     },
     es: {
@@ -162,6 +163,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "Si tiene algún problema al iniciar el doblaje, intente actualizar la página o actualizar la extensión OneDub",
         loadMore: "Cargar más",
+        cancel: "Cancel",
       },
     },
     zh: {
@@ -234,6 +236,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "如果在开始配音时遇到任何问题，请尝试刷新页面或更新OneDub扩展",
         loadMore: "加载更多",
+        cancel: "取消",
       },
     },
     hi: {
@@ -292,7 +295,7 @@ i18n.use(initReactI18next).init({
         name: "नाम",
         message: "संदेश",
         submitFeedback: "प्रतिक्रिया सबमिट करें",
-        invalidEmail: "अमान्य ईमेल पता",
+        invalidEmail: "अमान्य ईमेल पत्ता",
         nameRequired: "नाम आवश्यक है",
         messageMinLength: "संदेश कम से कम 10 अक्षरों का होना चाहिए",
         feedbackSuccess: "आपकी प्रतिक्रिया के लिए धन्यवाद!",
@@ -312,6 +315,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "यदि डबिंग शुरू करते समय आपको कोई समस्या हो, तो कृपया पेज को रीफ्रेश करने या OneDub एक्सटेंशन को अपडेट करने का प्रयास करें",
         loadMore: "और लोड करें",
+        cancel: "取消",
       },
     },
     ar: {
@@ -386,6 +390,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "إذا واجهت أي مشاكل عند بدء الدبلجة، يرجى محاولة تحديث الصفحة أو تحديث امتداد OneDub",
         loadMore: "تحميل المزيد",
+        cancel: "إلغاء",
       },
     },
     bn: {
@@ -466,6 +471,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "ডাবিং শুরু করার সময় আপনার কোনও সমস্যা হলে, অনুগ্রহ করে পৃষ্ঠাটি রিফ্রেশ করার চেষ্টা করুন বা OneDub এক্সটেনশন আপডেট করুন",
         loadMore: "আরও লোড করুন",
+        cancel: "বাতিল",
       },
     },
     ru: {
@@ -546,6 +552,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "Если у вас возникли проблемы при запуске дубляжа, попробуйте обновить страницу или обновить расширение OneDub",
         loadMore: "Загрузить ещё",
+        cancel: "Отмена",
       },
     },
     ja: {
@@ -625,6 +632,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "吹き替えを開始する際に問題が発生した場合は、ページを更新するか、OneDub拡張機能を更新してみてください",
         loadMore: "もっと読み込む",
+        cancel: "キャンセル",
       },
     },
     pa: {
@@ -705,6 +713,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "ਜੇਕਰ ਤੁਹਾਨੂੰ ਡਬਿੰਗ ਸ਼ੁਰੂ ਕਰਨ ਵੇਲੇ ਕੋਈ ਸਮੱਸਿਆ ਆਉਂਦੀ ਹੈ, ਤਾਂ ਕਿਰਪਾ ਕਰਕੇ ਪੰਨੇ ਨੂੰ ਰੀਫਰੈਸ਼ ਕਰਨ ਜਾਂ OneDub ਐਕਸਟੈਂਸ਼ਨ ਨੂੰ ਅਪਡੇਟ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ",
         loadMore: "ਹੋਰ ਲੋਡ ਕਰੋ",
+        cancel: "Cancel",
       },
     },
     de: {
@@ -789,6 +798,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "Wenn Sie beim Starten der Synchronisation Probleme haben, versuchen Sie bitte, die Seite zu aktualisieren oder die OneDub-Erweiterung zu aktualisieren",
         loadMore: "Mehr laden",
+        cancel: "Abbrechen",
       },
     },
     jv: {
@@ -864,6 +874,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "Yen sampeyan ngalami masalah nalika miwiti dubbing, coba refresh kaca utawa nganyari ekstensi OneDub",
         loadMore: "Ngemot Luwih Akeh",
+        cancel: "Batal",
       },
     },
     ko: {
@@ -940,6 +951,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "더빙을 시작할 때 문제가 있으면 페이지를 새로 고치거나 OneDub 확장 프로그램을 업데이트해 보세요",
         loadMore: "더 보기",
+        cancel: "Cancel",
       },
     },
     fr: {
@@ -1022,6 +1034,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "Si vous rencontrez des problèmes lors du démarrage du doublage, essayez de rafraîchir la page ou de mettre à jour l'extension OneDub",
         loadMore: "Carregar mais",
+        cancel: "Annuler",
       },
     },
     te: {
@@ -1102,6 +1115,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "డబ్బింగ్ ప్రారంభించేటప్పుడు మీకు ఏవైనా సమస్యలు ఉంటే, దయచేసి పేజీని రిఫ్రెష్ చేయడానికి లేదా OneDub పొడిగింపును నవీకరించడానికి ప్రయత్నించండి",
         loadMore: "మార్పులను అమలు చేయండి",
+        cancel: "రద్దు",
       },
     },
     mr: {
@@ -1152,7 +1166,7 @@ i18n.use(initReactI18next).init({
         dubbingPaused: "डबिंग यशस्वीरित्या थांबवले.",
         failedToToggleDubbing:
           "डबिंग टॉगल करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
-        dubbingControls: "डबिंग नियंत्रणे",
+        dubbingControls: "डबिंग नियंत्रण",
         noMovieOrLanguageSelected: "चित्रपट किंवा भाषा निवडलेली नाही.",
         language: "भाषा",
         seasonEpisode: "सीझन: {{season}}, एपिसोड: {{episode}}",
@@ -1181,6 +1195,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "डबिंग सुरू करताना आपल्याला काही समस्या आल्यास, कृपया पृष्ठ रीफ्रेश करण्याचा किंवा OneDub विस्तार अद्यतनित करण्याचा प्रयत्न करा",
         loadMore: "आणववळ लोड करो",
+        cancel: "Cancel",
       },
     },
     tr: {
@@ -1258,6 +1273,7 @@ i18n.use(initReactI18next).init({
         dubbingInfoTooltip:
           "Dublajı başlatırken herhangi bir sorun yaşarsanız, lütfen sayfayı yenilemeyi veya OneDub uzantısını güncellemeyi deneyin",
         loadMore: "Daha fazla yükle",
+        cancel: "Cancel",
       },
     },
   },

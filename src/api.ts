@@ -5,7 +5,8 @@ const API_BASE_URL = process.env.REACT_APP_BASE_API_URL;
 export const fetchMovies = async (params: {
   text: string;
   url: string;
-}): Promise<Movie[]> => {
+  page?: number;
+}): Promise<{ Search: Movie[]; totalResults: string }> => {
   const response = await fetch(`${API_BASE_URL}/api/search-movies`, {
     method: "POST",
     headers: {
@@ -18,8 +19,7 @@ export const fetchMovies = async (params: {
     throw new Error(`API call failed: ${response.statusText}`);
   }
 
-  const data = await response.json();
-  return data.Search;
+  return await response.json();
 };
 
 export const fetchSubtitles = async (params: {

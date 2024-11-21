@@ -25,6 +25,8 @@ interface MovieState {
   subtitlesLoaded: boolean;
   lastSelectedLanguage: Language | null;
   isLoading: boolean;
+  currentPage: number;
+  totalResults: number;
 }
 
 const initialState: MovieState = {
@@ -49,6 +51,8 @@ const initialState: MovieState = {
   subtitlesLoaded: false,
   lastSelectedLanguage: null,
   isLoading: false,
+  currentPage: 1,
+  totalResults: 0,
 };
 
 export const setDubbingVoice = createAsyncThunk(
@@ -230,15 +234,28 @@ export const toggleDubbingProcess = createAsyncThunk(
 
 export const searchMovies = createAsyncThunk(
   "movie/searchMovies",
-  async (query: string, { rejectWithValue }) => {
+  async (
+    {
+      query,
+      page = 1,
+      shouldAppend = false,
+    }: { query: string; page?: number; shouldAppend?: boolean },
+    { rejectWithValue }
+  ) => {
     try {
       const url = await new Promise<string>((resolve) => {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           resolve(tabs[0]?.url || "");
         });
       });
-      const params = { text: query, url };
-      return await fetchMovies(params);
+      const params = { text: query, url, page };
+      const response = await fetchMovies(params);
+      return {
+        movies: response.Search || [],
+        totalResults: parseInt(response.totalResults, 10),
+        page,
+        shouldAppend,
+      };
     } catch (error) {
       toast.error((error as Error).message);
       return rejectWithValue((error as Error).message);
@@ -373,9 +390,21 @@ const movieSlice = createSlice({
       })
       .addCase(
         searchMovies.fulfilled,
-        (state, action: PayloadAction<Movie[]>) => {
+        (
+          state,
+          action: PayloadAction<{
+            movies: Movie[];
+            totalResults: number;
+            page: number;
+            shouldAppend: boolean;
+          }>
+        ) => {
           state.isLoading = false;
-          state.searchResults = action.payload;
+          state.searchResults = action.payload.shouldAppend
+            ? [...state.searchResults, ...action.payload.movies]
+            : action.payload.movies;
+          state.totalResults = action.payload.totalResults;
+          state.currentPage = action.payload.page;
         }
       )
       .addCase(searchMovies.rejected, (state) => {

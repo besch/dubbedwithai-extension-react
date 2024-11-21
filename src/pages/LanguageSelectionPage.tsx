@@ -12,6 +12,7 @@ import {
   setSelectedSeasonNumber,
   setSelectedEpisodeNumber,
   setSelectedLanguage,
+  resetLoadingState,
 } from "@/store/movieSlice";
 import PageLayout from "@/components/ui/PageLayout";
 import MovieCard from "@/components/MovieCard";
@@ -84,6 +85,10 @@ const LanguageSelectionPage: React.FC = () => {
     }
   };
 
+  const handleCancelFetch = () => {
+    dispatch(resetLoadingState());
+  };
+
   if (!selectedMovie) {
     console.log("No movie selected, navigating to search");
     navigate("/search");
@@ -146,6 +151,13 @@ const LanguageSelectionPage: React.FC = () => {
                 <p className="mt-2 text-sm text-muted-foreground text-center">
                   {t("subtitlesGenerate")}
                 </p>
+                <Button
+                  onClick={handleCancelFetch}
+                  variant="destructive"
+                  className="mt-4"
+                >
+                  {t("cancel")}
+                </Button>
               </div>
             ) : (
               <div className="animate-fade-in">

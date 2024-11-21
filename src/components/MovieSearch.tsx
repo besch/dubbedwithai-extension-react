@@ -25,7 +25,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({
 }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
-  const { searchResults, isLoading } = useSelector(
+  const { searchResults, isLoading, currentPage, totalResults } = useSelector(
     (state: RootState) => state.movie
   );
   const [movieQuery, setMovieQuery] = useState("");
@@ -41,17 +41,27 @@ const MovieSearch: React.FC<MovieSearchProps> = ({
   }, [dispatch]);
 
   const handleSearch = useCallback(
-    async (query: string) => {
+    async (query: string, page = 1, shouldAppend = false) => {
       const trimmedQuery = query.trim();
       if (trimmedQuery.length > 2) {
-        const results = await dispatch(searchMovies(trimmedQuery)).unwrap();
-        if (results.length === 0) {
+        const result = await dispatch(
+          searchMovies({ query: trimmedQuery, page, shouldAppend })
+        ).unwrap();
+        if (result.movies.length === 0) {
           toast.error(t("noMoviesFound"));
         }
       }
     },
     [dispatch, t]
   );
+
+  const handleLoadMore = () => {
+    if (movieQuery.trim().length > 2) {
+      handleSearch(movieQuery, currentPage + 1, true);
+    }
+  };
+
+  const totalPages = Math.ceil(totalResults / 10);
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
@@ -125,22 +135,45 @@ const MovieSearch: React.FC<MovieSearchProps> = ({
         )}
       </div>
       <p className="mt-2 text-muted-foreground">{t("startTyping")}</p>
-      {isLoading && (
+
+      {isLoading && searchResults.length === 0 && (
         <div className="flex justify-center items-center mt-8">
           <LoadingSpinner size="lg" />
         </div>
       )}
+
       {searchResults && searchResults.length > 0 && (
-        <ul className="mt-2">
-          {searchResults.map((movie, index) => (
-            <MovieItem
-              key={movie.imdbID}
-              movie={movie}
-              onSelect={handleSelectMovie}
-              isSelected={index === selectedIndex}
-            />
-          ))}
-        </ul>
+        <>
+          <ul className="mt-2">
+            {searchResults.map((movie, index) => (
+              <MovieItem
+                key={movie.imdbID}
+                movie={movie}
+                onSelect={handleSelectMovie}
+                isSelected={index === selectedIndex}
+              />
+            ))}
+          </ul>
+
+          {currentPage < totalPages && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={handleLoadMore}
+                disabled={isLoading}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <LoadingSpinner size="sm" />
+                    <span>{t("loading")}</span>
+                  </div>
+                ) : (
+                  t("loadMore")
+                )}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

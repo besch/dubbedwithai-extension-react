@@ -78,6 +78,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "Dubbing stopped successfully.",
         dubbingInfoTooltip:
           "If you have any issues when starting dubbing, please try to refresh the page or update OneDub extension",
+        loadMore: "Load More",
       },
     },
     es: {
@@ -160,6 +161,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "Doblaje detenido con éxito.",
         dubbingInfoTooltip:
           "Si tiene algún problema al iniciar el doblaje, intente actualizar la página o actualizar la extensión OneDub",
+        loadMore: "Cargar más",
       },
     },
     zh: {
@@ -231,6 +233,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "配音已成功停止。",
         dubbingInfoTooltip:
           "如果在开始配音时遇到任何问题，请尝试刷新页面或更新OneDub扩展",
+        loadMore: "加载更多",
       },
     },
     hi: {
@@ -308,6 +311,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "डबिंग सफलतापूर्वक रोक दी गई।",
         dubbingInfoTooltip:
           "यदि डबिंग शुरू करते समय आपको कोई समस्या हो, तो कृपया पेज को रीफ्रेश करने या OneDub एक्सटेंशन को अपडेट करने का प्रयास करें",
+        loadMore: "और लोड करें",
       },
     },
     ar: {
@@ -381,85 +385,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "تم إيقاف الدبلجة بنجاح.",
         dubbingInfoTooltip:
           "إذا واجهت أي مشاكل عند بدء الدبلجة، يرجى محاولة تحديث الصفحة أو تحديث امتداد OneDub",
-      },
-    },
-    pt: {
-      translation: {
-        searchForMovie: "Pesquisar um filme",
-        search: "Pesquisar",
-        dubbing: "Dublagem",
-        settings: "Configurações",
-        feedback: "Feedback",
-        startDubbing: "Iniciar dublagem",
-        stopDubbing: "Parar dublagem",
-        selectLanguage: "Selecione um idioma",
-        searchLanguages: "Pesquisar idiomas...",
-        noPoster: "Sem cartaz",
-        poster: "cartaz",
-        year: "Ano",
-        searchForAMovie: "Pesquisar um filme",
-        clearSearch: "Limpar pesquisa",
-        noMoviesFound:
-          "Nenhum filme encontrado. Tente outro termo de pesquisa.",
-        startTyping:
-          "Comece a digitar para pesquisar filmes. Se você estiver tendo dificuldades em encontrar o filme que procura, tente pesquisá-lo no IMDb e cole o título do filme em inglês.",
-        seasonNumber: "Número da temporada",
-        episodeNumber: "Número do episódio",
-        lastSelectedLanguage: "Último idioma selecionado:",
-        use: "Usar",
-        dubbingSettings: "Configurações de dublagem",
-        current: "Atual",
-        adjusted: "Ajustado",
-        subtitleOffset: "Deslocamento de legendas",
-        dubbingVolume: "Volume da dublagem",
-        videoVolumeDuringDubbing: "Volume do vídeo durante a dublagem",
-        applyChanges: "Aplicar alterações",
-        resetToDefault: "Restaurar padrões",
-        settingsApplied: "Configurações aplicadas com sucesso!",
-        settingsReset: "Configurações restauradas para o padrão!",
-        subtitleOffsetInfo: "Ajuste o tempo das legendas em relação ao áudio.",
-        dubbingVolumeInfo: "Ajuste o volume do áudio dublado.",
-        videoVolumeInfo:
-          "Ajuste o volume do vídeo original enquanto a dublagem está ativa.",
-        languageChanged: "Idioma alterado com sucesso!",
-        failedToLoadSubtitles:
-          "Falha ao carregar as legendas. Por favor, tente novamente.",
-        waitForSubtitlesToLoad:
-          "Por favor, aguarde o carregamento das legendas antes de alternar a dublagem.",
-        subtitlesNotLoaded:
-          "As legendas não foram carregadas. Tente recarregar a página.",
-        dubbingStarted: "Dublagem iniciada com sucesso.",
-        dubbingPaused: "Dublagem pausada com sucesso.",
-        failedToToggleDubbing:
-          "Falha ao alternar a dublagem. Por favor, tente novamente.",
-        dubbingControls: "Controles de dublagem",
-        noMovieOrLanguageSelected: "Nenhum filme ou idioma selecionado.",
-        language: "Idioma",
-        seasonEpisode: "Temporada: {{season}}, Episódio: {{episode}}",
-        email: "E-mail",
-        name: "Nome",
-        message: "Mensagem",
-        submitFeedback: "Enviar feedback",
-        invalidEmail: "Endereço de e-mail inválido",
-        nameRequired: "O nome é obrigatório",
-        messageMinLength: "A mensagem deve ter pelo menos 10 caracteres",
-        feedbackSuccess: "Obrigado pelo seu feedback!",
-        feedbackError: "Falha ao enviar feedback. Por favor, tente novamente.",
-        emailPlaceholder: "seu@email.com",
-        loading: "Carregando...",
-        useLanguage: "Usar {{language}}",
-        subtitlesGenerate:
-          "Se as legendas não existirem em nosso banco de dados, pode levar até 10 segundos para gerá-las. Por favor, seja paciente.",
-        subtitles: "Legendas",
-        uploadSubtitles: "Carregar suas próprias legendas",
-        dubbingVoice: "Voz de dublagem",
-        usingUploadedSubtitles: "Usando legendas carregadas",
-        noSubtitlesFound:
-          "Nenhuma legenda encontrada para o idioma selecionado.",
-        subtitlesFetchError: "Ocorreu um erro ao buscar as legendas.",
-        dubbingStopped: "Dublagem parada com sucesso.",
-        dubbingInfoTooltip:
-          "Se você tiver algum problema ao iniciar a dublagem, tente atualizar a página ou atualizar a extensão OneDub",
+        loadMore: "تحميل المزيد",
       },
     },
     bn: {
@@ -481,7 +407,7 @@ i18n.use(initReactI18next).init({
         noMoviesFound:
           "কোনো সিনেমা পাওয়া যায়নি। অন্য অনুসন্ধান শব্দ ব্যবহার করে দেখুন।",
         startTyping:
-          "সিনেমা খুঁজতে টাইপ করা শুরু করুন। আপনি যদি আপনার খুঁজা সিনেমাটি খুঁজে পেতে অসুবিধা হয়, তাহলে অনুগ্রহ করে IMDb-তে খুঁজে দেখুন এবং ইংরেজিতে সিনেমার শিরোনাম পেস্ট করুন।",
+          "সিনেমা খুঁজতে টাইপ করা শুরু করুন। আপনি যদি আপনার খুঁজা সিনেমাটি খুঁজে পেতে অসুবিধা হয়, তাহলে অনুগ্রহ করে IMDb-তে খুঁজে দেখুন এবং ইংরেজিতে সিনেমার শিরোনাম পేস্ট করুন।",
         seasonNumber: "সিজন নম্বর",
         episodeNumber: "এপিসোড নম্বর",
         lastSelectedLanguage: "সর্বশেষ নির্বাচিত ভাষা:",
@@ -522,7 +448,7 @@ i18n.use(initReactI18next).init({
         invalidEmail: "অবৈধ্য ইমেইল ঠিকানা",
         nameRequired: "নাম প্রয়োজন",
         messageMinLength: "বার্তা অবশ্যই কমপক্ষে 10টি অক্ষরের হতে হবে",
-        feedbackSuccess: "আপনার প্রতিক্রিয়ার জন্য় ধন্যবাদ!",
+        feedbackSuccess: "আপনার প্রতিক্রিয়ার জন্য় ধন্য঵াদ!",
         feedbackError:
           "প্রতিক্রিয়া জমা দিতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
         emailPlaceholder: "আপনার@ইমেইল.কম",
@@ -539,6 +465,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "ডাবিং সফলভাবে বন্ধ হয়েছে।",
         dubbingInfoTooltip:
           "ডাবিং শুরু করার সময় আপনার কোনও সমস্যা হলে, অনুগ্রহ করে পৃষ্ঠাটি রিফ্রেশ করার চেষ্টা করুন বা OneDub এক্সটেনশন আপডেট করুন",
+        loadMore: "আরও লোড করুন",
       },
     },
     ru: {
@@ -618,6 +545,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "Дубляж успешно остановлен.",
         dubbingInfoTooltip:
           "Если у вас возникли проблемы при запуске дубляжа, попробуйте обновить страницу или обновить расширение OneDub",
+        loadMore: "Загрузить ещё",
       },
     },
     ja: {
@@ -696,6 +624,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "吹き替えが正常に停止されました。",
         dubbingInfoTooltip:
           "吹き替えを開始する際に問題が発生した場合は、ページを更新するか、OneDub拡張機能を更新してみてください",
+        loadMore: "もっと読み込む",
       },
     },
     pa: {
@@ -762,6 +691,7 @@ i18n.use(initReactI18next).init({
         feedbackError:
           "ਫੀਡਬੈਕ ਜਮ੍ਹਾਂ ਕਰਨ ਵਿੱਚ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
         emailPlaceholder: "ਤੁਹਾਡਾ@ਈਮੇਲ.ਕਾਮ",
+        loading: "ਲੋਡ ਹੋਤ ਆਹੈ...",
         useLanguage: "{{language}} ਵਰਤੋ",
         subtitlesGenerate:
           "ਜੇਕਰ ਸਾਡੇ ਡਾਟਾਬੇਸ ਵਿੱਚ ਉਪਸਿਰਲੇਖ ਮੌਜੂਦ ਨਹੀਂ ਹਨ, ਤਾਂ ਉਨ੍ਹਾਂ ਨੂੰ ਤਿਆਰ ਕਰਨ ਵਿੱਚ 10 ਸਕਿੰਟ ਤੱਕ ਦਾ ਸਮਾਂ ਲੱਗ ਸਕਦਾ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਧੀਰਜ ਰੱਖੋ।",
@@ -770,10 +700,11 @@ i18n.use(initReactI18next).init({
         dubbingVoice: "ਡਬਿੰਗ ਆਵਾਜ਼",
         usingUploadedSubtitles: "ਅਪਲੋਡ ਕੀਤੇ ਉਪਸਿਰਲੇਖਾਂ ਦੀ ਵਰਤੋਂ ਕਰ ਰਿਹਾ ਹੈ",
         noSubtitlesFound: "ਚੁਣੀ ਗਈ ਭਾਸ਼ਾ ਲਈ ਕੋਈ ਉਪਸਿਰਲੇਖ ਨਹੀਂ ਮਿਲੇ।",
-        subtitlesFetchError: "ਉਪਸਿਰਲੇਖ ਪ੍ਰਾਪਤ ਕਰਨ ਦੌਰਾਨ ਇੱਕ ਤਰੁੱਟੀ ਆਈ।",
+        subtitlesFetchError: "ਉਪਸਿਰਲੇਖ ਪ੍ਰਾਪਤ ਕਰਨ ਦੌਰਾन ਇੱਕ ਤਰੁੱਟੀ ਆਈ।",
         dubbingStopped: "ਡਬਿੰਗ ਸਫਲਤਾਪੂਰਵਕ ਰੋਕੀ ਗਈ।",
         dubbingInfoTooltip:
           "ਜੇਕਰ ਤੁਹਾਨੂੰ ਡਬਿੰਗ ਸ਼ੁਰੂ ਕਰਨ ਵੇਲੇ ਕੋਈ ਸਮੱਸਿਆ ਆਉਂਦੀ ਹੈ, ਤਾਂ ਕਿਰਪਾ ਕਰਕੇ ਪੰਨੇ ਨੂੰ ਰੀਫਰੈਸ਼ ਕਰਨ ਜਾਂ OneDub ਐਕਸਟੈਂਸ਼ਨ ਨੂੰ ਅਪਡੇਟ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ",
+        loadMore: "ਹੋਰ ਲੋਡ ਕਰੋ",
       },
     },
     de: {
@@ -857,6 +788,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "Synchronisation erfolgreich gestoppt.",
         dubbingInfoTooltip:
           "Wenn Sie beim Starten der Synchronisation Probleme haben, versuchen Sie bitte, die Seite zu aktualisieren oder die OneDub-Erweiterung zu aktualisieren",
+        loadMore: "Mehr laden",
       },
     },
     jv: {
@@ -931,6 +863,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "Dubbing kasil mandheg.",
         dubbingInfoTooltip:
           "Yen sampeyan ngalami masalah nalika miwiti dubbing, coba refresh kaca utawa nganyari ekstensi OneDub",
+        loadMore: "Ngemot Luwih Akeh",
       },
     },
     ko: {
@@ -1006,6 +939,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "더빙이 성공적으로 중지되었습니다.",
         dubbingInfoTooltip:
           "더빙을 시작할 때 문제가 있으면 페이지를 새로 고치거나 OneDub 확장 프로그램을 업데이트해 보세요",
+        loadMore: "더 보기",
       },
     },
     fr: {
@@ -1087,6 +1021,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "Le doublage a été arrêté avec succès.",
         dubbingInfoTooltip:
           "Si vous rencontrez des problèmes lors du démarrage du doublage, essayez de rafraîchir la page ou de mettre à jour l'extension OneDub",
+        loadMore: "Carregar mais",
       },
     },
     te: {
@@ -1166,6 +1101,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "డబ్బింగ్ విజయవంతంగా ఆపివేయబడింది.",
         dubbingInfoTooltip:
           "డబ్బింగ్ ప్రారంభించేటప్పుడు మీకు ఏవైనా సమస్యలు ఉంటే, దయచేసి పేజీని రిఫ్రెష్ చేయడానికి లేదా OneDub పొడిగింపును నవీకరించడానికి ప్రయత్నించండి",
+        loadMore: "మార్పులను అమలు చేయండి",
       },
     },
     mr: {
@@ -1244,6 +1180,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "डबिंग यशस्वीरित्या थांबवले.",
         dubbingInfoTooltip:
           "डबिंग सुरू करताना आपल्याला काही समस्या आल्यास, कृपया पृष्ठ रीफ्रेश करण्याचा किंवा OneDub विस्तार अद्यतनित करण्याचा प्रयत्न करा",
+        loadMore: "आणववळ लोड करो",
       },
     },
     tr: {
@@ -1320,6 +1257,7 @@ i18n.use(initReactI18next).init({
         dubbingStopped: "Dublaj başarıyla durduruldu.",
         dubbingInfoTooltip:
           "Dublajı başlatırken herhangi bir sorun yaşarsanız, lütfen sayfayı yenilemeyi veya OneDub uzantısını güncellemeyi deneyin",
+        loadMore: "Daha fazla yükle",
       },
     },
   },

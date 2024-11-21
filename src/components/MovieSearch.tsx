@@ -4,7 +4,7 @@ import { RootState, AppDispatch } from "@/store";
 import { Movie } from "@/types";
 import MovieItem from "@/components/MovieItem";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Search, X } from "lucide-react";
+import { Search, X, Grid, List } from "lucide-react";
 import {
   searchMovies,
   setSearchResults,
@@ -30,6 +30,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({
   );
   const [movieQuery, setMovieQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [isListView, setIsListView] = useState(false);
 
   useEffect(() => {
     dispatch(setSearchResults([]));
@@ -134,7 +135,18 @@ const MovieSearch: React.FC<MovieSearchProps> = ({
           </button>
         )}
       </div>
-      <p className="mt-2 text-muted-foreground">{t("startTyping")}</p>
+      <div className="flex justify-between items-center mt-2">
+        <p className="text-muted-foreground">{t("startTyping")}</p>
+        {searchResults.length > 0 && (
+          <button
+            onClick={() => setIsListView(!isListView)}
+            className="p-2 mr-2 text-muted-foreground hover:text-foreground"
+            aria-label={isListView ? t("gridView") : t("listView")}
+          >
+            {isListView ? <Grid size={20} /> : <List size={20} />}
+          </button>
+        )}
+      </div>
 
       {isLoading && searchResults.length === 0 && (
         <div className="flex justify-center items-center mt-8">
@@ -151,26 +163,24 @@ const MovieSearch: React.FC<MovieSearchProps> = ({
                 movie={movie}
                 onSelect={handleSelectMovie}
                 isSelected={index === selectedIndex}
+                isListView={isListView}
               />
             ))}
           </ul>
 
           {currentPage < totalPages && (
             <div className="mt-4 text-center">
-              <button
-                onClick={handleLoadMore}
-                disabled={isLoading}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <LoadingSpinner size="sm" />
-                    <span>{t("loading")}</span>
-                  </div>
-                ) : (
-                  t("loadMore")
-                )}
-              </button>
+              {isLoading ? (
+                <LoadingSpinner />
+              ) : (
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {t("loadMore")}
+                </button>
+              )}
             </div>
           )}
         </>

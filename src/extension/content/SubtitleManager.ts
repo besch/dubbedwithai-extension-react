@@ -1,7 +1,6 @@
 import { Subtitle } from "@/types";
 
 export class SubtitleManager {
-  private static instance: SubtitleManager | null = null;
   private sortedSubtitles: Subtitle[] = [];
 
   public setActiveSubtitles(subtitles: Subtitle[]): void {

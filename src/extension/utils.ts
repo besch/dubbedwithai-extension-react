@@ -1,15 +1,64 @@
-import Parser from "srt-parser-2";
 import { Subtitle } from "@/types";
 
 export function parseSrt(srtContent: string): Subtitle[] {
-  const parser = new Parser();
-  const parsedSubtitles = parser.fromSrt(srtContent);
+  const subtitles: Subtitle[] = [];
+  const lines = srtContent.split(/\r?\n/);
+  let index = 0;
 
-  return parsedSubtitles.map((sub) => ({
-    start: timeStringToMilliseconds(sub.startTime),
-    end: timeStringToMilliseconds(sub.endTime),
-    text: cleanSubtitleText(sub.text),
-  }));
+  const timecodePattern =
+    /^\d{2}:\d{2}:\d{2},\d{3}\s*-->?\s*\d{2}:\d{2}:\d{2},\d{3}/;
+
+  while (index < lines.length) {
+    let line = lines[index].trim();
+
+    // Skip index numbers or irrelevant lines
+    while (index < lines.length && !timecodePattern.test(line)) {
+      index++;
+      line = lines[index] ? lines[index].trim() : "";
+    }
+
+    if (index >= lines.length) {
+      break;
+    }
+
+    // Parse timecode line
+    const timecodeLine = lines[index++].trim();
+    const timecodeMatch = timecodeLine.match(
+      /(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/
+    );
+
+    if (!timecodeMatch) {
+      continue;
+    }
+
+    const startTime = timeStringToMilliseconds(timecodeMatch[1]);
+    const endTime = timeStringToMilliseconds(timecodeMatch[2]);
+
+    // Read subtitle text lines
+    const textLines = [];
+    while (index < lines.length) {
+      line = lines[index].trim();
+
+      // If the line is empty or is a timecode, break
+      if (line === "" || timecodePattern.test(line)) {
+        break;
+      }
+
+      textLines.push(line);
+      index++;
+    }
+
+    // Join text lines with spaces
+    const subtitleText = cleanSubtitleText(textLines.join(" "));
+
+    subtitles.push({
+      start: startTime,
+      end: endTime,
+      text: subtitleText,
+    });
+  }
+
+  return subtitles;
 }
 
 export const cleanSubtitleText = (text: string): string => {

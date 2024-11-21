@@ -171,7 +171,7 @@ const MovieSearch: React.FC<MovieSearchProps> = ({
           {currentPage < totalPages && (
             <div className="mt-4 text-center">
               {isLoading ? (
-                <LoadingSpinner />
+                <LoadingSpinner size="lg" />
               ) : (
                 <button
                   onClick={handleLoadMore}

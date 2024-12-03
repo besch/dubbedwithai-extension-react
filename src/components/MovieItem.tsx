@@ -41,9 +41,9 @@ const MovieItem: React.FC<MovieItemProps> = ({
             />
           ) : (
             <div className="w-24 h-36 bg-muted flex items-center justify-center rounded-md shadow-sm">
-              <span className="text-muted-foreground text-xs text-center">
+              <div className="w-24 text-muted-foreground text-xs text-center">
                 {t("noPoster")}
-              </span>
+              </div>
             </div>
           )}
           <div>

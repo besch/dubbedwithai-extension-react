@@ -9,6 +9,7 @@ import {
   toggleDubbingProcess,
 } from "@/store/movieSlice";
 import languageCodes from "@/lib/languageCodes";
+import { Star, ArrowRight } from "lucide-react";
 import PageLayout from "@/components/ui/PageLayout";
 import MovieCard from "@/components/MovieCard";
 import { toast } from "react-toastify";
@@ -130,6 +131,29 @@ const DubbingPage: React.FC = () => {
           </div>
         </div>
         <div className="mt-auto pt-4">
+          <div className="mb-4 bg-muted py-[14px] px-4 rounded-lg shadow">
+            <div className="flex items-center">
+              <Star className="h-6 w-6 text-yellow-500" />
+              <span className="ml-2 text-lg font-semibold text-foreground">
+                {t("rateOurExtension", "Rate OneDub")}
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t(
+                "pleaseRateOurExtension",
+                "If you enjoy using our extension, please leave a rating on the Chrome Web Store!"
+              )}
+            </p>
+            <a
+              href="https://chromewebstore.google.com/detail/onedub/cphceeehafncfeigajlnajkbddokpn"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-4 py-2 rounded"
+            >
+              {t("rateNow", "Rate Now")}
+              <ArrowRight className="ml-2 h-5 w-5 text-primary-foreground" />
+            </a>
+          </div>
           <SocialShareButtons />
         </div>
       </div>

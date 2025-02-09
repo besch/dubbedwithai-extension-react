@@ -3,7 +3,7 @@ import { TvMinimalPlayIcon } from "lucide-react";
 
 const StreamingServices: React.FC = () => {
   return (
-    <div className="bg-card transition-colors duration-200 p-4 rounded-lg shadow-sm">
+    <div className="bg-card transition-colors duration-200 px-4 rounded-lg shadow-sm">
       <a
         href="https://telegram.me/s/streamingwebsites"
         target="_blank"
